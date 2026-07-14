@@ -1,0 +1,20 @@
+{
+	"luci-app-openvpn": {
+		"description": "Grant rpcd and file access for OpenVPN management",
+		"read": {
+			"cgi": [ "luci" ],
+			"uci": [ "openvpn" ],
+			"file": {
+				"/etc/openvpn/": [ "read" ],
+				"/var/run/": [ "read" ]
+			}
+		},
+		"write": {
+			"uci": [ "openvpn" ],
+			"file": {
+				"/etc/openvpn/": [ "write" ],
+				"/etc/config/openvpn": [ "write" ]
+			}
+		}
+	}
+}

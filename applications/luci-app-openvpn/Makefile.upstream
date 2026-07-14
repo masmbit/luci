@@ -1,0 +1,26 @@
+#
+# Copyright (C) 2008-2026 The OpenWrt Project
+#
+# This is free software, licensed under the Apache License, Version 2.0.
+#
+
+include $(TOPDIR)/rules.mk
+
+LUCI_TITLE:=LuCI Support for OpenVPN Multi-Instance Gateway
+LUCI_DEPENDS:=+openvpn-openssl +luci-base +nftables
+LUCI_PKGARCH:=all
+
+PKG_NAME:=luci-app-openvpn
+PKG_VERSION:=2.0.0
+PKG_RELEASE:=1
+
+include ../../luci.mk
+
+define Package/luci-app-openvpn/description
+  This package provides an easy-to-use web interface for the simple configuration 
+  and fast deployment of OpenVPN server and client instances. It is the replacement 
+  of the old, unsupported LuCI interface, delivering a completely modernized design 
+  optimized for current OpenWrt builds.
+endef
+
+# Bottom line protects the build interface
