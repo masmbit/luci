@@ -3,7 +3,258 @@
 START=95
 USE_PROCD=1
 
-. /lib/functions.sh
+# Register custom actions to pass through rc.common validation
+EXTRA_COMMANDS="keygen keymeta"
+EXTRA_HELP=\
+"	keygen		Asynchronous key and certificate generator
+	keymeta		Validate and extract cryptographic metadata for LuCI"
+
+# Asynchronous key and certificate generator
+keygen() {
+	local type="${1:-unknown}"
+	local instance="${2:-default}"
+	
+	# Sane 2048 fallback prevents syntax drops on the CA layer
+	local bits="${3:-2048}"
+	local days="${4:-36500}"
+	local custom="$5"
+	
+	local log_file="/tmp/openvpn.keygen.log"
+	
+	# Explicit flat RAM staging nodes matching your authorized ACL matrix
+	local out_ca_file="/tmp/openvpn.keygen.ca.tmp"
+	local out_server_key_file="/tmp/openvpn.keygen.server-key.tmp"
+	local out_server_cert_file="/tmp/openvpn.keygen.server-cert.tmp"
+	local out_dh_file="/tmp/openvpn.keygen.dh.tmp"
+	local out_tls_file="/tmp/openvpn.keygen.tls.tmp"
+
+	local active_out=""
+	local ca_key_buffer=""
+	local ca_cert_buffer=""
+	local ca_engine=""
+	local ec_param_tmp=""
+
+	# General poller log reset happens synchronously to clear the terminal view
+	rm -f "$log_file"
+	touch "$log_file"
+	chmod 666 "$log_file"
+
+	case "$type" in
+		"ca")
+			active_out="$out_ca_file"
+			rm -f "$out_ca_file" "$out_server_key_file" "$out_server_cert_file" "$out_dh_file" "$out_tls_file"
+			
+			ca_key_buffer="$out_ca_file"
+			ca_cert_buffer="$out_server_cert_file"
+			
+			# DYNAMIC ENGINE MATRIX: Detect if we need to spawn an RSA or a Pure ECC Certificate Authority
+			ca_engine="-newkey rsa:$bits"
+			if [ "$bits" = "ec" ]; then
+				ec_param_tmp="/tmp/openvpn.keygen.dh.tmp"
+				rm -f "$ec_param_tmp"
+				
+				echo "[CMD] openssl ecparam -name prime256v1 -out $ec_param_tmp" >> "$log_file"
+				openssl ecparam -name prime256v1 -out "$ec_param_tmp" 2>> "$log_file"
+				
+				ca_engine="-newkey ec:$ec_param_tmp"
+			fi
+			
+			# TRUE ASYNC BYPASS: Shield the entire CA creation phase in the background
+			(
+				set +e
+				if [ -n "$custom" ]; then
+					echo "LOG: Invoking openssl engine for self-signed CA generation..." >> "$log_file"
+					echo "[CMD] openssl req -new -x509 -nodes -days $days $ca_engine -subj \"/CN=OpenVPN-CA-$instance\" -keyout $ca_key_buffer -out $ca_cert_buffer $custom" >> "$log_file"
+					openssl req -new -x509 -nodes -days "$days" $ca_engine -subj "/CN=OpenVPN-CA-$instance" -keyout "$ca_key_buffer" -out "$ca_cert_buffer" $custom >/dev/null 2>> "$log_file"
+				else
+					echo "LOG: Invoking openssl engine for self-signed CA generation..." >> "$log_file"
+					echo "[CMD] openssl req -new -x509 -nodes -days $days $ca_engine -subj \"/CN=OpenVPN-CA-$instance\" -keyout $ca_key_buffer -out $ca_cert_buffer" >> "$log_file"
+					openssl req -new -x509 -nodes -days "$days" $ca_engine -subj "/CN=OpenVPN-CA-$instance" -keyout "$ca_key_buffer" -out "$ca_cert_buffer" >/dev/null 2>> "$log_file"
+				fi
+				
+				# We append the unique certificate block into the key container. 
+				if [ -f "$ca_key_buffer" ] && [ -s "$ca_key_buffer" ] && [ -f "$ca_cert_buffer" ] && [ -s "$ca_cert_buffer" ]; then
+					cat "$ca_cert_buffer" >> "$ca_key_buffer"
+					chmod 644 "$active_out"
+					echo "LOG: WORKFLOW_SUCCESSFUL" >> "$log_file"
+				else
+					echo "ERROR: Cryptographic CA asset generation returned structural failure." >> "$log_file"
+				fi
+				
+				rm -f "$ca_cert_buffer" "/tmp/openvpn.keygen.dh.tmp"
+				set -e
+			) &
+			;;
+
+		"server-key")
+			active_out="$out_server_key_file"
+			rm -f "$active_out"
+			
+			# TRUE ASYNC BYPASS: Shift private key generation into background subshell
+			(
+				set +e
+				if [ "$bits" = "ec" ]; then
+					echo "LOG: Invoking openssl engine for ECC private key generation..." >> "$log_file"
+					echo "[CMD] openssl ecparam -name prime256v1 -genkey -out $active_out $custom" > "$log_file"
+					openssl ecparam -name prime256v1 -genkey -out "$active_out" $custom 2>> "$log_file"
+				else
+					echo "LOG: Invoking openssl engine for RSA private key generation..." >> "$log_file"
+					echo "[CMD] openssl genrsa -out $active_out $custom $bits" > "$log_file"				
+					openssl genrsa -out "$active_out" $custom "$bits" 2>> "$log_file"
+				fi
+				
+				if [ -f "$active_out" ] && [ -s "$active_out" ]; then
+					chmod 644 "$active_out"
+					echo "LOG: WORKFLOW_SUCCESSFUL" >> "$log_file"
+				else
+					echo "ERROR: Server private key buffer generation returned structural failure." >> "$log_file"
+				fi
+				set -e
+			) &
+			;;
+
+		"server-cert")
+			active_out="$out_server_cert_file"
+			rm -f "$active_out"
+			
+			# TRUE ASYNC BYPASS: Shift certificate signing pipeline into background subshell
+			(
+				set +e
+				echo "LOG: Validating local Certificate Authority access..." > "$log_file"
+				if [ ! -s "$out_ca_file" ] || [ ! -s "$out_server_key_file" ]; then
+					echo "ERROR: Required multi-stage RAM staging nodes are missing or empty!" >> "$log_file"
+				else
+					if [ -n "$custom" ] && echo "$custom" | grep -q -- "-subj"; then
+						echo "LOG: Invoking openssl engine for custom dynamic certificate signing..." >> "$log_file"
+						echo "[CMD] openssl req -new -nodes -key $out_server_key_file $custom | openssl x509 -req -days $days -CA $out_ca_file -CAkey $out_ca_file -set_serial $$ -out $active_out $custom" >> "$log_file"
+						openssl req -new -nodes -key "$out_server_key_file" $custom 2>/dev/null | \
+							openssl x509 -req -days "$days" -CA "$out_ca_file" -CAkey "$out_ca_file" \
+							-set_serial "$$" -rand /dev/urandom -out "$active_out" $custom 2>> "$log_file"
+					else
+						echo "LOG: Invoking openssl engine for dynamic certificate signing..." >> "$log_file"
+						echo "[CMD] openssl req -new -nodes -key $out_server_key_file -subj \"/CN=OpenVPN-Server-$instance\" -out $active_out $custom | openssl x509 -req -days $days -CA $out_ca_file -CAkey $out_ca_file -set_serial $$ -out $active_out $custom" >> "$log_file"				
+						openssl req -new -nodes -key "$out_server_key_file" \
+							-subj "/CN=OpenVPN-Server-$instance" 2>/dev/null | \
+							openssl x509 -req -days "$days" -CA "$out_ca_file" -CAkey "$out_ca_file" \
+							-set_serial "$$" -rand /dev/urandom -out "$active_out" $custom 2>> "$log_file"
+					fi
+					
+					if [ -f "$active_out" ] && [ -s "$active_out" ]; then
+						chmod 644 "$active_out"
+						echo "LOG: WORKFLOW_SUCCESSFUL" >> "$log_file"
+					else
+						echo "ERROR: Server certificate dynamic signing pipeline returned structural failure." >> "$log_file"
+					fi
+				fi
+				set -e
+			) &
+			;;
+
+		"dh")
+			active_out="$out_dh_file"
+			rm -f "$active_out"
+			
+			# TRUE ASYNC BYPASS: Shift prime bit generation into background subshell
+			(
+				set +e
+				if [ -n "$custom" ]; then
+					echo "LOG: Invoking openssl engine for fast Diffie-Hellman parameters..." >> "$log_file"
+					echo "[CMD] openssl dhparam -dsaparam -rand /dev/urandom $custom -out $active_out $bits" > "$log_file"
+					openssl dhparam -dsaparam -rand /dev/urandom $custom -out "$active_out" "$bits" >> "$log_file" 2>&1
+				else
+					echo "LOG: Invoking openssl engine for fast Diffie-Hellman parameters..." >> "$log_file"
+					echo "[CMD] openssl dhparam -dsaparam -rand /dev/urandom -out $active_out $bits" > "$log_file"				
+					openssl dhparam -dsaparam -rand /dev/urandom -out "$active_out" "$bits" 2>> "$log_file"
+				fi
+				
+				if [ -f "$active_out" ] && [ -s "$active_out" ]; then
+					chmod 644 "$active_out"
+					echo "LOG: WORKFLOW_SUCCESSFUL" >> "$log_file"
+				else
+					echo "ERROR: Diffie-Hellman cryptographic prime generation returned structural failure." >> "$log_file"
+				fi
+				set -e
+			) &
+			;;
+
+		"tls-crypt")
+			active_out="$out_tls_file"
+			rm -f "$active_out"
+			
+			# TRUE ASYNC BYPASS: Shift symmetric static secret generation into background subshell
+			(
+				set +e
+				echo "LOG: Invoking openvpn engine for symmetric static key secret..." >> "$log_file"
+				echo "[CMD] openvpn --genkey secret $active_out $custom" > "$log_file"
+				openvpn --genkey secret "$active_out" $custom 2>> "$log_file"
+				
+				if [ -f "$active_out" ] && [ -s "$active_out" ]; then
+					chmod 644 "$active_out"
+					echo "LOG: WORKFLOW_SUCCESSFUL" >> "$log_file"
+				else
+					echo "ERROR: Symmetric secret key engine tokens returned structural failure." >> "$log_file"
+				fi
+				set -e
+			) &
+			;;
+
+		*)
+			echo "ERROR: Invalid cryptographic profile requested." > "$log_file"
+			exit 1
+			;;
+	esac
+}
+
+# Validate and extract cryptographic metadata for LuCI
+keymeta() {
+	local filename="$1"
+	local absolute_path="/etc/openvpn/keys/$filename"
+	local ec_param_tmp="/tmp/openvpn.keygen.dh.tmp"
+	local hex_lines_count=0
+	local openvpn_exit=0
+
+	# Hard validation guard against directory traversal attacks
+	if [ -z "$filename" ] || echo "$filename" | grep -q '\.\.'; then
+		echo "ERROR: Invalid or restricted filename frame context."
+		exit 1
+	fi
+
+	if [ -s "$absolute_path" ]; then
+		# Case A: Check for valid Certificate (CA or Server Certificate)
+		if grep -q "BEGIN CERTIFICATE" "$absolute_path"; then
+			# Symmetrically extract Expiration and Key Strengths across RSA and ECC
+			openssl x509 -in "$absolute_path" -noout -text 2>/dev/null | \
+				grep -E "Not After|Public-Key|ASN1 OID|NIST CURVE" | sed 's/^[[:space:]]*//'
+		
+		# Case B: Check for standalone Private Keys (RSA or ECC)
+		elif grep -q "BEGIN PRIVATE KEY" "$absolute_path" || grep -q "BEGIN RSA PRIVATE KEY" "$absolute_path" || grep -q "BEGIN EC PRIVATE KEY" "$absolute_path"; then
+			# Pure private keys have no expiration, but we extract the mathematical bit strength
+			openssl pkey -in "$absolute_path" -noout -text 2>/dev/null | \
+				grep -E "Private-Key|ASN1 OID|NIST CURVE" | sed 's/^[[:space:]]*//'
+		
+		# Case C: Check for standalone Diffie-Hellman Parameter matrices
+		elif grep -q "BEGIN DH PARAMETERS" "$absolute_path"; then
+			openssl dhparam -in "$absolute_path" -noout -text 2>/dev/null | \
+				grep -E "DH Parameters|bit" | sed 's/^[[:space:]]*//'
+		
+		# Case D: Check for OpenVPN Static Keys (e.g. tls-crypt)
+		elif grep -q "BEGIN OpenVPN Static key" "$absolute_path"; then
+			# FUTUREPROOF VALIDATION: Explicitly verify the cryptographic shape of the static key matrix.
+			# A valid v1 key file must contain exactly 16 lines of pure hex payloads inside the layout blocks.
+			hex_lines_count=$(grep -v "BEGIN" "$absolute_path" | grep -v "END" | grep -E -c "^[0-9a-fA-F]{32}$")
+
+			if [ "$hex_lines_count" -eq 16 ] && grep -q "END OpenVPN Static key" "$absolute_path"; then
+				echo "TYPE: Symmetric Static Secret (2048 Bit) - Validated"
+			else
+				echo "ERROR: OpenVPN static key validation failed (Structural format corruption)."
+			fi
+		else
+			echo "TYPE: Custom Raw Data Structure"
+		fi
+	else
+		echo "ERROR: Staging node file is empty or missing."
+	fi
+}
 
 generate_default_keys() {
 	local key_dir="/etc/openvpn/keys"
@@ -11,7 +262,7 @@ generate_default_keys() {
 	local exit_code=0
 	local dummy_payload="MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzV1c4B9x9C3x"
 
-	# Hardened check: Verify that every required key asset exists on disk
+	# Step 1: Check physical existence on disk partition
 	[ -f "$key_dir/ca_default.crt" ] || missing=1
 	[ -f "$key_dir/server_default.crt" ] || missing=1
 	[ -f "$key_dir/server_default.key" ] || missing=1
@@ -21,30 +272,33 @@ generate_default_keys() {
 	[ "$missing" -eq 1 ] || return 0
 
 	mkdir -p "$key_dir"
-	
-	# Signal LuCI dynamic frontend overlay that generation loop is active
 	touch /var/run/openvpn.keygen.lock
-
-	# Try-Catch protection: Ensure lock file is dropped even on fatal crash
 	trap 'rm -f /var/run/openvpn.keygen.lock' EXIT INT TERM
 
-	# Execute high-overhead crypto commands sequentially via OpenSSL binary
 	if command -v openssl >/dev/null 2>&1 && command -v openvpn >/dev/null 2>&1; then
-		openssl req -x509 -nodes -days 36500 -newkey rsa:2048 \
-			-keyout "$key_dir/ca_default.key" \
-			-out "$key_dir/ca_default.crt" \
+		# 1. Generate combined CA key and certificate symmetrically using robust RSA 2048 for global compatibility
+		openssl req -new -x509 -nodes -days 36500 -newkey rsa:2048 \
+			-keyout "$key_dir/ca_default.crt" \
 			-subj "/CN=OpenWrt-Multi-CA" 2>/dev/null && \
-		openssl req -nodes -days 36500 -newkey rsa:2048 \
+		openssl req -new -x509 -nodes -days 36500 -key "$key_dir/ca_default.crt" \
+			-subj "/CN=OpenWrt-Multi-CA" 2>/dev/null >> "$key_dir/ca_default.crt" && \
+			
+		# 2. FIXED: Generate Server Private Key using high-performance ECC (Prime256v1) instead of heavy RSA
+		openssl req -new -nodes -newkey ec:<(openssl ecparam -name prime256v1) \
 			-keyout "$key_dir/server_default.key" \
 			-out "$key_dir/server_default.csr" \
 			-subj "/CN=OpenWrt-Server" 2>/dev/null && \
+			
+		# 3. Sign the ECC server cert mathematically secure using the RSA ca_default.crt layer
 		openssl x509 -req -days 36500 \
 			-in "$key_dir/server_default.csr" \
 			-CA "$key_dir/ca_default.crt" \
-			-CAkey "$key_dir/ca_default.key" \
-			-CAcreateserial \
+			-CAkey "$key_dir/ca_default.crt" \
+			-set_serial "$$" \
 			-out "$key_dir/server_default.crt" 2>/dev/null && \
-		openssl dhparam -out "$key_dir/dh_default.pem" 1024 2>/dev/null && \
+			
+		# Generate DH (with fast dsaparam) and TLS-Crypt assets safely
+		openssl dhparam -dsaparam -out "$key_dir/dh_default.pem" 1024 2>/dev/null && \
 		openvpn --genkey secret "$key_dir/tls-crypt_default.key" 2>/dev/null
 		
 		exit_code=$?
@@ -54,11 +308,10 @@ generate_default_keys() {
 			missing=0
 		fi
 
-		# Flush volatile temporary components used during certificate signing
-		rm -f "$key_dir/server_default.csr" "$key_dir/ca_default.key" "$key_dir/ca_default.srl"
+		# Flush volatile temporary components safely (no .csr or .srl files left on disk!)
+		rm -f "$key_dir/server_default.csr"
 	fi
 
-	# Keygen Fallback Channel: Spawns valid dummy blocks if OpenSSL/OpenVPN binary crashed
 	if [ "$missing" -eq 1 ]; then
 		[ -f "$key_dir/ca_default.crt" ] || printf -- "-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----\n" "$dummy_payload" > "$key_dir/ca_default.crt"
 		[ -f "$key_dir/server_default.crt" ] || printf -- "-----BEGIN CERTIFICATE-----\n%s\n-----END CERTIFICATE-----\n" "$dummy_payload" > "$key_dir/server_default.crt"
@@ -70,6 +323,7 @@ generate_default_keys() {
 	rm -f /var/run/openvpn.keygen.lock
 	trap - EXIT INT TERM
 }
+
 
 set_firewall_rules_openvpn() {
 	local need_reload=0
