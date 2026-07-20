@@ -1,17 +1,26 @@
 # luci-app-openvpn
 
-Modern client-side JavaScript (LuCI2) user interface for OpenVPN instance management on OpenWrt. This package serves as a secure, fully functional replacement for the deprecated Lua/CBI legacy implementation.
+Modern client-side JavaScript user interface for easy OpenVPN server and client configuration on OpenWrt.
+
+## Description
+
+This package provides an easy-to-use web interface for simple configuration of OpenVPN server and client instances with key generator and connection wizard. It is the replacement of the old, unsupported LuCI interface, delivering a completely modernized design optimized for current OpenWrt builds.
+
+With the new `luci-app-openvpn`, building new server and client connections becomes incredibly easy. Automated firewall management and the built-in key generator help you to establish correct and highly secure VPN tunnel connections without manual effort. 
+
+The live status overview is clean and simple. Using the integrated connection wizard, you can deploy real-world VPN profiles with just a few clicks. Managing and creating secure VPN connections has never been this effortless.
 
 ## Features
 
-- **Multi-Instance Support:** Dynamically create, configure, and delete parallel OpenVPN server and client sections from the UI.
-- **Procd Integration:** Service states and process lifetimes are natively managed via OpenWrt's `procd` daemon.
-- **On-Device Crypto Provisioning:** Automatically generates a unique default crypto environment (`ca`, `certs`, `dhparam`, `tls-crypt` with 100-year validity) during the initial service boot phase to guarantee secure cryptographic isolation without shared-key vulnerabilities and prevent handshakes failures on hardware lacking active NTP synchronization.
-- **Deterministic UI Locks:** Front-end controls apply visual execution locks during UCI transaction switches to prevent `procd` timing conflicts.
+- **Easy Setup:** Deploy fully working OpenVPN servers or clients in seconds.
+- **Connection Wizard:** Simple step-by-step configuration for real-world use cases.
+- **Automatic Keygen:** Automatically creates secure cryptographic keys and certificates.
+- **Smart Firewall:** Handles all necessary firewall zone rules and port forwardings.
+- **Clear Status Table:** A compact overview of running tunnels, encryption types, and live data transfer.
 
 ## Configuration Layout
 
-The application manages sections inside `/etc/config/openvpn`:
+The application manages configurations inside `/etc/config/openvpn`:
 
 ```ini
 config openvpn 'instance1'
@@ -20,15 +29,11 @@ config openvpn 'instance1'
 	option config '/etc/openvpn/instance1.conf'
 ```
 
-Daemon configuration profiles are stored individually as `/etc/openvpn/instanceX.conf`.
-
 ## Directory Structure
 
 ```text
 luci-app-openvpn/
 ├── Makefile
-├── Makefile.standalone
-├── Makefile.upstream
 ├── LICENSE
 ├── README.md
 └── root/
@@ -46,10 +51,15 @@ luci-app-openvpn/
     │   ├── luci/menu.d/
     │   │   └── openvpn.json
     │   └── rpcd/acl.d/
-    │       └── luci-app-openvpn.json
+    │       ├── luci-app-openvpn.json
+    │       └── luci-app-openvpn-status.json
     └── www/
-        luci-static/resources/view/vpn/
-            └── openvpn.js
+        luci-static/resources/view/
+            ├── status/include/
+            │   └── 35_openvpn.js
+            └── vpn/
+                ├── openvpn.js
+                └── openvpn-status.js
 ```
 
 ## License

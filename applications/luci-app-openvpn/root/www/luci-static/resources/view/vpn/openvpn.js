@@ -5,21 +5,18 @@
  * This is free software, licensed under the Apache License, Version 2.0.
  * See /LICENSE for more information.
  * 
- * 
- * luci-app-openvpn - architecture map
- * 
+ * luci-app-openvpn
+ *       
  * 1. --- TEXT & CONSTANTS --- ..... Global translations and constants
  * 2. --- HELPER & INIT --- ........ Router connections and file setup
  * 3. --- MAIN VIEW --- ............ Main OpenVPN dashboard
  * 4. --- SAVE AND RESTART --- ..... UCI saving and instance restart logic
- * 5. --- STATUS VIEW --- .......... Live statistics and traffic tables
- * 6. --- KEY EDITOR --- ........... Text area editor for key files
- * 7. --- KEY GENERATOR --- ........ Background key generation wizard
- * 8. --- OPENVPN INSTANCES --- .... Instance settings and creation buttons
- * 9. --- FIREWALL & LOG VIEW --- .. Active ports info and system log box
- * 10. -- LOCK SCREEN --- .......... Startup loading overlay and pollers
- * 11. -- VIEW ENTRYPOINT --- ...... Main entry where the page is generated
- * 
+ * 5. --- KEY EDITOR --- ........... Text area editor for key files
+ * 6. --- KEY GENERATOR --- ........ Background key generation wizard
+ * 7. --- OPENVPN INSTANCES --- .... Instance settings and creation buttons
+ * 8. --- FIREWALL & LOG VIEW --- .. Active ports info and system log box
+ * 9. --- LOCK SCREEN --- .......... Startup loading overlay and pollers
+ * 10. -- VIEW ENTRYPOINT --- ...... Main entry where the page is generated
  */
 
 /* global E, URL, FileReader, Blob, sessionStorage */
@@ -32,239 +29,224 @@ const view = L.view;
  */
 const TXT = {
     INFO: {
-        running: _('Running'),
-        stopped: _('Stopped'),
         active: _('Active'),
-        openvpn: _('OpenVPN'),
+        clearing: _('Clearing...'),
+        creating: _('Creating...'),
+        default: _('Default'),
+        disable: _('Disable'),
         disabled: _('Disabled'),
         enable: _('Enable'),
-        disable: _('Disable'),
+        error: _('Error'),
+        no: _('No'),
+        openvpn: _('OpenVPN'),
+        pending: _('Pending...'),
+        running: _('Running'),
         saved: _('Saved'),
         saving: _('Saving...'),
-        creating: _('Creating...'),
-        clearing: _('Clearing...'),
-        error: _('Error:'),
+        starting: _('Starting...'),
+        type: _('Type'),
         validated: _('Validated'),
         valid_until: _('Valid Until'),
-        type: _('Type'),
-        default: _('Default'),
-        years: _('Years')
-    },
-    BTN: {
-        show: _('Show'),
-        close: _('Close'),
-        download: _('Download'),
-        upload: _('Upload'),
-        save_apply: _('Save & Apply'),
-        click_save_apply: _('Please click "Save & Apply".'),
-        add_client: _('Add Client Instance'),
-        add_server: _('Add Server Instance'),
-        save_config: _('Save Config'),
-        del_instance: _('Delete Instance'),
-        del_ready: _('Deleted - Save & Apply')
+        years: _('Years'),
+        yes: _('Yes')
     },
     STATUS: {
-        status: _('Status'),        
-        title_main: _('OpenVPN Server/Client'),
-        title_instance: _('Instance Management'),
-        title_log: _('LOG'), 
-        log_cleared: _('Log Cleared'),
-        log_clear: _('Clear Log'),
-        loading_key: _('Loading key contents...'),
         file_location: _('File Location: '),
-        instance_x: 'Instance #',
-        key_info_ca: '• Certification Authority ',
-        key_info_serever_crt: '• Server Certificate ',
-        key_info_server_key: '• Private Server Key ',
-        key_info_hd: '• Diffie- Hellman Parameters ',
-        key_info_tls: '• TLS Crypt Secret ',
+        instance_x: _('Instance #'),
+        key_info_ca: _('• Certification Authority '),
+        key_info_hd: _('• Diffie- Hellman Parameters '),
+        key_info_serever_crt: _('• Server Certificate '),
+        key_info_server_key: _('• Private Server Key '),
+        key_info_tls: _('• TLS Crypt Secret '),
+        loading_key: _('Loading key contents...'),
+        log_clear: _('Clear Log'),
+        log_cleared: _('Log Cleared'),
         no_changes_detected: _('No changes detected'),
-        no_clients_connected: _('No clients connected'),
         no_vpn_configured: _('No OpenVPN instances configured yet. Use the buttons below to create an instance.'),
+        status: _('Status'),
+        title_instance: _('Instance Management'),
+        title_log: _('LOG'),
+        title_main: _('OpenVPN Server/Client')
     },
-    MSG: {       
+    MSG: {
+        confirm_del: _('Are you sure you want to delete '),
+        config_changed_reload: _('Configuration changed! Applying will temporarily restart the OpenVPN instance. Once the page has reloaded, click Apply a second time to complete the reactivation.'),
+        edit_config: _('Edit Config file'),
+        manage_instance: _('Here you can manage multiple OpenVPN Server and Client instances dynamically.'),
         no_vpn_log: _('No active OpenVPN log entries found.'),
         openvpn_keys: _('OpenVPN Keys'),
-        edit_config: _('Edit Config file'),
-        current_state: _('Current State:'),
-        global_status: _('Global Status:'),
-        confirm_del: _('Are you sure you want to delete '),
-        manage_instance: _('Here you can manage multiple OpenVPN Server and Client instances dynamically.'),
-        keygen_in_progress: _('Key generation in progress...'),
-        keygen_wait: _('Please wait while secure cryptographic, router-unique default assets are being generated.'),
         process_take_few_minutes: _('This automated initialization process can take a few minutes on your device...'),
-        keyfile_not_exist: _('Key file is empty or does not exist on disk yet.'),        
-        want_to_generate: _('What to generate?'),
-        uploaded_file_invalid: _('Uploaded file is invalid or corrupt!'),
-        // no translation
         session_storage_write_blocked: 'SessionStorage write blocked:',
+        uploaded_file_invalid: _('Uploaded file is invalid or corrupt!'),
+        want_to_generate: _('What to generate?'),
+        // System logging keys without user localization
         edit_save_unhandled_error: 'Editor save chain caught unhandled error context:',
         editor_validation_failed: 'Editor validation failed',
-        key_verification_failed: 'Key verification failed',        
-        key_type_mismatch: 'Key type mismatch',
-        failed_write_openvpn_config: 'Failed to write OpenVPN configuration for ',
-        failed_delete_openvpn_instance: 'Failed to delete OpenVPN instance ',
         failed_create_openvpn_instance: 'Failed to create OpenVPN instance ',
+        failed_delete_openvpn_instance: 'Failed to delete OpenVPN instance ',
+        failed_write_openvpn_config: 'Failed to write OpenVPN configuration for '
+    },
+    BTN: {
+        add_client: _('Add Client Instance'),
+        add_server: _('Add Server Instance'),
+        click_save_apply: _('Please click "Save & Apply".'),
+        close: _('Close'),
+        del_instance: _('Delete Instance'),
+        del_ready: _('Deleted - Save & Apply'),
+        download: _('Download'),
+        enabled: _('Enabled'),
+        save_apply: _('Save & Apply'),
+        save_config: _('Save Config'),
+        show: _('Show'),
+        upload: _('Upload')
     },
     TH: {
-        vpn: _('VPN'),
-        instance: _('Instance'),
-        type: _('Type'),
-        status: _('Status'),
-        remote: _('Remote IP / Port'),
-        tx: _('Tx Pkts / Data'),
-        rx: _('Rx Pkts / Data'),
-        uptime: _('UpTime'),
-        no_inst: _('No instances configured'),
-        local_ip_port: _('Local IP / Port'),
-        remote_ip_port: _('Remote IP / Port'),
-        enabled: _('Enabled: '),
-        instances: _('Instances: '),
-        connected: _('Connected: '),
         active_pids: _('Active PIDs: '),
         aggregated_rx: _('Aggregated RX: '),
-        aggregated_tx: _('Aggregated TX: ')
+        aggregated_tx: _('Aggregated TX: '),
+        connected: _('Connected: '),
+        enabled: _('Enabled: '),
+        instances: _('Instances: '),
+        type: _('Type'),
     },
     FIREWALL: {
-        firewall_info: _('Firewall & Routing Information'),
-        automated_zone_setup: _('Automated Zone Setup: '),
-        secure_firewall_for_all: _('A secure firewall zone for all '),
-        devices_autocreated: _(' devices is created automatically.'),
-        inbound_access: _('Inbound Access: '),
-        wan_ports: _('WAN ports '),
         auto_open_secure_connection: _(' are opened automatically for secure OpenVPN connections.'),
-        openvpn_tunnel_interface: _('OpenVPN tunnel interfaces (tun0, tun1, tun3, etc.)'),
+        automated_zone_setup: _('Automated Zone Setup: '),
         check_traffic_rules: _('Check Traffic Rules: '),
-        network: _('Network '),
+        devices_autocreated: _(' devices is created automatically.'),
         firewall: _('Firewall '),
+        firewall_info: _('Firewall & Routing Information'),
+        inbound_access: _('Inbound Access: '),
+        network: _('Network '),
+        openvpn_tunnel_interface: _('OpenVPN tunnel interfaces (tun0, tun1, tun3, etc.)'),
+        secure_firewall_for_all: _('A secure firewall zone for all '),
         traffic_rules: _('Traffic Rules'),
+        wan_ports: _('WAN ports ')
     },
     KEYGEN: {
         btn: _('KeyGen'),
         btn_generate: _('Generate'),
-        title: _('OpenVPN Crypto Generator'),
-        title_main: _('OpenVPN Instance Key Generator'),
-        key_strength: _('Key Strength'),
-        pure_ecc: _('Pure ECC'),
-        pure_rsa: _('Pure RSA'),
         certificate: _('Certificate'),
-        private_key: _('Private Key'),
-        validity_days: _('Validity (Days)'), 
-        unknown_asset: _('Unknown Asset'),
-        not_applicable: _('Not applicable'),
         custom_cli: _('Custom CLI Options'),
-        progress: _('Progress & Output'),
-        ready: _('Ready for key generation.'),
-        running: _('Crypto operation running. Please wait...'),
-        file_saved: _('File successfully written: '),
-        disk_err: _('Partition write error: '),
-        warn_close: _('Warning: The generated key is not saved and will be lost. Close?'),
-        opt_full_pki: _('Full PKI Suite (CA + Server Certificate + Private Server Key)'),
-        opt_dh: _('Diffie-Hellman Parameters (Perfect Forward Secrecy)'),
-        opt_tls: _('TLS Crypt Secret (Anti-DoS / Port-Scan Protection)'),
         dh_descr: _('Diffie-Hellman parameters enforce numeric prime bit boundaries exclusively.'),
-        tls_descr: _('OpenVPN symmetric encryption engines utilize rigid fixed token matrices.'),
-        strength_descr: _('Recommended: RSA-2048 + ECC-Prime256v1. RSA ensures CA compatibility, while ECC accelerates the data tunnel.'),
-        pki_warn: _('CRITICAL: Regenerating the PKI Suite will immediately invalidate all existing client connections. You MUST re-export and distribute new client configs (.ovpn) after saving!'),
+        disk_err: _('Partition write error: '),
+        error_format_corruption: _('The saved key data contains structural format corruption!'),
+        error_no_data_to_save: _('No generated data available to save.'),
+        error_polling_threshold: _('ERROR: Safety polling threshold exceeded boundaries. Process deadlocked.'),
+        file_saved: _('File successfully written: '),
+        key_strength: _('Key Strength'),
+        key_type_mismatch: _('Key type mismatch'),
+        key_verification_failed: _('Key verification failed'),
+        keyfile_not_exist: _('Key file is empty or does not exist on disk yet.'),
+        keygen_in_progress: _('Key generation in progress...'),
+        keygen_wait: _('Please wait while secure cryptographic, router-unique default assets are being generated.'),
+        not_applicable: _('Not applicable'),
+        opt_dh: _('Diffie-Hellman Parameters (Perfect Forward Secrecy)'),
+        opt_full_pki: _('Full PKI Suite (CA + Server Certificate + Private Server Key)'),
+        opt_tls: _('TLS Crypt Secret (Anti-DoS / Port-Scan Protection)'),
+        pki_saved: _('PKI Suite components successfully saved to disk!'),
         pki_step1: _('Step 1/3: Generating Certificate Authority (CA)...'),
         pki_step2: _('Step 2/3: Generating Private Server Key...'),
         pki_step3: _('Step 3/3: Generating & Signing Server Certificate...'),
         pki_success: _('SUCCESS: Full PKI Suite generated successfully in RAM!'),
-        pki_saved: _('PKI Suite components successfully saved to disk!'),
-        error_no_data_to_save: _('No generated data available to save.'),
-        error_polling_threshold: _('ERROR: Safety polling threshold exceeded boundaries. Process deadlocked.'),
-        error_format_corruption: _('The saved key data contains structural format corruption!'),
-        placeholder_pki: '-subj "/CN=CA" ; ; -subj "/CN=Server"',
-        placeholder_dh: '-text',
-        placeholder_tls: 'N/A - openvpn --genkey accepts no extra flags',
-        log_separator_line: '\n\n--------------------------------------------------\n\n',
-        log_id_workflow_sucessful: 'LOG: WORKFLOW_SUCCESSFUL',
+        pki_warn: _('CRITICAL: Regenerating the PKI Suite will immediately invalidate all existing client connections. You MUST re-export and distribute new client configs (.ovpn) after saving!'),
+        private_key: _('Private Key'),
+        pure_ecc: _('Pure ECC'),
+        pure_rsa: _('Pure RSA'),
+        progress: _('Progress & Output'),
+        ready: _('Ready for key generation.'),
+        running: _('Crypto operation running. Please wait...'),
+        strength_descr: _('Recommended: RSA-2048 + ECC-Prime256v1. RSA ensures CA compatibility, while ECC accelerates the data tunnel.'),
+        title_main: _('OpenVPN Instance Key Generator'),
+        unknown_asset: _('Unknown Asset'),
+        validity_days: _('Validity (Days)'),
+        wrong_key_type: _('Wrong key type! Please upload the correct cryptographic file.'),
+        warning_key_not_saved: _('Generated keys are not saved! Close window and discard keys?'),
+        warning_key_upload_title: _('Cryptographic Key Warning'),
+        warning_key_upload_nomatch: _('Warning: The uploaded file structure does not match the expected key type.'),
+        warning_key_upload_proceesing: _('Proceeding with invalid cryptographic keys will cause total connection failure and may lead to service instability or infinite daemon crash loops.'),
+        warning_key_upload_save_anyway: _('Do you want to proceed and save this file anyway?'),
+        // System logging keys without user localization
         log_id_error: 'ERROR:',
-        timeout: 600000     // 10-minute maximum waiting window to ensure full universal platform stability during heavy 4096-bit crypto operations
+        log_id_workflow_sucessful: 'LOG: WORKFLOW_SUCCESSFUL',
+        log_separator_line: '\n\n--------------------------------------------------\n\n',
+        placeholder_dh: '-text',
+        placeholder_pki: '-subj "/CN=CA" ; ; -subj "/CN=Server"',
+        placeholder_tls: 'N/A - openvpn --genkey accepts no extra flags'
     },
     ICON: {
-        success: '✅ ',
-        error: '❌ ',
-        loading: '⏳ ',
-        warning: '⚠️ ',
-        laptop: '💻 ',
-        info: 'ℹ️ ',
-        save: '💾 ',
-        check: '✓ ',
-        hint: '💡 ',
         arrow: '➔ ',
-        next: '➡️ '
+        check: '✓ ',
+        error: '❌ ',
+        hint: '💡 ',
+        info: 'ℹ️ ',
+        laptop: '💻 ',
+        loading: '⏳ ',
+        next: '➡️ ',
+        save: '💾 ',
+        success: '✅ ',
+        warning: '⚠️ '
     },
     CFG: {
-        modern_vpn_server: '# Modern OpenVPN Server Configuration Instance',
+        ip_loopback: '127.0.0.1',
         modern_vpn_client: '# Modern OpenVPN Client Configuration Instance',
-        config_instance: 'Configuration Instance',
-        openvpn_pending_reactivation: 'TXT.CFG.openvpn_pending_reactivation',
+        modern_vpn_server: '# Modern OpenVPN Server Configuration Instance',
         pconf: '.conf',
-        vpn_port_str: '1194',
         vpn_port_int: 1194,
-        ip_loopback: '127.0.0.1'
     },
     DIR: {
-        openvpn: '/etc/openvpn/',
+        init_d_openvpn: '/etc/init.d/openvpn',
         keys: '/etc/openvpn/keys/',
-        init_d_openvpn: '/etc/init.d/openvpn',       
+        openvpn: '/etc/openvpn/'
     },
     FILE: {
         client_def_conf: 'client.default.conf',
-        server_def_conf: 'server.default.conf',
-        instance1_conf: 'instance1.conf',
-        instance2_conf: 'instance2.conf',
-        var_run_openvpn: '/var/run/openvpn.',
-        temp_openvpn_keygen: '/tmp/openvpn.keygen.',
+        loading_img: '/luci-static/resources/icons/loading.svg',
+        openvpn_keygen_lock: '/var/run/openvpn.keygen.lock',
+        openvpn_keygen_log: '/tmp/openvpn.keygen.log',
         proc_net_dev: '/proc/net/dev',
         proc_uptime: '/proc/uptime',
-        vpn_enabled_img: '/luci-static/resources/icons/tunnel.svg',
+        server_def_conf: 'server.default.conf',
+        temp_openvpn_keygen: '/tmp/openvpn.keygen.',
         vpn_disabled_img: '/luci-static/resources/icons/tunnel_disabled.svg',
-        loading_img: '/luci-static/resources/icons/loading.svg',
-        openvpn_keygen_log: '/tmp/openvpn.keygen.log',
-        openvpn_keygen_lock: '/var/run/openvpn.keygen.lock'
+        vpn_enabled_img: '/luci-static/resources/icons/tunnel.svg'
     },
     KEY: {
         bit_2048: '2048 Bit',
         bit_4096: '4096 Bit',
+        ca_def_crt: 'ca_default.crt',
+        diffie_hellman: 'Diffie-Hellman',
+        dh_def_pem: 'dh_default.pem',
+        ecc_prime256v1: 'ECC Prime256v1',
+        empty_info: '--- EMPTY OR BLANK KEY FILE ---',
         rsa2048_ecc: 'RSA-2048 + ECC-Prime256v1',
         rsa4096_ecc: 'RSA-4096 + ECC-Prime256v1',
         rsa_2048_bit: 'RSA 2048 Bit',
         rsa_4096_bit: 'RSA 4096 Bit',
-        ecc_prime256v1: 'ECC Prime256v1',
-        diffie_hellman: 'Diffie-Hellman',
-        tls_2048: 'TLS Symmetric Static Secret (2048 Bit)',
-        ca_def_crt: 'ca_default.crt',
         server_def_crt: 'server_default.crt',
         server_def_key: 'server_default.key',
-        dh_def_pem: 'dh_default.pem',
-        tls_def_key: 'tls-crypt_default.key',
-        tls_crypt_: 'tls-crypt_',
-        empty_info: '--- EMPTY OR BLANK KEY FILE ---',
+        tls_2048: 'TLS Symmetric Static Secret (2048 Bit)',
+        tls_def_key: 'tls-crypt_default.key'
     },
     CMD: {
+        firewall: 'firewall',
+        keygen: 'keygen',
         logread: 'logread',
         mkdir: 'mkdir',
-        keygen: 'keygen',
-        openvpn: 'openvpn',
-        firewall: 'firewall',
+        openvpn: 'openvpn'
     },
     ID: {
-        OpenVPN_CLIENT_LIST: 'OpenVPN CLIENT LIST',
-        Common_Name: 'Common Name',
-        ROUTING_TABLE: 'ROUTING TABLE',
-        GLOBAL_STATS: 'GLOBAL STATS',
-        ACL_BLOCKED: 'ACL_BLOCKED',
-        openvpn_log_stamp: 'openvpn_log_stamp',
-        openvpn_keygen_overlay: 'openvpn_keygen_overlay',
-        main_control_box: 'main_control_box',
-        keygen_bits_pki: 'keygen_bits_pki',
-        keygen_bits_dh: 'keygen_bits_dh',
-        keygen_bits_desc: 'keygen_bits_desc',
+        displayname: 'displayname',
         central_keygen_mode: 'central_keygen_mode',
-        row_keygen_years: 'row_keygen_years',
+        keygen_bits_desc: 'keygen_bits_desc',
+        keygen_bits_dh: 'keygen_bits_dh',
+        keygen_bits_pki: 'keygen_bits_pki',
         keygen_years: 'keygen_years',
+        main_control_box: 'main_control_box',
+        openvpn_pending_reactivation: 'openvpn_pending_reactivation',
+        openvpn_keygen_overlay: 'openvpn_keygen_overlay',
+        openvpn_log_stamp: 'openvpn_log_stamp',
+        row_keygen_years: 'row_keygen_years'
     },
 };
 
@@ -272,6 +254,29 @@ const TXT = {
 /*
  * --- HELPER & INIT ---
  */
+
+
+/**
+ * Checks if an OpenVPN instance is enabled.
+ */
+const isInstanceEnabled = function (instance_id) {
+    // instance_id = instance1, instance2, ...
+    return L.uci.get(TXT.CMD.openvpn, instance_id, 'enabled') === '1';
+};
+
+/**
+ * Checks if at least one OpenVPN instance is enabled in the configuration array.
+ */
+const isAnyInstanceEnabled = function (sections) {
+    const targetSections = Array.isArray(sections) ? sections : [];
+
+    for (let i = 0; i < targetSections.length; i++) {
+        if (targetSections[i] && targetSections[i]['.name'] && isInstanceEnabled(targetSections[i]['.name'])) {
+            return true;
+        }
+    }
+    return false;
+};
 
 /**
  * Gets the active status of the OpenVPN service from ubus (replaces 'sh -c ubus' shell calls).
@@ -284,7 +289,7 @@ var callServiceList = L.rpc.declare({
 });
 
 /**
- * Hybrid log reader using high-performance RPC with automated fallback to logread utility.
+ * Reads system logs of the OpenVPN service from ubus with a fallback to the logread command (replaces 'logread -e openvpn' shell calls).
  */
 const callLogRead = function (options) {
     const pattern = (options && options.pattern) ? options.pattern : TXT.CMD.openvpn;
@@ -301,7 +306,7 @@ const callLogRead = function (options) {
             if (Array.isArray(res) && res.length > 0) {
                 return res.map(function (entry) { return entry.msg || ''; }).join('\n');
             }
-            /* Fallback to logread binary if RPC log table returns empty or ACL is restricted */
+            // Fallback to logread binary if ubus returns empty or permissions are restricted
             return L.resolveDefault(L.fs.exec(TXT.CMD.logread, ['-e', pattern]), '')
                 .then(function (execRes) {
                     return execRes.stdout || execRes || '';
@@ -340,6 +345,32 @@ const loadSystemTelemetry = function (viewData) {
     });
 };
 
+/**
+ * Refreshes volatile runtime data from procfs.
+ */
+const refreshSystemTelemetry = function (viewData) {
+    return Promise.all([
+        L.resolveDefault(L.fs.read(TXT.FILE.proc_net_dev), ''),
+        L.resolveDefault(L.fs.read(TXT.FILE.proc_uptime), '0')
+    ]).then(function (results) {
+        const [rawDevData, rawUptime] = results;
+
+        viewData.devData = rawDevData || '';
+
+        const parts = String(rawUptime).trim().split(/\s+/);
+        viewData.uptime = (parts && parts[0]) ? parseFloat(parts[0]) : 0;
+    });
+};
+
+/**
+ * Checks the default key generation lock state: '/etc/init.d/openvpn -> generate_default_keys()'
+ */
+const checkDefaultKeysState = function (viewData) {
+    return L.resolveDefault(L.fs.stat(TXT.FILE.openvpn_keygen_lock), null).then(function (lockStat) {
+        // If the lock file is gone, keys are guaranteed to be fully written and ready
+        viewData.keysReady = !lockStat;
+    });
+};
 
 /**
  * Generates the configuration file content for an OpenVPN server instance.
@@ -443,37 +474,6 @@ const initFile = function (customPath, defaultPath, id, instNum, role, viewData)
         });
 };
 
-
-/**
- * Parses client IP addresses from the OpenVPN status log file.
- */
-const parseConnectedClients = function (statusContent) {
-    const connectedClients = [];
-    if (!statusContent) return connectedClients;
-
-    const lines = statusContent.split('\n');
-    let insideClientList = false;
-
-    for (let c = 0; c < lines.length; c++) {
-        const line = lines[c].trim();
-
-        if (line.indexOf(TXT.ID.OpenVPN_CLIENT_LIST) !== -1 || line.indexOf(TXT.ID.Common_Name) !== -1) {
-            insideClientList = true;
-            continue;
-        }
-        if (line.indexOf(TXT.ID.ROUTING_TABLE) !== -1 || line.indexOf(TXT.ID.GLOBAL_STATS) !== -1) {
-            break;
-        }
-        if (insideClientList && line.length > 0) {
-            const ipMatch = line.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)/);
-            if (ipMatch && ipMatch[1]) {
-                connectedClients.push(ipMatch[1].trim());
-            }
-        }
-    }
-    return connectedClients;
-};
-
 /**
  * Synchronizes all required configuration and cryptographic files for an instance.
  */
@@ -499,9 +499,17 @@ const syncInstanceFiles = function (id, instNum, role, viewData) {
  * Loads configuration and runtime status data for all instances.
  */
 const loadInstanceData = function (sections, viewData) {
-    return L.resolveDefault(callServiceList(TXT.CMD.openvpn), {}).then(function (serviceData) {
+    // Fetch the service list and the volatile system telemetry concurrently
+    return Promise.all([
+        L.resolveDefault(callServiceList(TXT.CMD.openvpn), {}),
+        refreshSystemTelemetry(viewData)
+    ]).then(function (results) {
+        const serviceData = results[0];
         const instancesObj = serviceData.instances || {};
-        const instPromises = [];
+        const syncPromises = [];
+
+        // Extract the freshly filled system uptime straight from your updated viewData cache
+        const systemUptime = parseFloat(viewData.uptime) || 0;
 
         sections.forEach(function (s) {
             const id = s['.name'];
@@ -509,53 +517,31 @@ const loadInstanceData = function (sections, viewData) {
             const instNum = numMatch ? parseInt(numMatch, 10) : 1;
             const role = L.uci.get(TXT.CMD.openvpn, id, 'role') || 'server';
 
-            const instDataPromise = syncInstanceFiles(id, instNum, role, viewData).then(function () {
-                return L.resolveDefault(L.fs.read(TXT.DIR.openvpn + id + TXT.CFG.pconf), '');
-            }).then(function (confContent) {
-                const runtimeInstance = instancesObj[id] || {};
-                const isRunning = (runtimeInstance.running === true);
-                const pidVal = isRunning ? (runtimeInstance.pid || '-') : '-';
-
-                const baseResult = {
-                    id: id, instNum: instNum, role: role,
-                    confContent: String(confContent).trim(),
-                    isRunning: isRunning, pid: pidVal,
-                    startTime: 0, connectedClients: []
-                };
-
-                if (!isRunning || pidVal === '-') {
-                    return baseResult;
-                }
-
-                return L.resolveDefault(L.fs.stat('/proc/' + pidVal), null).then(function (statObj) {
-                    if (statObj && statObj.mtime) {
-                        if (typeof statObj.mtime === 'object' && statObj.mtime.sec) {
-                            baseResult.startTime = parseInt(statObj.mtime.sec, 10) || 0;
-                        } else if (typeof statObj.mtime === 'number') {
-                            baseResult.startTime = Math.floor(statObj.mtime);
-                        } else if (typeof statObj.mtime === 'string') {
-                            baseResult.startTime = parseInt(statObj.mtime, 10) || 0;
-                        }
-                    }
-
-                    if (role !== 'server') {
-                        return baseResult;
-                    }
-
-                    const statusFilePath = TXT.FILE.var_run_openvpn + id + '.status';
-                    return L.resolveDefault(L.fs.read(statusFilePath), '').then(function (statusContent) {
-                        baseResult.connectedClients = parseConnectedClients(statusContent);
-                        return baseResult;
-                    });
-                });
-            });
-
-            instPromises.push(instDataPromise);
+            syncPromises.push(syncInstanceFiles(id, instNum, role, viewData));
         });
 
-        return Promise.all(instPromises);
+        return Promise.all(syncPromises).then(function () {
+            if (viewData.statusClass && typeof viewData.statusClass.readInstanceStatus === 'function') {
+                return viewData.statusClass.readInstanceStatus(sections, instancesObj, systemUptime);
+            }
+
+            // fallback if statusClass is missing
+            const fallbackInstances = [];
+            sections.forEach(function (s) {
+                const id = s['.name'];
+                const numMatch = id.match(/\d+$/);
+                fallbackInstances.push({
+                    id: id,
+                    instNum: numMatch ? parseInt(numMatch, 10) : 1,
+                    role: L.uci.get(TXT.CMD.openvpn, id, 'role') || 'server',
+                    confContent: '', isRunning: false, pid: '-', startTime: 0, connectedClients: []
+                });
+            });
+            return Promise.resolve(fallbackInstances);
+        });
     });
 };
+
 
 
 const initEmptyUciView = function () {
@@ -567,11 +553,11 @@ const initEmptyUciView = function () {
  */
 const processPendingSessionTask = function (sections) {
     // Read the pending reactivation request from the browser memory
-    const reloadId = window.sessionStorage.getItem(TXT.CFG.openvpn_pending_reactivation);
+    const reloadId = window.sessionStorage.getItem(TXT.ID.openvpn_pending_reactivation);
 
     if (reloadId) {
         // Remove the token immediately to prevent endless refresh loops
-        window.sessionStorage.removeItem(TXT.CFG.openvpn_pending_reactivation);
+        window.sessionStorage.removeItem(TXT.ID.openvpn_pending_reactivation);
 
         // Re-enable the OpenVPN instance inside UCI staging memory
         if (L.uci.get(TXT.CMD.openvpn, reloadId)) {
@@ -613,7 +599,8 @@ const showSaveApplyOpenVPN = function (instance_id) {
 
         // Cache reactivation request for the post-reload page hook
         try {
-            window.sessionStorage.setItem(TXT.CFG.openvpn_pending_reactivation, instance_id);       // -> processPendingSessionTask() on reload
+            // Schedule instance reactivation task for the next session -> processPendingSessionTask() on reload 
+            window.sessionStorage.setItem(TXT.ID.openvpn_pending_reactivation, instance_id);
         } catch (err) {
             console.error(TXT.MSG.session_storage_write_blocked, err);
         }
@@ -635,7 +622,7 @@ const showSaveApplyOpenVPN = function (instance_id) {
                         const infoNotice = E('div', {
                             'class': 'alert-message info',
                             'style': 'margin:15px 0 15px 0; padding:12px; font-weight:bold; font-size:12px; line-height:1.5; border-left:4px solid #00a8ff; background:var(--background-color, #f0fdf4); color:var(--text-color, #334155); border-radius:4px;'
-                        }, TXT.ICON.warning + ' ' + _('Key data modified! Applying will temporarily stop the instance to load new credentials. After page reload, please click Apply once more to complete reactivation.'));
+                        }, TXT.ICON.warning + TXT.MSG.config_changed_reload);
 
                         const titleHeader = modalNode.querySelector('h4');
                         if (titleHeader && titleHeader.nextSibling) {
@@ -677,27 +664,56 @@ const calculateTunnelTraffic = function (devDataRaw) {
 };
 
 /**
- * Updates the visual styles and button labels of the main control box.
+ * Updates the visual styles, backgrounds, and action buttons based on the operational three-way state.
  */
 const updateMainBoxVisuals = function (stateStr, badgeLabelNode, badgeImgNode, boxHeadNode, globalToggleBtn) {
-    if (stateStr === '1') {
+    const badgeTextColor = 'var(--text-color-dark, #ffffff)';
+
+    if (stateStr === 'active') {
+        // STATE 1: System is active and running cleanly (Green)
         badgeLabelNode.textContent = TXT.INFO.openvpn + ' (' + TXT.INFO.active + ')';
         badgeImgNode.src = TXT.FILE.vpn_enabled_img;
-        boxHeadNode.style.setProperty('--zone-color-rgb', '144, 240, 144');
-        boxHeadNode.style.backgroundColor = 'var(--zone-lan-bg, rgb(144, 240, 144))';
+        boxHeadNode.style.setProperty('--zone-color-rgb', '46, 204, 113');
+        boxHeadNode.style.backgroundColor = 'var(--zone-lan-bg, rgb(46, 204, 113))';
+        boxHeadNode.style.color = badgeTextColor;
 
-        // Update button to disable action
+        if (globalToggleBtn) {
+            globalToggleBtn.className = 'cbi-button cbi-button-negative important';
+            globalToggleBtn.textContent = TXT.INFO.disable + ' ' + TXT.INFO.openvpn;
+        }
+    } else if (stateStr === 'pending') {
+        // STATE 2: UCI modified via checkbox but changes are not yet applied (Orange)
+        badgeLabelNode.textContent = TXT.INFO.openvpn + ' (' + TXT.INFO.pending + ')';
+        badgeImgNode.src = TXT.FILE.vpn_disabled_img;
+        boxHeadNode.style.setProperty('--zone-color-rgb', '230, 126, 34');
+        boxHeadNode.style.backgroundColor = 'rgb(230, 126, 34)';
+        boxHeadNode.style.color = badgeTextColor;
+
+        if (globalToggleBtn) {
+            // Keep button as Disable since the system is transitioning into an active state intent
+            globalToggleBtn.className = 'cbi-button cbi-button-negative important';
+            globalToggleBtn.textContent = TXT.INFO.disable + ' ' + TXT.INFO.openvpn;
+        }
+    } else if (stateStr === 'error') {
+        // STATE 3: UCI is enabled but processes are dead/crashed (Severe Red Alert)
+        badgeLabelNode.textContent = TXT.INFO.openvpn + ' (' + TXT.INFO.error + ')';
+        badgeImgNode.src = TXT.FILE.vpn_disabled_img;
+        boxHeadNode.style.setProperty('--zone-color-rgb', '231, 76, 60');
+        boxHeadNode.style.backgroundColor = 'var(--zone-wan-bg, rgb(231, 76, 60))';
+        boxHeadNode.style.color = badgeTextColor;
+
         if (globalToggleBtn) {
             globalToggleBtn.className = 'cbi-button cbi-button-negative important';
             globalToggleBtn.textContent = TXT.INFO.disable + ' ' + TXT.INFO.openvpn;
         }
     } else {
+        // STATE 4: User intentionally disabled everything (Neutral Grey/Slate)
         badgeLabelNode.textContent = TXT.INFO.openvpn + ' (' + TXT.INFO.disabled + ')';
         badgeImgNode.src = TXT.FILE.vpn_disabled_img;
-        boxHeadNode.style.setProperty('--zone-color-rgb', '240, 144, 144');
-        boxHeadNode.style.backgroundColor = 'var(--zone-wan-bg, rgb(240, 144, 144))';
+        boxHeadNode.style.setProperty('--zone-color-rgb', '148, 163, 184');
+        boxHeadNode.style.backgroundColor = 'rgb(148, 163, 184)';
+        boxHeadNode.style.color = badgeTextColor;
 
-        // Update button to enable action
         if (globalToggleBtn) {
             globalToggleBtn.className = 'cbi-button cbi-button-positive important';
             globalToggleBtn.textContent = TXT.INFO.enable + ' ' + TXT.INFO.openvpn;
@@ -705,13 +721,13 @@ const updateMainBoxVisuals = function (stateStr, badgeLabelNode, badgeImgNode, b
     }
 };
 
+
 /**
- * Handles the main toggle button click event.
+ * Handles the main toggle button click event to cycle all instances.
  */
 const handleMainToggleClick = function (sections, ifaceBoxMasterNode, addServerBtn, addClientBtn, badgeLabelNode, badgeImgNode, boxHeadNode, applyNotice, globalToggleBtn) {
     const targetSections = sections || [];
 
-    // Abort if no configuration sections exist
     if (targetSections.length === 0) return;
 
     ifaceBoxMasterNode.style.opacity = '0.4';
@@ -719,11 +735,18 @@ const handleMainToggleClick = function (sections, ifaceBoxMasterNode, addServerB
     if (addServerBtn) addServerBtn.disabled = true;
     if (addClientBtn) addClientBtn.disabled = true;
 
-    // Get next target state from the first instance name
-    const firstSectionName = targetSections[0]['.name'];
-    const nextState = isInstanceEnabled(firstSectionName) ? '0' : '1';
+    // Helper subroutine to safely restore user interface interactions
+    const unlockUI = function () {
+        ifaceBoxMasterNode.style.opacity = '1';
+        globalToggleBtn.disabled = false;
+        if (addServerBtn) addServerBtn.disabled = false;
+        if (addClientBtn) addClientBtn.disabled = false;
+    };
 
-    // Set next state across all sections
+    // toggle global openvpn enable state: if any instance is enabled -> turn all off. If all are disabled -> turn all on.
+    const nextState = isAnyInstanceEnabled(targetSections) ? '0' : '1';
+
+    // Apply the synchronized state change across all profiles in uci memory
     for (let k = 0; k < targetSections.length; k++) {
         if (targetSections[k] && targetSections[k]['.name']) {
             L.uci.set(TXT.CMD.openvpn, targetSections[k]['.name'], 'enabled', nextState);
@@ -732,42 +755,45 @@ const handleMainToggleClick = function (sections, ifaceBoxMasterNode, addServerB
 
     L.uci.save();
     updateMainBoxVisuals(nextState, badgeLabelNode, badgeImgNode, boxHeadNode, globalToggleBtn);
+    const mainControlBox = document.getElementById(TXT.ID.main_control_box);
+    if (mainControlBox) {
+        mainControlBox.setAttribute('data-current-state', nextState);
+    }
     applyNotice.style.display = 'inline-block';
 
-    // Open native LuCI changes window
+    // Invoke native LuCI core components to render the changes overlay tracking frame
     if (L.ui && L.ui.changes && typeof L.ui.changes.init === 'function') {
         L.ui.changes.init()
             .then(L.bind(L.ui.changes.displayChanges, L.ui.changes))
-            .finally(function () {
-                ifaceBoxMasterNode.style.opacity = '1';
-                globalToggleBtn.disabled = false;
-                if (addServerBtn) addServerBtn.disabled = false;
-                if (addClientBtn) addClientBtn.disabled = false;
-            });
+            .finally(unlockUI);
     } else {
-        ifaceBoxMasterNode.style.opacity = '1';
-        globalToggleBtn.disabled = false;
-        if (addServerBtn) addServerBtn.disabled = false;
-        if (addClientBtn) addClientBtn.disabled = false;
+        unlockUI();
     }
 };
 
-/**
- * Renders the main control and setup wizard box for OpenVPN.
- */
-const renderMainControlBox = function (initialRawState, sections, addServerBtn, addClientBtn, instances, devDataRaw) {
-    const applyNotice = E('span', { 'class': 'text-danger', 'style': 'font-weight:bold; margin-left:15px; display:none;' }, TXT.ICON.warning + TXT.BTN.click_save_apply);
 
-    const totalInstances = (sections && sections.length) ? sections.length : 0;
+/**
+ * Formats a raw byte metric into a human-readable data size string.
+ */
+const formatStatusBytes = function (b) {
+    if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+    if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
+    return b + ' B';
+};
+
+/**
+ * Refreshes only the numeric live metrics inside the main control box tooltip.
+ */
+const updateMainBoxTooltip = function (initialRawState, totalInstances, updatedInstances, devDataRaw) {
     let runningInstances = 0;
     const activePids = [];
 
-    if (Array.isArray(instances)) {
-        for (let i = 0; i < instances.length; i++) {
-            if (instances[i].isRunning) {
+    if (Array.isArray(updatedInstances)) {
+        for (let i = 0; i < updatedInstances.length; i++) {
+            if (updatedInstances[i].isRunning) {
                 runningInstances++;
-                if (instances[i].pid && instances[i].pid !== '-') {
-                    activePids.push(instances[i].pid);
+                if (updatedInstances[i].pid && updatedInstances[i].pid !== '-') {
+                    activePids.push(updatedInstances[i].pid);
                 }
             }
         }
@@ -775,37 +801,63 @@ const renderMainControlBox = function (initialRawState, sections, addServerBtn, 
 
     const traffic = calculateTunnelTraffic(devDataRaw);
 
-    // Format byte metrics for tooltip readability
-    const formatTooltipBytes = function (b) {
-        if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
-        if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
-        return b + ' B';
-    };
+    // Safely update individual text rows by their dedicated DOM descriptor IDs
+    const elEnabled = document.getElementById('mcb_val_enabled');
+    const elConnected = document.getElementById('mcb_val_connected');
+    const elPids = document.getElementById('mcb_val_pids');
+    const elRx = document.getElementById('mcb_val_rx');
+    const elTx = document.getElementById('mcb_val_tx');
+
+    // FIXED: Dynamic session-state evaluation matching your new operational states
+    if (elEnabled) elEnabled.textContent = (initialRawState !== 'disabled') ? TXT.INFO.yes : TXT.INFO.no;
+    if (elConnected) elConnected.textContent = runningInstances + '/' + totalInstances;
+    if (elPids) elPids.textContent = (activePids.length > 0) ? activePids.join(', ') : '-';
+
+    // FIXED: Reusing your centralized formatStatusBytes sub-routine for crisp code reuse
+    if (elRx) elRx.textContent = formatStatusBytes(traffic.rx);
+    if (elTx) elTx.textContent = formatStatusBytes(traffic.tx);
+};
+
+/**
+ * Renders the main control and setup wizard box for OpenVPN.
+ */
+const renderMainControlBox = function (initialRawState, sections, addServerBtn, addClientBtn, instances, devDataRaw) {
+    const applyNotice = E('span', { 'class': 'text-danger', 'style': 'font-weight:bold; margin-left:15px; display:none;' }, TXT.ICON.warning + TXT.BTN.click_save_apply);
+    const totalInstances = (sections && sections.length) ? sections.length : 0;
 
     const globalToggleBtn = E('button', {
         'style': 'text-shadow:none !important; box-shadow:none !important; white-space:nowrap; margin-left:auto;'
     }, '');
 
-    const labelText = initialRawState === '1' ? TXT.INFO.openvpn + ' (' + TXT.INFO.active + ')' : TXT.INFO.openvpn + ' (' + TXT.INFO.disabled + ')';
+    // Set dynamic badge label based on the calculated three-way status
+    let labelText = TXT.INFO.openvpn + ' (' + TXT.INFO.disabled + ')';
+    if (initialRawState === 'active') {
+        labelText = TXT.INFO.openvpn + ' (' + TXT.INFO.active + ')';
+    } else if (initialRawState === 'error') {
+        labelText = TXT.INFO.openvpn + ' (' + TXT.INFO.error + ')';
+    } else if (initialRawState === 'pending') {
+        labelText = TXT.INFO.openvpn + ' (' + TXT.INFO.starting + ')';
+    }
+
     const badgeLabelNode = E('strong', {}, labelText);
     const badgeImgNode = E('img', { 'class': 'middle', 'style': 'width:48px; height:48px; vertical-align:middle;' });
 
     const boxHeadNode = E('div', {
         'class': 'ifacebox-head',
-        'style': 'padding:3px 8px; font-size:12px; color:var(--text-color, #334155); text-shadow:none !important;'
+        'style': 'padding:3px 8px; font-size:12px; text-shadow:none !important;'
     }, [badgeLabelNode]);
 
-    // Build the status summary tooltip overlay
+    // Build the status summary tooltip overlay frame with completely empty placeholder text targets
     const tooltipBadgeNode = E('span', { 'class': 'cbi-tooltip ifacebadge large', 'style': 'text-align:left; font-weight:normal;' }, [
         E('img', { 'src': TXT.FILE.vpn_enabled_img, 'style': 'float:left; margin-right:10px; width:24px; height:24px;' }),
         E('span', { 'class': 'left', 'style': 'display:block; overflow:hidden;' }, [
             E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.type), 'OpenVPN Engine']), E('br'),
-            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.enabled), initialRawState === '1' ? _('Yes') : _('No')]), E('br'),
+            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.enabled), E('span', { 'id': 'mcb_val_enabled' }, '')]), E('br'),
             E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.instances), String(totalInstances)]), E('br'),
-            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.connected), runningInstances + '/' + totalInstances]), E('br'),
-            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.active_pids), activePids.length > 0 ? activePids.join(', ') : '-']), E('br'),
-            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.aggregated_rx), formatTooltipBytes(traffic.rx)]), E('br'),
-            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.aggregated_tx), formatTooltipBytes(traffic.tx)])
+            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.connected), E('span', { 'id': 'mcb_val_connected' }, '')]), E('br'),
+            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.active_pids), E('span', { 'id': 'mcb_val_pids' }, '')]), E('br'),
+            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.aggregated_rx), E('span', { 'id': 'mcb_val_rx' }, '')]), E('br'),
+            E('span', { 'class': 'nowrap' }, [E('strong', {}, TXT.TH.aggregated_tx), E('span', { 'id': 'mcb_val_tx' }, '')])
         ])
     ]);
 
@@ -826,18 +878,21 @@ const renderMainControlBox = function (initialRawState, sections, addServerBtn, 
         'style': 'display:inline-block; width:160px; vertical-align:middle; margin:0; transition:opacity 0.15s ease-in-out; background:var(--background-color, #fafafa); border:1px solid var(--border-color, #cbd5e1); border-radius:4px; overflow:hidden;'
     }, [boxHeadNode, boxBodyNode]);
 
+    // Apply corporate styles, action labels, and colors directly
     updateMainBoxVisuals(initialRawState, badgeLabelNode, badgeImgNode, boxHeadNode, globalToggleBtn);
 
-    // Bind master click action to the toggle button
     globalToggleBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
         handleMainToggleClick(sections, ifaceBoxMasterNode, addServerBtn, addClientBtn, badgeLabelNode, badgeImgNode, boxHeadNode, applyNotice, globalToggleBtn);
     });
 
+    window.requestAnimationFrame(function () {
+        updateMainBoxTooltip(initialRawState, totalInstances, instances, devDataRaw);
+    });
+
     return E('div', { 'style': 'margin-bottom:25px; width:100%;' }, [
         E('h2', { 'style': 'color:var(--text-color, #334155); font-weight:bold; margin:0 0 10px 0; padding:0;' }, TXT.STATUS.title_main),
         E('p', { 'style': 'font-style:normal; margin-bottom:20px; color:var(--text-color-light, #64748b);' }, TXT.MSG.manage_instance),
-
         E('fieldset', { 'class': 'class_fieldset', 'style': 'margin-bottom:5px; padding:0; border:0; background:transparent;' }, [
             E('div', { 'style': 'display:flex; align-items:flex-start; justify-content:space-between; padding:3px 0; margin:0; min-height:0; width:100%;' }, [
                 E('div', { 'style': 'display:inline-flex; align-items:center;' }, [
@@ -849,222 +904,26 @@ const renderMainControlBox = function (initialRawState, sections, addServerBtn, 
     ]);
 };
 
-
-/*
- * --- STATUS VIEW ---
- */
-
-
 /**
- * Extracts and maps networking parameters (IP/Port) from configuration data strings.
+ * Refreshes the main control box and tooltip
  */
-const parseNetworkParams = function (role, confContent, isRunning) {
-    const params = { localIp: '0.0.0.0', localPort: TXT.CFG.vpn_port_str, clientRemote: '-' };
+const refreshMainBoxVisuals = function (sections, calculatedState, updatedInstances, devDataRaw) {
+    const totalInstances = sections.length;
 
-    if (!confContent) return params;
+    // 2. Push fresh metrics straight into the open tooltip elements
+    updateMainBoxTooltip(calculatedState, totalInstances, updatedInstances, devDataRaw);
 
-    const lines = confContent.split(/[\r\n]+/);
-    for (let j = 0; j < lines.length; j++) {
-        const line = lines[j].trim();
+    // 3. Update the main control box state frame color only if state shifted
+    const mainControlBox = document.getElementById(TXT.ID.main_control_box);
+    if (mainControlBox && mainControlBox.firstChild) {
+        const currentDomState = mainControlBox.getAttribute('data-current-state');
 
-        if (role === 'client' && line.indexOf('remote ') === 0) {
-            const rParts = line.split(/\s+/);
-            const remoteIp = (rParts.length >= 2) ? rParts[1] : TXT.CFG.ip_loopback;
-            const remotePort = (rParts.length >= 3) ? rParts[2] : TXT.CFG.vpn_port_str;
-
-            params.localIp = TXT.CFG.ip_loopback;
-            params.localPort = isRunning ? 'dynamic' : '-';
-            params.clientRemote = remoteIp + ':' + remotePort;
-        } else if (role === 'server') {
-            if (line.indexOf('port ') === 0) {
-                const pParts = line.split(/\s+/);
-                if (pParts.length >= 2) params.localPort = pParts[1];
-            }
-            if (line.indexOf('server ') === 0) {
-                const sParts = line.split(/\s+/);
-                if (sParts.length >= 2) params.localIp = sParts[1].replace(/\.0$/, '.1');
-            }
-        }
-    }
-    return params;
-};
-
-/**
- * Extracts exact Tx/Rx packet and byte telemetry from Linux kernel stats.
- */
-const parseKernelInterfaceData = function (tunDevice, devDataRaw) {
-    const stats = { rxBytes: 0, rxPkts: 0, txBytes: 0, txPkts: 0, hasData: false };
-
-    if (!devDataRaw || devDataRaw.length === 0) return stats;
-
-    const devLines = devDataRaw.split('\n');
-    for (let d = 0; d < devLines.length; d++) {
-        if (devLines[d].indexOf(tunDevice + ':') !== -1) {
-            const parts = devLines[d].replace(/.*:/, '').trim().split(/\s+/);
-            if (parts.length >= 16) {
-                stats.rxBytes = parseInt(parts[0], 10) || 0;
-                stats.rxPkts = parseInt(parts[1], 10) || 0;
-                stats.txBytes = parseInt(parts[8], 10) || 0;
-                stats.txPkts = parseInt(parts[9], 10) || 0;
-                stats.hasData = true;
-            }
-            break;
-        }
-    }
-    return stats;
-};
-
-/**
- * Generates responsive theme-compliant UI node elements for remote connections.
- */
-const renderRemoteNode = function (role, isRunning, netParams, connectedClients) {
-    if (role === 'client') {
-        return E('span', {
-            'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);'
-        }, netParams.clientRemote);
-    }
-
-    if (isRunning) {
-        const activeClients = connectedClients || [];
-        if (activeClients.length > 0) {
-            const badges = [];
-            for (let c = 0; c < activeClients.length; c++) {
-                badges.push(E('div', {
-                    'style': 'display:block; font-family:var(--font-monospace, monospace); font-size:11px; background:var(--background-color, #f1f2f6); padding:2px 6px; border-radius:3px; margin-bottom:2px; border:1px solid var(--border-color, #ced6e0); color:var(--text-color, #334155);'
-                }, activeClients[c]));
-            }
-            return E('div', {}, badges);
-        }
-        return E('span', { 'style': 'font-style:italic; color:var(--text-color-light, #a4b0be);' }, TXT.STATUS.no_clients_connected);
-    }
-
-    return E('span', {}, '-');
-};
-
-/**
- * Asynchronously refreshes the rows of the status table and updates master section tooltips.
- */
-const updateLiveStatusTable = function (sections, viewData, tableContainerElement) {
-    return loadSystemTelemetry(viewData).then(function () {
-        return loadInstanceData(sections, viewData);
-    }).then(function (updatedInstances) {
-        const devDataRaw = String(viewData.devData || '').trim();
-        const systemUptime = parseFloat(viewData.uptime) || 0;
-
-        const freshTableNode = renderStatusTable(updatedInstances, devDataRaw, systemUptime);
-        if (tableContainerElement && tableContainerElement.firstChild) {
-            tableContainerElement.replaceChild(freshTableNode, tableContainerElement.firstChild);
-        }
-
-        const mainControlBox = document.getElementById(TXT.ID.main_control_box);
-        if (mainControlBox && mainControlBox.firstChild) {
-            // FIXED: Symmetrically applying your new isInstanceEnabled sub-function with a clean binary state fallback
-            const initialRawState = (updatedInstances.length > 0 && isInstanceEnabled(updatedInstances[0].id)) ? '1' : '0';
-
-            const mainControlBoxNode = renderMainControlBox(initialRawState, sections, null, null, updatedInstances, devDataRaw);
+        if (currentDomState !== calculatedState) {
+            const mainControlBoxNode = renderMainControlBox(calculatedState, sections, null, null, updatedInstances, devDataRaw);
             mainControlBox.replaceChild(mainControlBoxNode, mainControlBox.firstChild);
+            mainControlBox.setAttribute('data-current-state', calculatedState);
         }
-    }).catch(function (err) {
-        console.error('LuCI Polling Error:', err);
-    });
-};
-
-/**
- * Renders the multi-instance real-time status and telemetry table.
- */
-const renderStatusTable = function (instances, devDataRaw, systemUptime) {
-    const tableRows = [];
-
-    const formatBytes = function (b) {
-        if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
-        if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
-        return b + ' B';
-    };
-
-    const formatUptime = function (procStartSeconds) {
-        const startSec = parseInt(procStartSeconds, 10);
-        if (isNaN(startSec) || startSec <= 0) return '-';
-
-        const currentUnixTime = Math.floor(Date.now() / 1000);
-        const diff = currentUnixTime - startSec;
-        if (isNaN(diff) || diff < 0) return '00:00:00';
-
-        const days = Math.floor(diff / 86400);
-        const hours = Math.floor((diff % 86400) / 3600);
-        const minutes = Math.floor((diff % 3600) / 60);
-        const seconds = diff % 60;
-
-        const pad = function (n) { return n < 10 ? '0' + n : n; };
-
-        if (days > 0) {
-            return days + 'd ' + pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-        }
-        return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
-    };
-
-    for (let i = 0; i < instances.length; i++) {
-        const inst = instances[i];
-        const role = inst.role || 'server';
-        const tunDevice = 'tun' + (inst.instNum - 1);
-
-        /* Execution of localized sub-parsers */
-        const netParams = parseNetworkParams(role, inst.confContent, inst.isRunning);
-        const kernelStats = parseKernelInterfaceData(tunDevice, devDataRaw);
-        const remoteIpNode = renderRemoteNode(role, inst.isRunning, netParams, inst.connectedClients);
-
-        const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-        const displayId = inst.id.charAt(0).toUpperCase() + inst.id.slice(1);
-
-        const typeBadge = E('span', {
-            'class': 'ifacebadge',
-            'style': 'font-weight:normal !important; padding:2px 6px; border-radius:3px; background:var(--background-color, transparent) !important; border:1px solid var(--border-color, #cbd5e1); color:var(--text-color, #334155);'
-        }, roleLabel);
-
-        let statusBadge;
-        if (inst.isRunning) {
-            statusBadge = E('span', {
-                'class': 'ifacebadge',
-                'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color:var(--action-bg, #00a8ff) !important; border:1px solid var(--action-border, #0097e6); text-shadow:none !important; box-shadow:none !important;'
-            }, TXT.INFO.running + ' (PID: ' + inst.pid + ')');
-        } else {
-            statusBadge = E('span', {
-                'class': 'ifacebadge',
-                'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--neutral-bg, #f1f2f6) !important; color:var(--text-color-light, #64748b) !important; border:1px solid var(--border-color, #cbd5e1); text-shadow:none !important; box-shadow:none !important;'
-            }, TXT.INFO.stopped);
-        }
-
-        const rowStyleClass = (i % 2 === 0) ? 'tr cbi-section-table-row cbi-rowstyle-1' : 'tr cbi-section-table-row cbi-rowstyle-2';
-
-        tableRows.push(E('tr', { 'class': rowStyleClass }, [
-            E('td', { 'class': 'td' }, '#' + inst.instNum),
-            E('td', { 'class': 'td', 'style': 'font-weight:bold; color:var(--text-color, #334155);' }, displayId),
-            E('td', { 'class': 'td' }, typeBadge),
-            E('td', { 'class': 'td' }, statusBadge),
-            E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, netParams.localIp + ':' + netParams.localPort),
-            E('td', { 'class': 'td' }, remoteIpNode),
-            E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, inst.isRunning ? (kernelStats.hasData ? kernelStats.txPkts + ' / ' + formatBytes(kernelStats.txBytes) : '0 / 0 B') : '-'),
-            E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, inst.isRunning ? (kernelStats.hasData ? kernelStats.rxPkts + ' / ' + formatBytes(kernelStats.rxBytes) : '0 / 0 B') : '-'),
-            E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, inst.isRunning ? formatUptime(inst.startTime) : '-')
-        ]));
     }
-
-    return E('table', { 'class': 'table cbi-section-table' }, [
-        E('tr', { 'class': 'tr cbi-section-table-titles' }, [
-            E('th', { 'class': 'th' }, TXT.TH.vpn),
-            E('th', { 'class': 'th' }, TXT.TH.instance),
-            E('th', { 'class': 'th' }, TXT.TH.type),
-            E('th', { 'class': 'th' }, TXT.TH.status),
-            E('th', { 'class': 'th' }, TXT.TH.local_ip_port),
-            E('th', { 'class': 'th' }, TXT.TH.remote_ip_port),
-            E('th', { 'class': 'th' }, TXT.TH.tx),
-            E('th', { 'class': 'th' }, TXT.TH.rx),
-            E('th', { 'class': 'th' }, TXT.TH.uptime)
-        ])
-    ].concat(tableRows.length > 0 ? tableRows : [
-        E('tr', { 'class': 'tr' }, [
-            E('td', { 'class': 'td', 'colspan': '9', 'style': 'text-align:center; font-style:italic; color:var(--text-color-light, #64748b);' }, TXT.TH.no_inst)
-        ])
-    ]));
 };
 
 
@@ -1259,7 +1118,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
     let options_html = '<div class="cbi-value">' +
         '<label class="cbi-value-title">' + TXT.MSG.want_to_generate + '</label>' +
         '<div class="cbi-value-field">' +
-        '<select id="' + TXT.ID.central_keygen_mode +'" class="cbi-input-select">' +
+        '<select id="' + TXT.ID.central_keygen_mode + '" class="cbi-input-select">' +
         '<option value="pki" selected="selected">' + TXT.KEYGEN.opt_full_pki + '</option>' +
         dh_option_html +
         '<option value="tls">' + TXT.KEYGEN.opt_tls + '</option>' +
@@ -1270,14 +1129,14 @@ const openKeyGenModal = function (instance_id, displayId, role) {
         '<div class="cbi-value">' +
         '<label class="cbi-value-title">' + TXT.KEYGEN.key_strength + '</label>' +
         '<div class="cbi-value-field">' +
-        '<select id="' + TXT.ID.keygen_bits_pki +'" class="cbi-input-select">' +
+        '<select id="' + TXT.ID.keygen_bits_pki + '" class="cbi-input-select">' +
         '<option value="rsa2048_ec" selected>' + TXT.KEY.rsa2048_ecc + ' (' + TXT.INFO.default + ')</option>' +
         '<option value="rsa4096_ec">' + TXT.KEY.rsa4096_ecc + '</option>' +
         '<option value="ec">' + TXT.KEY.ecc_prime256v1 + ' (' + TXT.KEYGEN.pure_ecc + ')</option>' +
         '<option value="2048">' + TXT.KEY.rsa_2048_bit + ' (' + TXT.KEYGEN.pure_rsa + ')</option>' +
         '<option value="4096">' + TXT.KEY.rsa_4096_bit + ' (' + TXT.KEYGEN.pure_rsa + ')</option>' +
         '</select>' +
-        '<select id="' + TXT.ID.keygen_bits_dh +'" class="cbi-input-select" style="display:none;">' +
+        '<select id="' + TXT.ID.keygen_bits_dh + '" class="cbi-input-select" style="display:none;">' +
         '<option value="2048" selected>' + TXT.KEY.bit_2048 + ' (' + TXT.INFO.default + ')</option>' +
         '<option value="4096">' + TXT.KEY.bit_4096 + '</option>' +
         '</select>' +
@@ -1285,7 +1144,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
         '</div>' +
         '</div>' +
 
-        '<div class="cbi-value" id="' + TXT.ID.row_keygen_years +'">' +
+        '<div class="cbi-value" id="' + TXT.ID.row_keygen_years + '">' +
         '<label class="cbi-value-title">' + TXT.KEYGEN.validity_days + '</label>' +
         '<div class="cbi-value-field">' +
         '<select id="' + TXT.ID.keygen_years + '" class="cbi-input-select">' +
@@ -1367,7 +1226,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
             // OpenVPN symmetric engine takes zero custom CLI flags
             customCliInput.placeholder = TXT.KEYGEN.placeholder_tls;
             customCliInput.disabled = true;
-            customCliInput.style.opacity = '0.2'; // Visually mute the field gracefully
+            customCliInput.style.opacity = '0.2';
         }
     };
 
@@ -1449,7 +1308,8 @@ const openKeyGenModal = function (instance_id, displayId, role) {
                 bits = rawBitsSelection;
             }
         } else {
-            // Standalone DH mode uses numeric bits directly
+            // Standalone DH mode (2048 or 4096)
+            caBits = rawBitsSelection;
             bits = rawBitsSelection;
         }
 
@@ -1591,7 +1451,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
             }).then(function () {
                 return L.fs.write(TXT.DIR.keys + 'server_' + instance_id + '.crt', pki_payload.cert.trim() + '\n');
             }).then(function () {
-                // FIXED: Mark save context successful, clear memory markers, and update log text
+                modalSaveBtn.disabled = false;
                 hasSaved = true;
                 is_generated = false;
                 modalTextArea.value += '\n\n' + TXT.ICON.save + TXT.KEYGEN.pki_saved;
@@ -1606,7 +1466,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
             const targetFile = (active_mode === 'dh') ? 'dh_' + instance_id + '.pem' : 'tls-crypt_' + instance_id + '.key';
 
             L.fs.write(TXT.DIR.keys + targetFile, single_payload.trim() + '\n').then(function () {
-                // FIXED: Mark save context successful, clear memory markers, and update log text
+                modalSaveBtn.disabled = false;
                 hasSaved = true;
                 is_generated = false;
                 modalTextArea.value += '' + TXT.ICON.save + TXT.KEYGEN.file_saved + ' ' + targetFile;
@@ -1622,7 +1482,7 @@ const openKeyGenModal = function (instance_id, displayId, role) {
 
     const modalCloseBtn = E('button', { 'class': 'cbi-button cbi-button-neutral' }, TXT.BTN.close);
     modalCloseBtn.addEventListener('click', function () {
-        if (is_generated && !window.confirm(TXT.KEYGEN.warn_close)) return;
+        if (is_generated && !window.confirm(TXT.KEYGEN.warning_key_not_saved)) return;
 
         L.ui.hideModal();
 
@@ -1695,7 +1555,7 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
 
     const statusMsg = E('span', { 'style': 'font-weight:bold; margin-left:10px; font-size:11px;' }, '');
 
-    // upload key
+    // upload key file
     fileInput.addEventListener('change', function (ev) {
         const files = ev.target.files;
         if (!files || files.length === 0) return;
@@ -1710,53 +1570,83 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
         const reader = new FileReader();
         reader.onload = function (e) {
 
-            // Step A: upload to .tmp file
+            // Step 1: Upload to temporary file
             L.fs.write(tmpPath, e.target.result)
                 .then(function () {
-                    // Step B: check keymeta of .tmp file
+                    // Step 2: Validate cryptographic metadata
                     return L.fs.exec(TXT.DIR.init_d_openvpn, ['keymeta', tmpFilename]);
                 })
                 .then(function (res) {
-                    if (res && res.code === 0 && res.stdout && res.stdout.trim() !== '') {
-                        const rawMeta = res.stdout;
-
-                        // 1. timout or corrupted
-                        if (rawMeta.indexOf('ERROR') !== -1) {
-                            // remove .tmp file from flash mem
-                            L.fs.remove(tmpPath);
-                            statusMsg.className = 'text-danger';
-                            statusMsg.textContent = TXT.ICON.error + ' ' + TXT.MSG.uploaded_file_invalid;
-                            uploadBtn.classList.remove('disabled');
-                            return Promise.reject(new Error(TXT.MSG.key_verification_failed));
-                        }
-
-                        let typeMismatch = false;
-
-                        if (default_key === TXT.KEY.ca_def_crt || default_key === TXT.KEY.server_def_crt) {
-                            if (rawMeta.indexOf('Public-Key') === -1) typeMismatch = true;
-                        } else if (default_key === TXT.KEY.server_def_key) {
-                            if (rawMeta.indexOf('Private-Key') === -1) typeMismatch = true;
-                        } else if (default_key === TXT.KEY.dh_def_pem) {
-                            if (rawMeta.indexOf('DH Parameters') === -1 && rawMeta.indexOf('bit') === -1) typeMismatch = true;
-                        } else if (default_key === TXT.KEY.tls_def_key) {
-                            if (rawMeta.indexOf('Symmetric Static Secret') === -1) typeMismatch = true;
-                        }
-
-                        // 2. key type mismatch
-                        if (typeMismatch) {
-                            // remove .tmp file from flash mem
-                            L.fs.remove(tmpPath);
-                            statusMsg.className = 'text-danger';
-                            statusMsg.textContent = TXT.ICON.error + ' ' + _('Wrong key type! Please upload the correct cryptographic file.');
-                            uploadBtn.classList.remove('disabled');
-                            return Promise.reject(new Error('Key type mismatch'));
-                        }
+                    let rawMeta = '';
+                    if (res && res.code === 0 && res.stdout) {
+                        rawMeta = res.stdout;
                     }
 
-                    // Step C: key file ok
+                    // Check for syntax errors or corrupted format
+                    if (rawMeta.indexOf('ERROR') !== -1 || rawMeta.trim() === '') {
+                        L.fs.remove(tmpPath);
+                        statusMsg.className = 'text-danger';
+                        statusMsg.textContent = TXT.ICON.error + ' ' + TXT.MSG.uploaded_file_invalid;
+                        uploadBtn.classList.remove('disabled');
+                        return Promise.reject(new Error(TXT.KEYGEN.key_verification_failed));
+                    }
+
+                    let typeMismatch = false;
+
+                    if (default_key === TXT.KEY.ca_def_crt || default_key === TXT.KEY.server_def_crt) {
+                        if (rawMeta.indexOf('Public-Key') === -1) typeMismatch = true;
+                    } else if (default_key === TXT.KEY.server_def_key) {
+                        if (rawMeta.indexOf('Private-Key') === -1) typeMismatch = true;
+                    } else if (default_key === TXT.KEY.dh_def_pem) {
+                        if (rawMeta.indexOf('DH Parameters') === -1) typeMismatch = true;
+                    } else if (default_key === TXT.KEY.tls_def_key) {
+                        if (rawMeta.indexOf('Symmetric Static Secret') === -1) typeMismatch = true;
+                    }
+
+                    // Step 3: Show warning modal if key type mismatch occurs
+                    if (typeMismatch) {
+                        return new Promise(function (resolve, reject) {
+                            L.showModal(TXT.ICON.warning + TXT.KEYGEN.warning_key_upload_title, E('div', { 'class': 'cbi-modal' }, [
+                                E('p', { 'style': 'margin-bottom: 12px; font-size: 13px; line-height: 1.4;' },
+                                    TXT.KEYGEN.warning_key_upload_nomatch
+                                ),
+                                E('p', { 'style': 'margin-bottom: 16px; font-size: 13px; color: var(--text-color-light, #64748b); line-height: 1.4;' },
+                                    TXT.KEYGEN.warning_key_upload_proceesing
+                                ),
+                                E('p', { 'style': 'font-weight: bold; color: var(--zone-wan-bg, #e74c3c); margin-bottom: 20px; font-size: 13px;' },
+                                    TXT.KEYGEN.warning_key_upload_save_anyway
+                                ),
+                                E('div', { 'class': 'right' }, [
+                                    E('button', {
+                                        'class': 'btn cbi-button-action important',
+                                        'style': 'margin-right: 10px;',
+                                        'click': function () {
+                                            L.hideModal();
+                                            L.fs.remove(tmpPath);
+                                            statusMsg.className = 'text-danger';
+                                            statusMsg.textContent = TXT.ICON.error + ' ' + TXT.KEYGEN.wrong_key_type;
+                                            uploadBtn.classList.remove('disabled');
+                                            reject(new Error(TXT.KEYGEN.key_type_mismatch));
+                                        }
+                                    }, _('No')),
+                                    E('button', {
+                                        'class': 'btn cbi-button-neutral',
+                                        'click': function () {
+                                            L.hideModal();
+                                            resolve();
+                                        }
+                                    }, _('Yes'))
+                                ])
+                            ]));
+                        });
+                    }
+
+                    return Promise.resolve();
+                })
+                .then(function () {
+                    // Step 4: Move validated temporary file to real path
                     return L.fs.read(tmpPath).then(function (verifiedBlob) {
                         return L.fs.write(realPath, verifiedBlob).then(function () {
-                            // Instantly remove the intermediate staging node from storage
                             return L.fs.remove(tmpPath);
                         });
                     });
@@ -1766,13 +1656,11 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
                     statusMsg.textContent = TXT.ICON.success + TXT.INFO.saved + ' ' + TXT.ICON.warning + TXT.BTN.click_save_apply;
 
                     showSaveApplyOpenVPN(instance_id);
-
-                    return Promise.resolve();
                 })
                 .catch(function (err) {
-                    if (err.message !== TXT.MSG.key_verification_failed && err.message !== TXT.MSG.key_type_mismatch) {
+                    if (err.message !== TXT.KEYGEN.key_verification_failed && err.message !== TXT.KEYGEN.key_type_mismatch) {
                         statusMsg.className = 'text-danger';
-                        statusMsg.textContent = TXT.ICON.error + TXT.INFO.error + ' ' + err.message;
+                        statusMsg.textContent = TXT.ICON.error + ' ' + TXT.INFO.error + ': ' + err.message;
                     }
                 })
                 .finally(function () {
@@ -1783,19 +1671,19 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
         reader.readAsText(files[0]);
     });
 
-    // show key
+    // show key file
     showBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
         openKeyEditorModal(filename, instance_id, displayId);
     });
 
-    // download key
+    // download key file
     downloadBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
         L.resolveDefault(L.fs.read(TXT.DIR.keys + filename), '').then(function (content) {
             if (!content) {
                 if (L.ui && L.ui.addNotification) {
-                    L.ui.addNotification(null, E('p', TXT.MSG.keyfile_not_exist), 'warning');
+                    L.ui.addNotification(null, E('p', TXT.KEYGEN.keyfile_not_exist), 'warning');
                 }
                 return;
             }
@@ -1876,17 +1764,10 @@ const parsePortFromConfig = function (role, content) {
 };
 
 /**
- * Checks if an OpenVPN instance is enabled.
- */
-const isInstanceEnabled = function (id) {
-    return L.uci.get(TXT.CMD.openvpn, id, 'enabled') === '1';     // id = instance1, instance2, ...
-};
-
-/**
  * Calculates the default port from the instance id
  */
 const getPortFromId = function (instance_id) {
-    const numMatch = instance_id.match(/\d+$/);      // instance_id = instance1, instance2, ...
+    const numMatch = instance_id.match(/\d+$/);
     const instNum = numMatch ? parseInt(numMatch, 10) : 1;
     return TXT.CFG.vpn_port_int - 1 + instNum;
 };
@@ -2054,8 +1935,71 @@ const renderInstanceBox = function (s, idx, instances, currentVisualState) {
     const numMatch = instance_id.match(/\d+$/);
     const instNum = numMatch ? parseInt(numMatch, 10) : (idx + 1);
 
-    const displayId = TXT.STATUS.instance_x + instNum;
-    const sectionHeadingText = displayId + ' - ' + roleLabel;
+    // Get the custom display name directly from UCI session storage
+    const customDisplayName = L.uci.get(TXT.CMD.openvpn, instance_id, TXT.ID.displayname) || '';
+    const displayId = customDisplayName || (TXT.STATUS.instance_x + instNum);
+    const sectionHeadingText = customDisplayName
+        ? customDisplayName + ' (' + roleLabel + ')'
+        : displayId + ' - ' + roleLabel;
+
+    // Add user-friendly inline text input to manipulate displayname option
+    const nameInput = E('input', {
+        'type': 'text',
+        'class': 'cbi-input-text',
+        'placeholder': TXT.STATUS.instance_x + instNum,
+        'value': customDisplayName,
+        'style': 'width: 140px; margin-right: 15px; padding: 2px 6px; font-size: 12px; border-radius: 3px; border: 1px solid var(--border-color, #cbd5e1); background: var(--background-color, #ffffff); color: var(--text-color, #334155);'
+    });
+
+    nameInput.addEventListener('change', function (ev) {
+        const cleanName = String(ev.target.value || '').trim();
+
+        if (cleanName) {
+            L.uci.set(TXT.CMD.openvpn, instance_id, TXT.ID.displayname, cleanName);
+        } else {
+            L.uci.set(TXT.CMD.openvpn, instance_id, TXT.ID.displayname, null);
+        }
+        L.uci.save();
+
+        if (L.ui && L.ui.changes && typeof L.ui.changes.init === 'function') {
+            L.ui.changes.init().then(function () {
+                if (typeof L.ui.changes.displayChanges === 'function') {
+                    L.ui.changes.displayChanges();
+                }
+            });
+        }
+    });
+
+    const isEnabled = L.uci.get(TXT.CMD.openvpn, instance_id, 'enabled') === '1';
+    const instanceCheckbox = E('input', {
+        'type': 'checkbox',
+        'id': 'cb_enabled_' + instance_id,
+        'style': 'margin-right: 6px; cursor: pointer; width: 16px; height: 16px; vertical-align: middle;',
+        'checked': isEnabled ? 'checked' : null
+    });
+
+    instanceCheckbox.addEventListener('change', function (ev) {
+        const nextCheckboxState = ev.target.checked ? '1' : '0';
+
+        L.uci.set(TXT.CMD.openvpn, instance_id, 'enabled', nextCheckboxState);
+        L.uci.save();
+
+        if (L.ui && L.ui.changes && typeof L.ui.changes.init === 'function') {
+            L.ui.changes.init().then(function () {
+                if (typeof L.ui.changes.displayChanges === 'function') {
+                    L.ui.changes.displayChanges();
+                }
+            });
+        }
+    });
+
+    const checkboxContainer = E('label', {
+        'for': 'cb_enabled_' + instance_id,
+        'style': 'display: inline-flex; align-items: center; cursor: pointer; font-size: 13px; font-weight: bold; color: var(--text-color, #334155);'
+    }, [
+        instanceCheckbox,
+        E('span', {}, TXT.BTN.enabled)
+    ]);
 
     const keygenBtn = E('button', {
         'class': 'cbi-button cbi-button-apply important',
@@ -2093,23 +2037,27 @@ const renderInstanceBox = function (s, idx, instances, currentVisualState) {
         'style': 'float:right;'
     }, TXT.BTN.del_instance);
 
-    // Build the main container node
     const sectionRootNode = E('div', {
         'class': 'cbi-section',
         'id': 'modification_section_' + instance_id,
         'style': 'margin-bottom:25px; padding:25px 0 0 0; border:none; border-top:1px solid var(--border-color, #ced6e0); position:relative;'
     }, [
-        E('h3', { 'style': 'margin:0 0 20px 0; font-weight:bold; font-size:16px; border-bottom:1px solid var(--border-color, #e2e8f0); padding-bottom:5px; color:var(--text-color, #334155)' }, sectionHeadingText),
+        // FIXED: Wrap heading, custom input, and the activation checkbox wrapper within a clean unified flex header row
+        E('div', { 'style': 'display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color, #e2e8f0); padding-bottom: 5px; margin-bottom: 20px;' }, [
+            E('h3', { 'style': 'margin: 0; font-weight: bold; font-size: 16px; border: none; padding: 0; color: var(--text-color, #334155);' }, sectionHeadingText),
+            E('div', { 'style': 'display: inline-flex; align-items: center;' }, [
+                nameInput,
+                checkboxContainer
+            ])
+        ]),
 
         E('fieldset', { 'class': 'cbi-section-fieldset', 'style': 'margin-bottom:25px; padding:15px; border:1px solid var(--border-color, #cbd5e1); border-radius:4px; background:var(--background-color, transparent);' }, [
             E('legend', { 'style': 'font-weight:bold; font-size:13px; padding:0 8px; color:var(--text-color, #334155);' }, TXT.MSG.openvpn_keys),
             E('div', { 'class': 'cbi-section-node', 'style': 'padding:0 5px;' }, [
-                // Clean ES5 compliant single-quote string concatenation
                 renderKeyButtons(TXT.STATUS.key_info_ca + '(ca_' + instance_id + '.crt)', 'ca_' + instance_id + '.crt', instance_id, displayId, TXT.KEY.ca_def_crt),
                 renderKeyButtons(TXT.STATUS.key_info_serever_crt + '(server_' + instance_id + '.crt)', 'server_' + instance_id + '.crt', instance_id, displayId, TXT.KEY.server_def_crt),
                 renderKeyButtons(TXT.STATUS.key_info_server_key + '(server_' + instance_id + '.key)', 'server_' + instance_id + '.key', instance_id, displayId, TXT.KEY.server_def_key),
 
-                // Show DH button only if instance is a server profile
                 role === 'server' ? renderKeyButtons(TXT.STATUS.key_info_hd + '(dh_' + instance_id + '.pem)', 'dh_' + instance_id + '.pem', instance_id, displayId, TXT.KEY.dh_def_pem) : '',
                 renderKeyButtons(TXT.STATUS.key_info_tls + '(tls-crypt_' + instance_id + '.key)', 'tls-crypt_' + instance_id + '.key', instance_id, displayId, TXT.KEY.tls_def_key),
                 keygenBtn
@@ -2125,7 +2073,6 @@ const renderInstanceBox = function (s, idx, instances, currentVisualState) {
         E('div', { 'style': 'width:100%; display:block; margin-top:20px; overflow:hidden;' }, [sBtn, cNotice, dNotice, dBtn])
     ]);
 
-    // Save original content for difference tracking
     sectionRootNode.setAttribute('data-original-content', confContent);
 
     sBtn.addEventListener('click', function (ev) {
@@ -2153,8 +2100,7 @@ const addNewInstance = function (roleType, sections, viewData, btnNode, noticeNo
     if (btnNode) btnNode.disabled = true;
     if (noticeNode) noticeNode.style.display = 'inline-block';
 
-    // FIXED: Radical simplification. syncInstanceFiles automatically triggers initFile,
-    // which generates and writes the perfect configuration template on disk.
+    // syncInstanceFiles automatically triggers initFile, which generates and writes the configuration template on disk.
     return syncInstanceFiles(nextId, nextNum, roleType, viewData).then(function () {
         L.uci.add(TXT.CMD.openvpn, TXT.CMD.openvpn, nextId);
 
@@ -2327,7 +2273,7 @@ const renderLogBox = function (logLines) {
 
     return E('div', { 'class': 'cbi-map', 'id': 'system_log_section_node' }, [
         E('div', { 'class': 'cbi-section' }, [
-            E('h3', { 'style': 'color:var(--text-color, #334155); font-weight:bold;' }, TXT.MSG.title_log),
+            E('h3', { 'style': 'color:var(--text-color, #334155); font-weight:bold;' }, TXT.STATUS.title_log),
             E('div', { 'class': 'cbi-value', 'style': 'padding:0; margin:0; width:100%;' }, [
                 logTextArea,
                 E('br'),
@@ -2378,10 +2324,10 @@ const renderDefaultKeysOverlay = function (keysReady) {
             'src': TXT.FILE.loading_img,
             'style': 'width:64px; height:32px; margin-bottom:15px; vertical-align:middle;'
         }),
-        E('h3', { 'style': 'margin:0 0 10px 0; font-weight:bold; color:var(--text-color, #334155); text-shadow:none !important;' }, TXT.MSG.keygen_in_progress),
+        E('h3', { 'style': 'margin:0 0 10px 0; font-weight:bold; color:var(--text-color, #334155); text-shadow:none !important;' }, TXT.KEYGEN.keygen_in_progress),
 
         E('p', { 'style': 'margin:0; font-style:normal; font-size:13px; color:var(--text-color, #334155); text-align:center; line-height:1.6;' }, [
-            TXT.MSG.keygen_wait, E('br'),
+            TXT.KEYGEN.keygen_wait, E('br'),
             TXT.MSG.process_take_few_minutes, E('br'), E('br'),
             TXT.STATUS.key_info_ca + '(' + TXT.KEY.ca_def_crt + ')', E('br'),
             TXT.STATUS.key_info_serever_crt + '(' + TXT.KEY.server_def_crt + ')', E('br'),
@@ -2395,22 +2341,32 @@ const renderDefaultKeysOverlay = function (keysReady) {
 /**
  * Polls the system startup state until default crypto keys are fully ready.
  */
-const pollDefaultKeysReady = function (sections, viewData, tableDOMContainer) {
-    return loadSystemTelemetry(viewData).then(function () {
+const pollDefaultKeysReady = function (sections, viewData) {
+    return checkDefaultKeysState(viewData).then(function () {
         const overlay = document.getElementById(TXT.ID.openvpn_keygen_overlay);
 
-        if (viewData.keysReady) {
+        // 1. If background generator lock still exists, maintain the lock screen
+        if (!viewData.keysReady) {
             if (overlay) {
-                overlay.style.display = 'none';
+                overlay.style.display = 'flex';
             }
-            L.Poll.stop(); // Stop the initial startup poll permanently
-        } else if (overlay) {
-            overlay.style.display = 'flex';
+            return;
         }
 
-        return updateLiveStatusTable(sections, viewData, tableDOMContainer);
+        // 2. Keys are ready - check if a reload is actually required
+        if (overlay) {
+            if (overlay.style.display === 'flex') {
+                overlay.style.display = 'none';
+                L.Poll.stop();
+                window.location.reload();
+                return;
+            }
+            overlay.style.display = 'none';
+        }
+
+        // 3. If keys were already present on page load, quietly stop the startup poll
+        L.Poll.stop();
     }).catch(function () {
-        // Prevent lock screen freeze and stop polling during session drops
         const overlay = document.getElementById(TXT.ID.openvpn_keygen_overlay);
         if (overlay) {
             overlay.style.display = 'none';
@@ -2432,6 +2388,7 @@ return view.extend({
 
     // Shared data container for the OpenVPN view context
     VIEW_DATA: {
+        statusClass: null,
         devData: '',
         uptime: 0,
         serverTemplate: '',
@@ -2447,9 +2404,15 @@ return view.extend({
         const viewData = this.VIEW_DATA;
 
         return Promise.all([
+            // load openvpn-status.js into browser memory
+            L.require('view.vpn.openvpn-status'),
             L.uci.load(TXT.CMD.openvpn),
             L.uci.load(TXT.CMD.firewall)
-        ]).then(function () {
+        ]).then(function (results) {
+
+            // Save the loaded status class object for later use
+            viewData.statusClass = results[0];
+
             const sections = L.uci.sections(TXT.CMD.openvpn, TXT.CMD.openvpn) || [];
 
             if (sections.length === 0) {
@@ -2461,16 +2424,19 @@ return view.extend({
             return Promise.resolve(sections);
         }).then(function (sections) {
             const safeSections = Array.isArray(sections) ? sections : [];
+            // Execute pending setup tasks from the previous session
             return processPendingSessionTask(safeSections);
         }).then(function (sections) {
             const safeSections = Array.isArray(sections) ? sections : [];
-
             return loadSystemTelemetry(viewData).then(function () {
                 return loadInstanceData(safeSections, viewData);
             }).then(function (instances) {
+                const safeInstances = Array.isArray(instances) ? instances : [];
+                const safeOpenvpnEnabled = isAnyInstanceEnabled(safeSections);
                 return {
                     sections: safeSections,
-                    instances: instances
+                    instances: safeInstances,
+                    openvpnEnabled: safeOpenvpnEnabled ? '1' : '0'
                 };
             });
         });
@@ -2480,13 +2446,15 @@ return view.extend({
      * Renders the main OpenVPN dashboard view.
      */
     render: function (data) {
+
         const safeData = data || {};
         const sections = safeData.sections || [];
-        const viewData = this.VIEW_DATA;
         const instances = safeData.instances || [];
-        const initialRawState = safeData.initialGlobalState || '0';
-        const devDataRaw = String(viewData.devData || '').trim();
+        const openvpnEnabled = safeData.openvpnEnabled || '0';
 
+        const viewData = this.VIEW_DATA;
+        const openvpnStatus = viewData.statusClass;
+        const devDataRaw = String(viewData.devData || '').trim();
         const logLines = parseLogLines(viewData);
         const startupLockOverlay = renderDefaultKeysOverlay(viewData.keysReady);
 
@@ -2495,6 +2463,7 @@ return view.extend({
 
         // Dynamically build content block based on instance presence
         let middleSectionNode;
+        let statusTable = null;
 
         if (sections.length === 0) {
             middleSectionNode = E('div', { 'class': 'cbi-map' }, [
@@ -2508,17 +2477,12 @@ return view.extend({
         } else {
             const instanceSections = [];
             sections.forEach(function (s, idx) {
-                instanceSections.push(renderInstanceBox(s, idx, instances, initialRawState));
+                instanceSections.push(renderInstanceBox(s, idx, instances, openvpnEnabled));
             });
 
-            const statusTable = E('div', { 'id': 'openvpn_live_table_wrapper' }, [
-                renderStatusTable(instances, devDataRaw, parseFloat(viewData.uptime) || 0)
+            statusTable = E('div', { 'id': 'openvpn_live_table_wrapper' }, [
+                openvpnStatus ? openvpnStatus.refreshStatusTable(instances, devDataRaw, parseFloat(viewData.uptime) || 0, false, null) : ''
             ]);
-
-            // Activate runtime interval polling strictly if sections exist
-            L.Poll.add(L.bind(function () {
-                return pollDefaultKeysReady(sections, viewData, statusTable);
-            }, this), 5);
 
             // Combine live status table and instance modification rows sequentially
             middleSectionNode = E('div', {}, [
@@ -2532,12 +2496,26 @@ return view.extend({
             ]);
         }
 
+        // check default keys ready
+        if (!viewData.keysReady) {
+            L.Poll.add(L.bind(function () {
+                return pollDefaultKeysReady(sections, viewData);
+            }, this), 5);
+        } else if (sections.length > 0) {
+            L.Poll.add(L.bind(function () {
+                if (openvpnStatus) {
+                    // Continuously refresh main and status box
+                    return openvpnStatus.refreshLiveDashboard(sections, viewData, statusTable, refreshMainBoxVisuals);
+                }
+            }, this), 5);
+        }
+
         // Return a unified, single, clean UI wrapper frame
         return E('div', { 'class': 'cbi-map', 'style': 'position:relative; min-height:300px;' }, [
             startupLockOverlay,
 
             E('div', { 'id': TXT.ID.main_control_box }, [
-                renderMainControlBox(initialRawState, sections, masterServerBtn, masterClientBtn, instances, devDataRaw)
+                renderMainControlBox(openvpnEnabled, sections, masterServerBtn, masterClientBtn, instances, devDataRaw)
             ]),
 
             E('hr', { 'style': 'margin:15px 0; border:0; border-top:1px solid var(--border-color, #ced6e0);' }),
@@ -2545,7 +2523,7 @@ return view.extend({
             middleSectionNode,
 
             E('hr', { 'style': 'margin:20px 0 30px 0; border:0; border-top:1px solid var(--border-color, #ced6e0);' }),
-            renderInstanceCreationBox(sections, viewData, initialRawState),
+            renderInstanceCreationBox(sections, viewData, openvpnEnabled),
 
             E('hr', { 'style': 'margin:25px 0 35px 0; border:0; border-top:1px solid var(--border-color, #ced6e0);' }),
             renderFirewallInfoBox(),
@@ -2556,6 +2534,5 @@ return view.extend({
     }
 
 });
-
 
 

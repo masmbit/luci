@@ -1,0 +1,20 @@
+{
+	"luci-app-openvpn-status": {
+		"description": "Status access for OpenVPN LuCI app",
+		"read": {
+			"cgi": [ "luci" ],
+			"uci": [ "openvpn" ],
+			"ubus": {
+				"system": [ "info" ],
+				"service": [ "list" ]
+			},
+			"file": {
+				"/etc/openvpn/": [ "read" ],
+				"/var/run/": [ "read" ],
+				"/proc/uptime": [ "read" ],
+				"/proc/net/dev": [ "read" ],
+				"/proc/": [ "read" ]
+			}
+		}
+	}
+}
