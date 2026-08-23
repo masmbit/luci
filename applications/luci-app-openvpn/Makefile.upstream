@@ -1,8 +1,9 @@
 #
 # Copyright (C) 2008-2026 The OpenWrt Project
-# Copyright (C) 2026 masmbit
+# Copyright (C) 2026 Manfred Jaider <masmbit@users.noreply.github.com>
 #
 # This is free software, licensed under the Apache License, Version 2.0.
+# See /LICENSE for more information.
 #
 
 include $(TOPDIR)/rules.mk
@@ -14,14 +15,17 @@ PKG_LICENSE:=Apache-2.0
 PKG_MAINTAINER:=Manfred Jaider <masmbit@users.noreply.github.com>
 
 LUCI_TITLE:=LuCI support for OpenVPN server and client configuration
-LUCI_DEPENDS:=+luci-base +openvpn-openssl +openssl-util +nftables +coreutils
+LUCI_DEPENDS:=+luci-base +openvpn +openssl-util +firewall4 +coreutils
 LUCI_PKGARCH:=all
 
-LUCI_DESCRIPTION:=This package provides an easy-to-use web interface for simple configuration \
-	of OpenVPN server and client instances with key generator and connection wizard. \
-	It is the replacement of the old, unsupported LuCI interface, delivering a \
-	completely modernized design optimized for current OpenWrt builds.
+define Package/$(PKG_NAME)/description
+  This package provides an easy web interface to configure OpenVPN servers and
+  clients quickly. With the built-in key generator, wizard, and DDNS, your VPN
+  is up and running immediately. It replaces the old interface with a modern
+  design optimized for current OpenWrt builds.
+endef
 
 include ../../luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature
+

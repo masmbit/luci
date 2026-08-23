@@ -1,0 +1,56 @@
+#!/bin/sh
+
+# Copyright (C) 2008-2026 The OpenWrt Project
+# Copyright (C) 2026 Manfred Jaider <masmbit@users.noreply.github.com>
+#
+# This is free software, licensed under the Apache License, Version 2.0.
+# See /LICENSE for more information.
+#
+# luci-app-openvpn : OpenWrt hotplug lifecycle manager for ddns
+# /etc/hotplug.d/openvpn/10-luci-app-openvpn-ddns
+
+# Ensure we catch the active OpenVPN name context across all OpenWrt variants
+local_inst="${INSTANCE:-$NAME}"
+
+if [ -z "$local_inst" ]; then
+    exit 0
+fi
+
+CONF_FILE="/etc/openvpn/luci/${local_inst}.conf"
+PID_FILE="/var/run/openvpn-ddns-${local_inst}.pid"
+
+case "$ACTION" in
+    up)
+        # ALWAYS kill any surviving old daemon instance first using the robust daemon framework
+        if start-stop-daemon -K -q -p "$PID_FILE" -t 2>/dev/null; then
+            logger -t openvpn-luci "Hotplug: Stopping active daemon process for ${local_inst} before configuration reload."
+            start-stop-daemon -K -q -p "$PID_FILE" 2>/dev/null
+        fi
+        rm -f "$PID_FILE"
+
+        # Process the new configuration only if the file exists
+        if [ -f "$CONF_FILE" ]; then
+            domain=$(grep -E "^setenv[[:space:]]+DDNS[[:space:]]+" "$CONF_FILE" | sed -E 's/^setenv[[:space:]]+DDNS[[:space:]]+"(.*)"/\1/')
+            url=$(grep -E "^setenv[[:space:]]+DDNS_URL[[:space:]]+" "$CONF_FILE" | sed -E 's/^setenv[[:space:]]+DDNS_URL[[:space:]]+"(.*)"/\1/')
+
+            # Only spawn a new background daemon if BOTH variables are defined
+            if [ -n "$domain" ] && [ -n "$url" ]; then
+                logger -t openvpn-luci "Hotplug: Starting background DDNS daemon for ${local_inst} (Domain: ${domain})"
+
+                # IMMUNE TO TIMEOUTS: Leverages native daemon frameworks to safely background the process task
+                start-stop-daemon -S -b -m -p "$PID_FILE" -x /usr/libexec/luci-app-openvpn -- ddns "$domain" "$url" "$local_inst"
+            fi
+        fi
+        ;;
+
+    down)
+        # Clean application stop via standard system manager signals
+        if start-stop-daemon -K -q -p "$PID_FILE" -t 2>/dev/null; then
+            logger -t openvpn-luci "Hotplug: Stopping DDNS daemon for ${local_inst} because tunnel is down."
+            start-stop-daemon -K -q -p "$PID_FILE" 2>/dev/null
+        fi
+        rm -f "$PID_FILE"
+        ;;
+esac
+
+exit 0
