@@ -32,8 +32,9 @@ const TXT = {
     },
     BTN: {
         close: _('Close'),
-        confirm_save: _('Confirm Save'),
+        cancel: _('Cancel'),
         download: _('Download'),
+        enable_save: _('Enable Save'),
         generate: _('Generate'),
         save_apply: _('Save & Apply'),
         save_config: _('Save Config'),
@@ -52,7 +53,7 @@ const TXT = {
         export_keys: _('Export Keys'),
         generate_tls_key: _('Generating TLS-Crypt key...'),
         generate_unique_keys: _('Yes (Generate Unique Keys)'),
-        generate_unique_keys_new_instance: _('A secondary instance needs unique key files to work correctly. Do you want to generate new unique keys now? (Recommended - takes 1-2 minutes)'),
+        generate_unique_keys_new_instance: _('To be secure, a new instance needs its own key files. Do you want to create them now? (Recommended - usually takes just a few moments)'),
         generating_client_keys: _('Generating private client key...'),
         key_strength: _('Key Strength'),
         loading_contents: _('Loading key contents...'),
@@ -157,7 +158,7 @@ const sanitizeInputText = function (value) {
 /**
  * Show simple key editor that verifies and displays key metadata.
  */
-const openKeyEditorModal = function (filename, instance_id, displayId, role, showSaveApplyOpenVPNCallback) {
+const openKeyEditorModal = function (filename, instance_id, displayId, role, showSaveApplyOpenVPNCallback, L_fs_callback) {
     const absolutePath = CFG.FILE.dir_keys + filename;
     let hasSaved = false;
 
@@ -255,12 +256,12 @@ const openKeyEditorModal = function (filename, instance_id, displayId, role, sho
     };
 
     // Read file and parse metadata
-    L.resolveDefault(L.fs.read(absolutePath), '').then(function (content) {
+    L_fs_callback.L_resolveDefault(L_fs_callback.L_fs_read(absolutePath), '').then(function (content) {
         modalKeyTextArea.value = content ? content.trim() + '\n' : '--- EMPTY OR BLANK KEY FILE ---';
 
         if (!content || content.trim() === '') return;
 
-        L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keymeta, filename]).then(function (res) {
+        L_fs_callback.L_fs_exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keymeta, filename]).then(function (res) {
             if (res && res.code === 0 && res.stdout && res.stdout.trim() !== '') {
                 quickInfoBoxUpdate(res.stdout);
             }
@@ -280,9 +281,9 @@ const openKeyEditorModal = function (filename, instance_id, displayId, role, sho
         const sanitizedKeyContent = sanitizeInputText(modalKeyTextArea.value) + '\n';
 
         // Write file and re-validate key metadata (Using our clean sanitized text string)
-        L.fs.write(absolutePath, sanitizedKeyContent)
+        L_fs_callback.L_fs_write(absolutePath, sanitizedKeyContent)
             .then(function () {
-                return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keymeta, filename]);
+                return L_fs_callback.L_fs_exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keymeta, filename]);
             })
             .then(function (res) {
                 const keymeta = (res && res.stdout) ? res.stdout : '';
@@ -362,7 +363,7 @@ const openKeyEditorModal = function (filename, instance_id, displayId, role, sho
 /**
  * Creates keys and certificates using background background scripts
  */
-const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSelection, selectedYears, targetCnName, customCliString, statusOutputNode, finalCallback, displayMode) {
+const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSelection, selectedYears, targetCnName, customCliString, statusOutputNode, L_fs_callback, finalCallback, displayMode) {
     if (!statusOutputNode) {
         return;
     }
@@ -426,7 +427,7 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
     }
 
     // Run the system command to start the key background script
-    L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, caBits, days, targetCnName, step1Custom]);
+    L_fs_callback.L_fs_exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, caBits, days, targetCnName, step1Custom]);
 
     if (active_mode === 'pki') {
         accumulatedPkiLog = ICON.ARROW + TXT.KEY.pki_step1 + '\n';
@@ -448,7 +449,7 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
     const logPollerInterval = setInterval(function () {
         pollCount++;
 
-        L.fs.read(CFG.FILE.openvpn_keygen_log).then(function (logContent) {
+        L_fs_callback.L_fs_read(CFG.FILE.openvpn_keygen_log).then(function (logContent) {
             if (logContent && logContent.trim() !== '') {
                 const beautifiedLog = logContent.replace(/\[CMD\]/g, ICON.LAPTOP);
                 statusOutputNode.value = accumulatedPkiLog + beautifiedLog;
@@ -470,7 +471,7 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
                     }
 
                     // Read the temporary file containing the generated text data
-                    L.resolveDefault(L.fs.read(CFG.FILE.temp_openvpn_keygen + targetTmpFile + '.tmp'), '').then(function (finalAsset) {
+                    L_fs_callback.L_resolveDefault(L_fs_callback.L_fs_read(CFG.FILE.temp_openvpn_keygen + targetTmpFile + '.tmp'), '').then(function (finalAsset) {
 
                         if (!finalAsset || finalAsset.trim() === '') {
                             return;
@@ -486,7 +487,7 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
                                 backendType = 'server-key';
                                 accumulatedPkiLog += finalBeautifiedLog + log_separator_line + ICON.ARROW + TXT.KEY.pki_step2 + '\n';
 
-                                L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, bits, days, targetCnName, step2Custom]);
+                                L_fs_callback.L_fs_exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, bits, days, targetCnName, step2Custom]);
 
                             } else if (currentPkiStep === 2) {
                                 pki_payload.key = finalAsset;
@@ -496,23 +497,42 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
                                 const displayStepText = (active_mode === 'client_pki') ? TXT.KEY.signing_client_using_server_ca : TXT.KEY.pki_step3;
                                 accumulatedPkiLog += finalBeautifiedLog + log_separator_line + ICON.ARROW + displayStepText + '\n';
 
-                                L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, bits, days, targetCnName, step3Custom]);
+                                L_fs_callback.L_fs_exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.keygen, backendType, instance_id, bits, days, targetCnName, step3Custom]);
 
                             } else if (currentPkiStep === 3) {
                                 pki_payload.cert = finalAsset;
                                 clearInterval(logPollerInterval);
 
-                                // Read the server CA file as an extra task for the client package download file link
-                                L.resolveDefault(L.fs.read(CFG.FILE.dir_keys + 'ca_' + instance_id + '.crt'), '').then(function (liveCaContent) {
-                                    pki_payload.ca = String(liveCaContent).trim();
+                                // Check if we need to read the CA file (only for client_pki mode)
+                                var caPromise;
 
+                                if (active_mode === 'client_pki') {
+                                    // Read the file and use empty string if it fails
+                                    caPromise = L_fs_callback.L_resolveDefault(L_fs_callback.L_fs_read(CFG.FILE.dir_keys + 'ca_' + instance_id + '.crt'), '');
+                                } else {
+                                    // Do not read the file, just send an empty string immediately
+                                    caPromise = Promise.resolve('');
+                                }
+
+                                // This part always runs, no matter what mode we are in
+                                caPromise.then(function (liveCaContent) {
+
+                                    // Only save the CA content if we are in client_pki mode
+                                    if (active_mode === 'client_pki') {
+                                        pki_payload.ca = String(liveCaContent).trim();
+                                    }
+
+                                    // Update the text area on the screen with the results
                                     statusOutputNode.value = accumulatedPkiLog + finalBeautifiedLog + '\n\n' +
                                         ICON.SUCCESS + ' ' + TXT.KEY.client_key_generated + '\n\n' +
                                         '--- ca.crt ---\n' + pki_payload.ca + '\n\n' +
                                         '--- client.key ---\n' + pki_payload.key + '\n\n' +
                                         '--- client.crt ---\n' + pki_payload.cert + '\n';
+
+                                    // Scroll to the bottom of the text area automatically
                                     statusOutputNode.scrollTop = statusOutputNode.scrollHeight;
 
+                                    // Call the final callback function if it exists
                                     if (typeof finalCallback === 'function') {
                                         finalCallback(true, pki_payload, null);
                                     }
@@ -558,19 +578,19 @@ const executeAsynchronousKeyGen = function (instance_id, active_mode, rawBitsSel
 /**
  * Commits raw cryptographic key components or single key assets sequentially to disk storage.
  */
-const saveKeysToDisk = function (instance_id, active_mode, pkiPayload, singlePayload) {
+const saveKeysToDisk = function (instance_id, active_mode, pkiPayload, singlePayload, L_fs_callback) {
     if (active_mode === 'pki') {
         if (!pkiPayload || !pkiPayload.ca || !pkiPayload.key || !pkiPayload.cert) {
             return Promise.reject(new Error('Incomplete multi-stage PKI suite payload buffer contents.'));
         }
 
         // Write PKI certificates and keys sequentially to disk
-        return L.fs.write(CFG.FILE.dir_keys + 'ca_' + instance_id + '.crt', pkiPayload.ca.trim() + '\n')
+        return L_fs_callback.L_fs_write(CFG.FILE.dir_keys + 'ca_' + instance_id + '.crt', pkiPayload.ca.trim() + '\n')
             .then(function () {
-                return L.fs.write(CFG.FILE.dir_keys + 'server_' + instance_id + '.key', pkiPayload.key.trim() + '\n');
+                return L_fs_callback.L_fs_write(CFG.FILE.dir_keys + 'server_' + instance_id + '.key', pkiPayload.key.trim() + '\n');
             })
             .then(function () {
-                return L.fs.write(CFG.FILE.dir_keys + 'server_' + instance_id + '.crt', pkiPayload.cert.trim() + '\n');
+                return L_fs_callback.L_fs_write(CFG.FILE.dir_keys + 'server_' + instance_id + '.crt', pkiPayload.cert.trim() + '\n');
             });
     } else {
         if (!singlePayload) {
@@ -579,14 +599,14 @@ const saveKeysToDisk = function (instance_id, active_mode, pkiPayload, singlePay
 
         // Write standalone DH or TLS assets to disk
         const targetFile = (active_mode === 'dh') ? 'dh_' + instance_id + '.pem' : 'tls-crypt_' + instance_id + '.key';
-        return L.fs.write(CFG.FILE.dir_keys + targetFile, singlePayload.trim() + '\n');
+        return L_fs_callback.L_fs_write(CFG.FILE.dir_keys + targetFile, singlePayload.trim() + '\n');
     }
 };
 
 /**
  * Opens a window to ask the user if they want to create new unique keys
  */
-const openAutomatedPostKeyGenModal = function (instance_id, viewData, showSaveApplyOpenVPNCallback) {
+const openAutomatedPostKeyGenModal = function (instance_id, viewData, cnName, showSaveApplyOpenVPNCallback, L_fs_callback) {
     const progressTextArea = E('textarea', {
         'class': 'cbi-input-textarea',
         'style': 'width:100%; max-width:100%; resize:none; font-family:var(--font-monospace, monospace); font-size:12px; background:var(--background-color-dark, #222); color:var(--text-color-success, #0f0) !important; padding:15px; border-radius:4px; border:1px solid var(--border-color, #cbd5e1); text-shadow:none !important; display:none;',
@@ -600,9 +620,10 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, showSaveAp
 
     const yesBtn = E('button', { 'class': 'btn cbi-button cbi-button-action important', 'style': 'margin-right:10px;' }, TXT.KEY.generate_unique_keys);
     const noBtn = E('button', { 'class': 'btn cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' }, TXT.KEY.clone_default_keys);
-    const closeBtn = E('button', { 'class': 'cbi-button cbi-button-neutral', 'style': 'display:none;' }, TXT.BTN.close);
+    const cancelBtn = E('button', { 'class': 'btn cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' }, TXT.BTN.cancel);
+    const closeBtn = E('button', { 'class': 'cbi-button cbi-button-action important', 'style': 'display:none;' }, TXT.BTN.close);
 
-    const buttonContainer = E('div', { 'style': 'text-align:right; margin-top:15px;' }, [yesBtn, noBtn, closeBtn]);
+    const buttonContainer = E('div', { 'style': 'text-align:right; margin-top:15px;' }, [yesBtn, noBtn, cancelBtn, closeBtn]);
 
     // Skip creating new keys and use cloned default files instead
     noBtn.addEventListener('click', function () {
@@ -610,21 +631,28 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, showSaveAp
         showSaveApplyOpenVPNCallback(instance_id);
     });
 
+    cancelBtn.addEventListener('click', function () {
+        L.ui.hideModal();
+    });
+
     // Start creating new unique keys when clicking the yes button
     yesBtn.addEventListener('click', function () {
         yesBtn.style.display = 'none';
         noBtn.style.display = 'none';
+        cancelBtn.style.display = 'none'; // Hide cancel button when generation starts
         promptMessageNode.style.display = 'none';
 
         progressTextArea.style.display = 'block';
         closeBtn.style.display = 'inline-block';
         closeBtn.disabled = true;
+        closeBtn.className = 'cbi-button cbi-button-neutral'; // Reset to neutral color while working
 
         // Stage 1: Generate the full PKI certificate files first
-        executeAsynchronousKeyGen(instance_id, 'pki', 'rsa2048_ec', '100', '', '', progressTextArea, function (pkiSuccess, pkiData, nullData) {
+        executeAsynchronousKeyGen(instance_id, 'pki', 'rsa2048_ec', '100', cnName, '', progressTextArea, L_fs_callback, function (pkiSuccess, pkiData, nullData) {
             if (!pkiSuccess || !pkiData) {
                 progressTextArea.value += '\n' + ICON.ERROR + ' PKI generation failed.';
                 closeBtn.disabled = false;
+                closeBtn.className = 'cbi-button cbi-button-action important';
                 return;
             }
 
@@ -635,17 +663,18 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, showSaveAp
             progressTextArea.scrollTop = progressTextArea.scrollHeight;
 
             // Stage 2: Generate the unique TLS-Crypt key file next
-            executeAsynchronousKeyGen(instance_id, 'tls', '2048', '100', '', '', progressTextArea, function (tlsSuccess, nullData, tlsData) {
+            executeAsynchronousKeyGen(instance_id, 'tls', '2048', '100', cnName, '', progressTextArea, L_fs_callback, function (tlsSuccess, nullData, tlsData) {
                 if (!tlsSuccess || !tlsData) {
                     progressTextArea.value += '\n' + ICON.ERROR + ' TLS-Crypt secret generation failed.';
                     closeBtn.disabled = false;
+                    closeBtn.className = 'cbi-button cbi-button-action important';
                     return;
                 }
 
                 // Stage 3: Save both new key files to the disk memory safely
                 Promise.all([
-                    saveKeysToDisk(instance_id, 'pki', pkiData, null),
-                    saveKeysToDisk(instance_id, 'tls', null, tlsData)
+                    saveKeysToDisk(instance_id, 'pki', pkiData, null, L_fs_callback),
+                    saveKeysToDisk(instance_id, 'tls', null, tlsData, L_fs_callback)
                 ]).then(function () {
                     progressTextArea.value += '\n' + ICON.SUCCESS + ' ' + TXT.KEY.pki_saved + '\n' + ICON.SAVE + ' ' + TXT.KEY.tls_key_saved;
                     progressTextArea.scrollTop = progressTextArea.scrollHeight;
@@ -656,6 +685,7 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, showSaveAp
                 }).catch(function (err) {
                     progressTextArea.value += '\n' + ICON.ERROR + ' Storage Write Failed: ' + err.message;
                     closeBtn.disabled = false;
+                    closeBtn.className = 'cbi-button cbi-button-action important';
                 });
             }, 'append');
         }, 'fresh');
@@ -780,8 +810,8 @@ const createKeyGenUiElements = function (role, defaultName, viewData) {
         nodes: { warn: warnBox, options: optionsBox, customCli: customCli, output: textArea },
         buttons: {
             generate: E('button', { 'class': 'cbi-button cbi-button-action', 'style': 'margin-right:10px;' }, TXT.BTN.generate),
-            save: E('button', { 'class': 'cbi-button cbi-button-save', 'style': 'margin-right:10px;' }, TXT.BTN.save_config),
-            export: E('button', { 'class': 'cbi-button cbi-button-action important', 'style': 'margin-right:10px; display:none;' }, ICON.EXPORT + ' ' + TXT.KEY.export_keys),
+            save: E('button', { 'class': 'cbi-button cbi-button-save disabled', 'style': 'margin-right:10px; opacity: 0.5;', 'disabled': true }, TXT.BTN.save_config),
+            export: E('button', { 'class': 'cbi-button cbi-button-action important disabled', 'style': 'margin-right:10px; opacity: 0.5; display:none;', 'disabled': true }, ICON.EXPORT + ' ' + TXT.KEY.export_keys),
             close: E('button', { 'class': 'cbi-button cbi-button-neutral' }, TXT.BTN.close)
         }
     };
@@ -790,7 +820,7 @@ const createKeyGenUiElements = function (role, defaultName, viewData) {
 /**
  * Connects all interactive timers, actions and file saving events
  */
-const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveApplyOpenVPNCallback) {
+const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveApplyOpenVPNCallback, L_fs_callback) {
     // Use ui.nodes.options to safely find the unique mode dropdown element layout
     const modeSelect = (ui.nodes && ui.nodes.options) ? ui.nodes.options.querySelector('#' + CFG.ID.central_keygen_mode) : null;
 
@@ -851,26 +881,30 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         const saveBtn = ui.buttons.save;
         const exportBtn = ui.buttons.export;
 
-        // Toggle distinct button visibilities and the Common Name row layer instantly
+        if (ui.nodes.warn) ui.nodes.warn.style.display = 'none';
+
+        // Toggle distinct button visibilities and the Common Name row layer instantly        
         if (state.mode === 'client_pki') {
             saveBtn.style.display = 'none';
             exportBtn.style.display = 'inline-block';
+            exportBtn.enabled = false;
+            exportBtn.style.opacity = '0.5';
 
-            if (ui.nodes.warn) ui.nodes.warn.style.display = 'none';
             if (rowYears) rowYears.style.display = 'flex';
             if (rowCn) rowCn.style.display = 'flex';
         } else {
             saveBtn.style.display = 'inline-block';
+            saveBtn.enabled = false;
+            saveBtn.style.opacity = '0.5';
             exportBtn.style.display = 'none';
 
             if (state.mode === 'pki') {
-                if (ui.nodes.warn) ui.nodes.warn.style.display = 'none';
+                // Show Common Name field for server PKI setups
                 if (rowYears) rowYears.style.display = 'flex';
-                if (rowCn) rowCn.style.display = 'flex'; // Also show Common Name field for server PKI setups
+                if (rowCn) rowCn.style.display = 'flex';
             } else {
-                if (ui.nodes.warn) ui.nodes.warn.style.display = 'none';
                 if (rowYears) rowYears.style.display = 'none';
-                if (rowCn) rowCn.style.display = 'none'; // Hide it for DH and TLS modes
+                if (rowCn) rowCn.style.display = 'none';
             }
         }
 
@@ -883,6 +917,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         const selectedYears = document.getElementById(CFG.ID.keygen_years) ? document.getElementById(CFG.ID.keygen_years).value : '100';
         const baseCustomArgs = (ui.nodes.customCli && ui.nodes.customCli.value) ? sanitizeInputLine(ui.nodes.customCli.value) : '';
         let finalCn = '';
+        state.isGenerated = false;
 
         if (state.mode === 'pki' || state.mode === 'client_pki') {
             const cnInput = document.getElementById(CFG.ID.keygen_cn);
@@ -900,10 +935,12 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
 
         ui.buttons.generate.disabled = true;
         ui.buttons.save.disabled = true;
+        ui.buttons.save.style.opacity = '0.5';
         ui.buttons.export.disabled = true;
+        ui.buttons.export.style.opacity = '0.5';
         modeSelect.disabled = true;
 
-        executeAsynchronousKeyGen(instance_id, state.mode, rawBitsSelection, selectedYears, finalCn, baseCustomArgs, ui.nodes.output, function (isSuccessful, pkiData, singleData) {
+        executeAsynchronousKeyGen(instance_id, state.mode, rawBitsSelection, selectedYears, finalCn, baseCustomArgs, ui.nodes.output, L_fs_callback, function (isSuccessful, pkiData, singleData) {
             ui.buttons.generate.disabled = false;
             modeSelect.disabled = false;
 
@@ -912,17 +949,21 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
                 state.pkiData = pkiData;
                 state.singleData = singleData;
 
-                if (state.mode === 'pki') {
-                    if (ui.nodes.warn) ui.nodes.warn.style.display = 'block';
-                    ui.buttons.save.textContent = ICON.WARNING + TXT.BTN.confirm_save;
-                    ui.buttons.save.dataset.confirmSave = 'true';
+                if (!ui.buttons.save.dataset.confirmSave) {
+                    if ((state.mode === 'pki') || (state.mode === 'tls')) {
+                        if (ui.nodes.warn) ui.nodes.warn.style.display = 'block';
+                        ui.buttons.save.textContent = ICON.WARNING + TXT.BTN.enable_save;
+                        ui.buttons.save.dataset.confirmSave = 'true';
+                    }
                 }
 
                 // Reactivate only the specific button context matching your current selection matrix
                 if (state.mode === 'client_pki') {
                     ui.buttons.export.disabled = false;
+                    ui.buttons.export.style.opacity = '1';
                 } else {
                     ui.buttons.save.disabled = false;
+                    ui.buttons.save.style.opacity = '1';
                 }
             }
         }, 'fresh');
@@ -940,8 +981,9 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         }
 
         ui.buttons.save.disabled = true;
+        ui.buttons.save.style.opacity = '0.5';
 
-        saveKeysToDisk(instance_id, state.mode, state.pkiData, state.singleData)
+        saveKeysToDisk(instance_id, state.mode, state.pkiData, state.singleData, L_fs_callback)
             .then(function () {
                 state.hasSaved = true;
                 state.isGenerated = false;
@@ -950,6 +992,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
             })
             .catch(function (err) {
                 ui.buttons.save.disabled = false;
+                ui.buttons.save.style.opacity = '1';
                 ui.nodes.output.value += '\n' + ICON.ERROR + ' ' + err.message;
             });
     });
@@ -961,6 +1004,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
             return;
         }
         ui.buttons.export.disabled = true;
+        ui.buttons.save.style.opacity = '0.5';
 
         const rawCaContent = state.pkiData ? state.pkiData.ca : '';
         const clientCertContent = state.pkiData ? state.pkiData.cert : '';
@@ -978,7 +1022,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         const tlsCryptFilePath = CFG.FILE.dir_keys + 'tls-crypt_' + instance_id + '.key';
 
         // LuCI resolveDefault keeps the system safe from crashing if the tls-crypt file does not exist
-        const rawTlsCryptKey = await L.resolveDefault(L.fs.read(tlsCryptFilePath), '');
+        const rawTlsCryptKey = await L_fs_callback.L_resolveDefault(L_fs_callback.L_fs_read(tlsCryptFilePath), '');
         const cleanTlsCryptKey = String(rawTlsCryptKey || '').trim();
 
         if (cleanTlsCryptKey) {
@@ -1005,8 +1049,8 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         link.click();
         document.body.removeChild(link);
 
-        state.isGenerated = false;
         ui.buttons.export.disabled = false;
+        ui.buttons.export.style.opacity = '1';
         ui.nodes.output.value += '\n\n' + ICON.SUCCESS + ' ' + TXT.KEY.client_keys_exported;
     });
 
@@ -1027,7 +1071,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
 /**
  * Opens the key generator window to create keys and certificates (Slim and Modular)
  */
-const openKeyGenModal = function (instance_id, displayId, role, viewData, showSaveApplyOpenVPNCallback) {
+const openKeyGenModal = function (instance_id, displayId, role, viewData, showSaveApplyOpenVPNCallback, L_fs_callback) {
     // Create the configuration elements and buttons using our sub-routines
     const ui = createKeyGenUiElements(role, displayId, viewData);
 
@@ -1041,7 +1085,7 @@ const openKeyGenModal = function (instance_id, displayId, role, viewData, showSa
     };
 
     // Setup all interactive listeners and event routing logic
-    setupKeyGenEvents(ui, instance_id, state, viewData, showSaveApplyOpenVPNCallback);
+    setupKeyGenEvents(ui, instance_id, state, viewData, showSaveApplyOpenVPNCallback, L_fs_callback);
 
     // Render the complete key generator overlay view layout structure
     L.ui.showModal(TXT.KEY.title_main + ' (' + displayId + ')', [

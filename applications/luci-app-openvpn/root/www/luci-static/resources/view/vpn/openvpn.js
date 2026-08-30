@@ -83,10 +83,10 @@ const TXT = {
         saving: _('Saving...'),
         saved: _('Saved'),
         show: _('Show'),
-        upload: _('Upload')
+        upload: _('Upload'),
+        use_fallback: _('Use Fallback')
     },
     MSG: {
-        cancel_use_fallback: _('Cancel / Use Fallback'),
         client_export: _('OpenVPN Client Export'),
         config_changed_reload: _('Configuration changed! Applying will temporarily restart the OpenVPN instance. Once the page has reloaded, click Apply a second time to complete the reactivation.'),
         confirm_del: _('Are you sure you want to delete '),
@@ -111,6 +111,7 @@ const TXT = {
         secure_temporary_profile_url: _('Secure Temporary Profile URL Field:'),
         select_profile_ovpn: _('Select Profile (.ovpn)'),
         select_remote_office_to_export: _('This server handles network rules for multiple remote offices. Please choose an existing office name or write a name to make a new connection profile.'),
+        system_logs: _('System logs ...'),
         uploaded_file_invalid: _('Uploaded file is invalid or corrupt!'),
         vpn_client_address: _('VPN Client Connection Domain or Address:')
     },
@@ -194,9 +195,11 @@ const CFG = Object.freeze({
         keymeta: 'keymeta',
         symlink: 'symlink',
         iroute: 'iroute',
-        cleanipdns: 'cleanipdns',
         publicip: 'publicip',
+        cleanipdns: 'cleanipdns',
+        wgetddns: 'wgetddns',
         checkddns: 'checkddns',
+        checkport: 'checkport',
         cleanup: 'cleanup',
         initkeys: 'initkeys'
     }),
@@ -294,6 +297,42 @@ const initEmptyUciView = function () {
     return Promise.resolve([]);
 };
 
+// Wrapper for L.resolveDefault
+function L_resolveDefault(value, fallback) {
+    return L.resolveDefault(value, fallback);
+}
+
+/**
+ * Wrapper for L.fs.read
+ */
+function L_fs_read(filepath) {
+    return L.fs.read(filepath);
+}
+
+/**
+ * Wrapper for L.fs.read
+ */
+function L_fs_write(filepath, content) {
+    return L.fs.write(filepath, content);
+}
+
+/**
+ * Wrapper for L.fs.exec
+ */
+function L_fs_exec(command, args) {
+    return L.fs.exec(command, args);
+}
+
+/**
+ * L.fs callbacks container
+ */
+const L_fs_Callbacks = ({
+    L_resolveDefault: L_resolveDefault,
+    L_fs_read: L_fs_read,
+    L_fs_write: L_fs_write,
+    L_fs_exec: L_fs_exec,
+});
+
 /**
  * Checks if an OpenVPN instance is enabled.
  */
@@ -355,68 +394,46 @@ const callServiceList = L.rpc.declare({
 });
 
 /**
- * Clean any string from spaces, tabs, newlines, http(s)://, paths, ports and URL brackets
+ * Memory buffer and timestamp to cache the public IP string
  */
-const cleanIpOrDomain = function (rawString) {
-    return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.cleanipdns, rawString])
-        .then(function (res) {
-            // Added strict string type verification to prevent runtime browser crashes
-            if (res && res.code === 0 && typeof res.stdout === 'string') {
-                const cleaned = res.stdout.trim();
-                if (cleaned !== '') {
-                    return cleaned;
-                }
-            }
-            return rawString; // Safe fallback if script returns empty space or fails
-        })
-        .catch(function () {
-            return rawString; // Safe error fallback
-        });
-};
+var lastPublicIp = null;
+var lastPublicIpTime = 0;
 
 /**
- * Check a DDNS domain name or validate a raw public WAN IP address, and verify if it is online
+ * Resolves the external public WAN IP with a 60-second local cache.
  */
-const checkDdns = function (targetHost) {
-    return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.checkddns, targetHost])
-        .then(function (res) {
-            // Enforces strict boolean conversion and strips trailing newlines safely
-            const isSuccessful = (res && res.code === 0 && typeof res.stdout === 'string' && res.stdout.trim() !== '');
-            // Return a standardized result object matching POSIX pipeline expectations
-            return {
-                success: isSuccessful,
-                stdout: res ? (res.stdout || '').trim() : ''
-            };
-        })
-        .catch(function () {
-            return { success: false, stdout: '' };
-        });
-};
-
-/**
- * Resolves the external public WAN IP (get IPv4 or IPv6)
- */
-const queryPublicIp = function () {
+const queryPublicIp = async function (force) {
     const currentHost = window.location.hostname;
-    return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.publicip])
-        .then(function (res) {
-            if (res && res.code === 0 && res.stdout) {
-                const cleanIp = res.stdout.trim();
-                if (cleanIp !== '') {
-                    return cleanIp;
-                }
+    const currentTime = Date.now(); // Current time in milliseconds
+
+    // Cache validation path (Math.abs protects against NTP time drops)
+    if (force !== true && lastPublicIp !== null && Math.abs(currentTime - lastPublicIpTime) < 60000) {
+        return lastPublicIp;
+    }
+
+    try {
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.publicip]);
+
+        if (res && res.code === 0 && res.stdout) {
+            const cleanIp = res.stdout.trim();
+            if (cleanIp !== '') {
+                // Update local memory cache variables
+                lastPublicIp = cleanIp;
+                lastPublicIpTime = currentTime;
+                return cleanIp;
             }
-            return currentHost;
-        })
-        .catch(function () {
-            return currentHost;
-        });
+        }
+        return currentHost;
+
+    } catch {
+        return currentHost;
+    }
 };
 
 /**
  * Combined DDNS resolution function (checks your custom target or the public OpenWrt DDNS system)
  */
-const getDdnsPublicIp = function (instObj) {
+const getDdnsOrPublicIp = async function (instObj) {
     let foundDomain = '';
 
     // 1. Get the dynamic domain name from the .conf file data object
@@ -424,36 +441,257 @@ const getDdnsPublicIp = function (instObj) {
         foundDomain = instObj.ddns.trim();
     }
 
-    // 2. Fallback to the default public OpenWrt DDNS profile if no internal domain is defined
+    // If no domain was passed, try to look up the host via OpenWrt's UCI system
     if (!foundDomain) {
-        const ddnsSections = L.uci.sections('ddns', 'service');
-        if (ddnsSections && ddnsSections.length > 0) {
-            for (let i = 0; i < ddnsSections.length; i++) {
-                const host = L.uci.get('ddns', ddnsSections[i]['.name'], 'lookup_host');
+        try {
+            // Load the ddns configuration package asynchronously
+            await L.uci.load('ddns');
+            const ddnsSections = L.uci.sections('ddns', 'service') || [];
+
+            // Modern, clean loop to find the first valid lookup_host
+            for (const section of ddnsSections) {
+                const host = L.uci.get('ddns', section['.name'], 'lookup_host');
                 if (host && host.trim() !== '') {
                     foundDomain = host.trim();
+                    // Found a valid host target, stop searching immediately
                     break;
                 }
             }
+        } catch {
+            // Secure fallback if the ddns plugin package is missing on the system
+            foundDomain = '';
         }
     }
 
+    // 2. Resolve the domain we found or run the public IP fallback
     if (foundDomain) {
-        // Call your new all-in-one checkdns backend component in one single pass
-        return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.checkddns, foundDomain])
-            .then(function (res) {
-                if (res && res.code === 0 && res.stdout) {
-                    return res.stdout.trim(); // Returns the validated IPv4 or IPv6 address string
+        try {
+            // Call your all-in-one checkdns backend component inline
+            const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.checkddns, foundDomain]);
+            if (res && res.code === 0 && res.stdout) {
+                const resolvedIp = res.stdout.trim();
+                if (resolvedIp !== '') {
+                    // Returns the validated IP address string
+                    return resolvedIp;
                 }
-                return queryPublicIp();
-            })
-            .catch(function () {
-                return queryPublicIp();
-            });
+            }
+        } catch {
+            // Silent fallback if the backend script encounters a execution drop
+        }
     }
 
-    return queryPublicIp();
+    // 3. fallback if domain fails or is completely empty
+    return await queryPublicIp(false);
 };
+
+/**
+ * Clean any string from spaces, tabs, newlines, http(s)://, paths, ports and URL brackets
+ */
+const cleanIpOrDomain = async function (rawString) {
+    if (!rawString) {
+        return '';
+    }
+
+    try {
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.cleanipdns, rawString]);
+
+        // Strict string type verification to prevent runtime browser crashes
+        if (res && res.code === 0 && typeof res.stdout === 'string') {
+            const cleaned = res.stdout.trim();
+            if (cleaned !== '') {
+                return cleaned;
+            }
+        }
+        return rawString;
+
+    } catch {
+        return rawString;
+    }
+};
+
+/**
+ * Check a DDNS domain name or validate a raw public WAN IP address, and verify if it is online
+ */
+const checkDdns = async function (targetHost) {
+    if (!targetHost) {
+        return { success: false, stdout: '' };
+    }
+    try {
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.checkddns, targetHost]);
+
+        // Enforces strict boolean conversion and strips trailing newlines safely
+        const isSuccessful = (res && res.code === 0 && typeof res.stdout === 'string' && res.stdout.trim() !== '');
+
+        return {
+            success: isSuccessful,
+            stdout: res ? (res.stdout || '').trim() : ''
+        };
+
+    } catch {
+        return { success: false, stdout: '' };
+    }
+};
+
+/**
+ * Validate if a UDP or TCP port is open from the outside. Returns true or false.
+ */
+const checkPort = async function (targetHost, externalPort, internalPort, protocol) {
+    if (!targetHost || !externalPort || !internalPort || !protocol) {
+        return false;
+    }
+    const protoStr = protocol.toLowerCase();
+    try {
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.checkport, targetHost, externalPort, internalPort, protoStr]);
+        return (res && res.code === 0 && typeof res.stdout === 'string' && res.stdout.trim() === 'PORT_OPEN');
+
+    } catch {
+        return false;
+    }
+};
+
+/**
+ * Dispatches the background system task to update your dynamic DNS registration.
+ */
+const updateDdnsProvider = async function (updateUrl, domain) {
+    if (!updateUrl) {
+        return null;
+    }
+    try {
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.wgetddns, updateUrl, domain]);
+
+        const responseText = String(res.stdout || res.stderr || '').trim();
+
+        // Check if the response text starts with "Update successful" or "success"
+        const isSuccess = responseText.toLowerCase().indexOf('success') !== -1;
+
+        return {
+            raw: responseText,
+            isError: !isSuccess || res.code !== 0
+        };
+
+    } catch (err) {
+        return {
+            raw: String(err.message || err),
+            isError: true
+        };
+    }
+};
+
+/**
+ * Checks the router network structure to find double NAT, AP mode, real gateway IP
+ * and collects all active subnets to prevent routing deadlocks.
+ */
+const checkNetworkStructure = async function () {
+    const privateIpRegex = /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|fd|fc)/i;
+
+    // We will collect all active subnet strings (e.g. "192.168.20.0") here
+    let localSubnets = [];
+
+    try {
+        // 1. Fetch all local interfaces (LAN, Guest, etc.) asynchronously to protect them
+        const devices = await network.getDevices();
+
+        if (Array.isArray(devices)) {
+            for (const dev of devices) {
+                if (!dev) continue;
+                const ipaddrs = dev.getIPAddrs ? dev.getIPAddrs() : [];
+
+                for (const rawIp of ipaddrs) {
+                    if (!rawIp) continue;
+                    // Strip the subnet mask if it exists (e.g., "192.168.20.5/24" -> "192.168.20.5")
+                    const ip = String(rawIp).split('/')[0];
+                    const parts = ip.split('.');
+                    if (parts.length === 4) {
+                        localSubnets.push(parts[0] + '.' + parts[1] + '.' + parts[2] + '.0');
+                    }
+                }
+            }
+        }
+
+        // 2. Fetch the WAN networks inline to find the gateway and double NAT state
+        const wanNetworks = await network.getWANNetworks();
+
+        let isDoubleNat = false;
+        let isApMode = false;
+        let gatewayIp = '';
+
+        if (!wanNetworks || wanNetworks.length === 0) {
+            isApMode = true;
+            return { doubleNat: isDoubleNat, apMode: isApMode, gateway: OPENVPN.IP.ZERO, localSubnets: localSubnets };
+        }
+
+        // Process all found wide area network channels using modern loops
+        for (const net of wanNetworks) {
+            if (!net) continue;
+
+            const gw4 = net.getGatewayAddr ? net.getGatewayAddr() : (net.data ? net.data.gateway : null);
+            if (gw4 && gw4 !== OPENVPN.IP.ZERO) {
+                gatewayIp = gw4;
+            }
+
+            // Evaluate WAN IPv4 addresses for Double-NAT tracking
+            const ipaddrs = net.getIPAddrs ? net.getIPAddrs() : [];
+            for (const rawWanIp of ipaddrs) {
+                if (!rawWanIp) continue;
+
+                // Strip the subnet mask before the regex and parts logic runs
+                const ip = String(rawWanIp).split('/')[0];
+
+                if (privateIpRegex.test(ip)) {
+                    isDoubleNat = true;
+                }
+
+                // Also add the WAN side IP subnet to our protection blacklist
+                const parts = ip.split('.');
+                if (parts.length === 4) {
+                    const wanSub = parts[0] + '.' + parts[1] + '.' + parts[2] + '.0';
+                    if (localSubnets.indexOf(wanSub) === -1) {
+                        localSubnets.push(wanSub);
+                    }
+                }
+            }
+
+            // Evaluate WAN IPv6 addresses for Local/Unique-Local tracking
+            const ip6addrs = net.getIP6Addrs ? net.getIP6Addrs() : [];
+            for (const rawWanIp6 of ip6addrs) {
+                if (!rawWanIp6) continue;
+                const ip6 = String(rawWanIp6).split('/')[0];
+                if (privateIpRegex.test(ip6)) {
+                    isDoubleNat = true;
+                }
+            }
+        }
+
+        if (!gatewayIp) {
+            gatewayIp = OPENVPN.IP.ZERO;
+        }
+
+        // Return the full, rich network state mapping profile cleanly
+        return {
+            doubleNat: isDoubleNat,
+            apMode: isApMode,
+            gateway: gatewayIp,
+            localSubnets: localSubnets
+        };
+
+    } catch {
+        // Safe error fallback if either network system command breaks down
+        return { doubleNat: false, apMode: false, gateway: OPENVPN.IP.ZERO, localSubnets: localSubnets };
+    }
+};
+
+/**
+ * network callbacks container
+ */
+const networkCallbacks = ({
+    queryPublicIp: queryPublicIp,
+    getDdnsOrPublicIp: getDdnsOrPublicIp,
+    cleanIpOrDomain: cleanIpOrDomain,
+    checkDdns: checkDdns,
+    checkPort: checkPort,
+    updateDdnsProvider: updateDdnsProvider,
+    checkNetworkStructure: checkNetworkStructure
+});
 
 /**
  * Asynchronously loads system telemetry, network metrics, logs, and configuration templates
@@ -807,7 +1045,7 @@ const generateConfigContentClient = function (viewData, newInstanceItem, wizardP
 /**
  * Checks and creates all configuration and key files for an instance
  */
-const syncInstanceFiles = function (newInstanceItem, viewData, wizardParams) {
+const syncInstanceFiles = async function (newInstanceItem, viewData, wizardParams) {
     const id = newInstanceItem.id;
     const calculatedPort = calcPortFromId(id, newInstanceItem.instNum);
     const rolePrefix = newInstanceItem.role + '_';
@@ -821,16 +1059,14 @@ const syncInstanceFiles = function (newInstanceItem, viewData, wizardParams) {
     } else if (!wizardParams && newInstanceItem.role === OPENVPN.ROLE.SERVER) {
         newInstanceItem.port = calculatedPort;
     } else if (wizardParams && wizardParams.port) {
-        if (wizardParams.port) {
-            // Ensure the wizard port is also mirrored inside the object property instantly
-            newInstanceItem.port = parseInt(wizardParams.port, 10);
-        }
+        // Ensure the wizard port is also mirrored inside the object property instantly
+        newInstanceItem.port = parseInt(wizardParams.port, 10);
         if (wizardParams.proto) {
             newInstanceItem.proto = wizardParams.proto;
         }
     }
 
-    // Now all initial files can be written with the correctly set port property
+    // Push all tasks into an array to fire them simultaneously
     const filePromises = [
         initFile(CFG.FILE.dir_cfg + id + '.conf', null, newInstanceItem, viewData, wizardParams),
         initFile(CFG.FILE.dir_keys + 'ca_' + id + '.crt', CFG.FILE.dir_keys + CFG.FILE.ca_def_crt, newInstanceItem, viewData, wizardParams),
@@ -845,67 +1081,81 @@ const syncInstanceFiles = function (newInstanceItem, viewData, wizardParams) {
         );
     }
 
-    return Promise.all(filePromises);
+    // We wait for all parallel file transmissions
+    return await Promise.all(filePromises);
 };
 
 /**
  * Reads a file or creates it with default text if missing
  */
-const initFile = function (customPath, defaultPath, newInstanceItem, viewData, wizardParams) {
-    return L.fs.read(customPath)
-        .then(function (existingContent) {
-            return existingContent;
-        })
-        .catch(function () {
-            // STEP 1: If the missing file is a configuration profile (.conf), compile it now
-            if (customPath.indexOf('.conf') !== -1) {
-                let configContent = '';
+const initFile = async function (customPath, defaultPath, newInstanceItem, viewData, wizardParams) {
+    try {
+        // Try to read the file from the disk
+        const existingContent = await L.fs.read(customPath);
+        return existingContent;
 
-                if (newInstanceItem.role === OPENVPN.ROLE.CLIENT) {
-                    configContent = generateConfigContentClient(viewData, newInstanceItem, wizardParams);
-                } else {
-                    configContent = generateConfigContentServer(viewData, newInstanceItem, wizardParams);
-                }
+    } catch {
 
-                return L.fs.write(customPath, configContent).then(function () {
-                    return configContent;
-                });
+        // STEP 1: If the missing file is a configuration profile (.conf), compile it now
+        if (customPath.indexOf('.conf') !== -1) {
+            let configContent = '';
+
+            if (newInstanceItem.role === OPENVPN.ROLE.CLIENT) {
+                configContent = generateConfigContentClient(viewData, newInstanceItem, wizardParams);
+            } else {
+                configContent = generateConfigContentServer(viewData, newInstanceItem, wizardParams);
             }
 
-            // If no default fallback path is given, stop here safely
-            if (!defaultPath) {
-                return Promise.resolve('');
+            // Write the new config file and return its content inline
+            await L.fs.write(customPath, configContent);
+            return configContent;
+        }
+
+        // If no default fallback path is given, stop here safely
+        if (!defaultPath) {
+            return '';
+        }
+
+        // STEP 2: For local loopback tests, copy the server's keys so the client certificates match perfectly.
+        let sourcePath = defaultPath;
+        if (!wizardParams && newInstanceItem.role === OPENVPN.ROLE.CLIENT && newInstanceItem.loopbackServerId && newInstanceItem.loopbackServerId !== newInstanceItem.id) {
+            // Example: Change "ca_instance2.crt" to search for "ca_instance1.crt" on the disk
+            const fileName = customPath.substring(customPath.lastIndexOf('/') + 1);
+            const serverFileName = fileName.replace(newInstanceItem.id, newInstanceItem.loopbackServerId);
+            sourcePath = customPath.substring(0, customPath.lastIndexOf('/') + 1) + serverFileName;
+        }
+
+        // STEP 3: Read the selected source file with a safe fallback to an empty string
+        let sourceContent = '';
+        try {
+            const rawSource = await L.fs.read(sourcePath);
+            sourceContent = String(rawSource || '').trim();
+        } catch {
+            sourceContent = '';
+        }
+
+        // SAFETY FALLBACK: If the local file was empty or missing, fall back to default files
+        if (sourceContent.length === 0 && sourcePath !== defaultPath) {
+            let fallbackContent = '';
+            try {
+                const rawFallback = await L.fs.read(defaultPath);
+                fallbackContent = String(rawFallback || '').trim();
+            } catch {
+                fallbackContent = '';
             }
 
-            // STEP 2: For local loopback tests, copy the server's keys so the client certificates match perfectly.
-            let sourcePath = defaultPath;
-            if (!wizardParams && newInstanceItem.role === OPENVPN.ROLE.CLIENT && newInstanceItem.loopbackServerId && newInstanceItem.loopbackServerId !== newInstanceItem.id) {
-                // Example: Change "ca_instance2.crt" to search for "ca_instance1.crt" on the disk
-                const fileName = customPath.substring(customPath.lastIndexOf('/') + 1);
-                const serverFileName = fileName.replace(newInstanceItem.id, newInstanceItem.loopbackServerId);
-                sourcePath = customPath.substring(0, customPath.lastIndexOf('/') + 1) + serverFileName;
-            }
+            if (fallbackContent.length === 0) return '';
 
-            // STEP 3: Read the selected source file and write it to the new instance destination folder
-            return L.resolveDefault(L.fs.read(sourcePath), '').then(function (sourceContent) {
-                const cleanContent = String(sourceContent || '').trim();
+            await L.fs.write(customPath, fallbackContent);
+            return fallbackContent;
+        }
 
-                // SAFETY FALLBACK: If the local file was empty or missing, fall back to default files
-                if (cleanContent.length === 0 && sourcePath !== defaultPath) {
-                    return L.resolveDefault(L.fs.read(defaultPath), '').then(function (fallbackContent) {
-                        const finalFallback = String(fallbackContent || '').trim();
-                        if (finalFallback.length === 0) return '';
-                        return L.fs.write(customPath, finalFallback).then(function () { return finalFallback; });
-                    });
-                }
+        if (sourceContent.length === 0) return '';
 
-                if (cleanContent.length === 0) return '';
-
-                return L.fs.write(customPath, cleanContent).then(function () {
-                    return cleanContent;
-                });
-            });
-        });
+        // Write the verified clean content to the destination folder
+        await L.fs.write(customPath, sourceContent);
+        return sourceContent;
+    }
 };
 
 /**
@@ -962,7 +1212,7 @@ const loadInstanceData = async function (viewData) {
 /**
  * Processes pending reactivation tasks from the previous session reload
  */
-const processPendingSessionTask = function () {
+const processPendingSessionTask = async function () {
     // Read the pending reactivation request from the browser memory
     const reloadId = window.sessionStorage.getItem(CFG.ID.openvpn_pending_reactivation);
 
@@ -978,22 +1228,24 @@ const processPendingSessionTask = function () {
 
         // Open the native LuCI review and apply window automatically
         if (L.ui && L.ui.changes && typeof L.ui.changes.init === 'function') {
-            L.ui.changes.init().then(function () {
+            try {
+                // Wait for the modal engine initialization
+                await L.ui.changes.init();
+
                 if (L.ui.changes.displayChanges && typeof L.ui.changes.displayChanges === 'function') {
                     L.ui.changes.displayChanges();
                 }
-            });
+            } catch {
+                // Silent fallback safety if the LuCI modal framework drops out
+            }
         }
     }
-
-    // Return a clean resolved promise without dragging unused data arrays around
-    return Promise.resolve();
 };
 
 /**
  * Shows the LuCI changes modal and restarts the OpenVPN instance safely
  */
-const showSaveApplyOpenVPN = function (instance_id) {
+const showSaveApplyOpenVPN = async function (instance_id) {
     // OpenVPN needs a full stop and start cycle to load new key files into memory
     const needsReactivation = isInstanceEnabled(instance_id);
 
@@ -1016,17 +1268,23 @@ const showSaveApplyOpenVPN = function (instance_id) {
 
     // Open the standard LuCI review and apply changes window
     if (L.ui && L.ui.changes && typeof L.ui.changes.init === 'function') {
-        L.ui.changes.init().then(function () {
+        try {
+            // Wait for the modal engine initialization
+            await L.ui.changes.init();
+
             if (L.ui.changes.displayChanges && typeof L.ui.changes.displayChanges === 'function') {
                 L.ui.changes.displayChanges();
 
-                // Add a beautiful info message box into the popup window after a tiny delay
-                setTimeout(function () {
+                // requestAnimationFrame guarantees the DOM node is fully accessible before injection runs.
+                window.requestAnimationFrame(function () {
                     const modalNode = document.querySelector('.modal.uci-dialog') || document.querySelector('.modal');
                     if (modalNode) {
                         const infoNotice = E('div', {
                             'class': 'alert-message info',
-                            'style': 'margin:15px 0 15px 0; padding:12px; font-weight:bold; font-size:12px; line-height:1.5; border-left:4px solid var(--action-bg, #00a8ff); background:var(--background-color, #f0fdf4); color:var(--text-color, #334155); border-radius:4px;'
+                            'style': 'margin:15px 0 15px 0; padding:12px; font-weight:bold; font-size:12px; line-height:1.5; ' +
+                                'border-left:4px solid var(--action-bg, #00a8ff); ' +
+                                'background:color-mix(in srgb, var(--sysstat-text-blue, #3b82f6) 6%, transparent); ' +
+                                'color:var(--text-color, #334155); border-radius:4px;'
                         }, ICON.WARNING + TXT.MSG.config_changed_reload);
 
                         const titleHeader = modalNode.querySelector('h4');
@@ -1036,9 +1294,11 @@ const showSaveApplyOpenVPN = function (instance_id) {
                             modalNode.appendChild(infoNotice);
                         }
                     }
-                }, 50);
+                });
             }
-        });
+        } catch {
+            // Silent fallback on failure
+        }
     }
 };
 
@@ -1522,7 +1782,7 @@ const openSiteToSiteExportModal = function (instance_id, nextId, files, activeBr
         modalCancelBtn.style.display = 'none';
         statusFeedbackNode.style.display = 'block';
 
-        viewData.keygenClass.executeAsynchronousKeyGen(nextId, 'client_pki', 'rsa2048_ec', '100', targetCnName, '', statusFeedbackNode, async function (keygenSuccess, pkiPayload) {
+        viewData.keygenClass.executeAsynchronousKeyGen(nextId, 'client_pki', 'rsa2048_ec', '100', targetCnName, '', statusFeedbackNode, L_fs_Callbacks, async function (keygenSuccess, pkiPayload) {
             if (!keygenSuccess || !pkiPayload) {
                 modalCancelBtn.style.display = 'inline-block';
                 modalConfirmBtn.disabled = false;
@@ -1606,33 +1866,45 @@ const openSiteToSiteExportModal = function (instance_id, nextId, files, activeBr
 /**
  * Exporter for OpenVPN profiles with embedded client crypto data
  */
-const downloadClientOvpnProfile = function (instance_id, instObj, customUciName, viewData, instanceSaveParams) {
+const downloadClientOvpnProfile = async function (instance_id, instObj, customUciName, viewData, instanceSaveParams) {
     const nextId = instance_id;
     const displayId = customUciName || instance_id;
     const currentRole = instObj.role || 'client';
     const rolePrefix = currentRole + '_';
 
-    Promise.all([
-        L.resolveDefault(L.fs.read(CFG.FILE.dir_cfg + nextId + '.conf'), ''),
-        L.resolveDefault(L.fs.read(CFG.FILE.dir_keys + 'ca_' + nextId + '.crt'), ''),
-        L.resolveDefault(L.fs.read(CFG.FILE.dir_keys + rolePrefix + nextId + '.crt'), ''),
-        L.resolveDefault(L.fs.read(CFG.FILE.dir_keys + rolePrefix + nextId + '.key'), ''),
-        L.resolveDefault(L.fs.read(CFG.FILE.dir_keys + 'tls-crypt_' + nextId + '.key'), '')
-    ]).then(async function (rawFilesArray) {
+    try {
+        // Read all 5 crypto files simultaneously in parallel
+        const readSafe = async function (path) {
+            try {
+                const content = await L.fs.read(path);
+                return content;
+            } catch {
+                return '';
+            }
+        };
 
+        // Read all 5 crypto files simultaneously in parallel
+        const rawFilesArray = await Promise.all([
+            readSafe(CFG.FILE.dir_cfg + nextId + '.conf'),
+            readSafe(CFG.FILE.dir_keys + 'ca_' + nextId + '.crt'),
+            readSafe(CFG.FILE.dir_keys + rolePrefix + nextId + '.crt'),
+            readSafe(CFG.FILE.dir_keys + rolePrefix + nextId + '.key'),
+            readSafe(CFG.FILE.dir_keys + 'tls-crypt_' + nextId + '.key')
+        ]);
+
+        // Validate that we actually have the configuration and the required keys
         if (!rawFilesArray || rawFilesArray.length < 5 || !rawFilesArray[0]) {
             L.ui.addNotification(null, E('p', {}, TXT.ERROR.config_key_missing), 'error');
             return;
         }
 
-        // Map the raw flat array immediately into a beautiful semantic data object
         const serverAssets = Object.assign({}, SERVER_FILES_TEMPLATE, {
             conf: rawFilesArray[0],
             ca: rawFilesArray[1],
             cert: rawFilesArray[2],
             key: rawFilesArray[3],
             tlsCrypt: rawFilesArray[4]
-        });
+        });;
 
         // Check if this server configuration uses the environment routing variable system
         const isSiteToSite = serverAssets.conf.indexOf('CLIENT_CNAME_') !== -1;
@@ -1644,20 +1916,20 @@ const downloadClientOvpnProfile = function (instance_id, instObj, customUciName,
         // Read the custom client port range directly from the template schema
         const currentPort = instObj.portExtern || internalPort;
 
-        // 1. Match both the variable type [1] and the target value [2] using capturing groups
+        // Match both the variable type [1] and the target value [2] using capturing groups
         const ddnsMetaMatch = serverAssets.conf.match(/^setenv\s+(DDNS|PUBLIC_DOMAIN|PUBLIC_STATIC_IP|PUBLIC_DYNAMIC_IP)\s+"?(\S+?)"?$/m);
 
         const configIpType = ddnsMetaMatch ? ddnsMetaMatch[1] : '';
         const savedHost = ddnsMetaMatch ? ddnsMetaMatch[2].trim() : '';
         let finalHost = '';
 
-        // 2. If it is a permanent domain name or verified static IP, never overwrite it
+        // If it is a permanent domain name or verified static IP, never overwrite it
         if (configIpType === 'DDNS' || configIpType === 'PUBLIC_DOMAIN' || configIpType === 'PUBLIC_STATIC_IP') {
             finalHost = savedHost;
         } else {
-            // For unverified dynamic IPs, try to get the public IP
+            // For unverified dynamic IPs, try to get the public IP via our flat cache engine
             try {
-                const liveDetectedIp = await getDdnsPublicIp(instObj);
+                const liveDetectedIp = await getDdnsOrPublicIp(instObj, false);
                 finalHost = liveDetectedIp || savedHost || window.location.hostname;
             } catch {
                 finalHost = savedHost || window.location.hostname;
@@ -1720,11 +1992,11 @@ const downloadClientOvpnProfile = function (instance_id, instObj, customUciName,
         // --- TYPE B: Open the clean isolated Site-to-Site Selection Modal UI Sub-Routine ---
         openSiteToSiteExportModal(instance_id, nextId, serverAssets, activeBranchNames, finalHost, triggerStandardExportFlow, viewData, instanceSaveParams);
 
-    }).catch(function (err) {
-        L.ui.addNotification(null, E('p', {}, TXT.ERROR.build_profile + err.message), 'error');
-    });
+    } catch (err) {
+        // Central error interception handler cleanly logs all file system crashes
+        L.ui.addNotification(null, E('p', {}, TXT.ERROR.build_profile + ' ' + err.message), 'error');
+    }
 };
-
 
 
 /**
@@ -2052,10 +2324,7 @@ const renderMainControlBox = function (initialRawState, addServerBtn, addClientB
         const wizardData = Object.assign({}, viewData.wizardClass.WIZARD_DATA_TEMPLATE, {
             viewData: viewData,
             addNewInstanceCallback: addNewInstance,
-            getDdnsOrPublicIpCallback: getDdnsPublicIp,
-            checkNetworkStructureCallback: checkNetworkStructure,
-            cleanIpOrDomainCallback: cleanIpOrDomain,
-            checkDdnsCallback: checkDdns,
+            networkCallbacks: networkCallbacks,
             showSaveApplyOpenVPNCallback: showSaveApplyOpenVPN,
             importOvpnClientProfileCallback: importOvpnClientProfile,
             instanceNumber: totalInstances + 1,
@@ -2272,7 +2541,7 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
     // show key file
     showBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
-        viewData.keygenClass.openKeyEditorModal(filename, instance_id, displayId, role, showSaveApplyOpenVPN);
+        viewData.keygenClass.openKeyEditorModal(filename, instance_id, displayId, role, showSaveApplyOpenVPN, L_fs_Callbacks);
     });
 
     // download key file
@@ -2315,7 +2584,7 @@ const renderKeyButtons = function (label, filename, instance_id, displayId, defa
 /**
  * Saves the modified configuration text and handles the instance restart logic
  */
-const handleInstanceSave = function (instance_id, role, txtArea, sBtn, sNotice, originalConfContent, modificationBoxNode, viewData, clientUpdateOnly) {
+const handleInstanceSave = async function (instance_id, role, txtArea, sBtn, sNotice, originalConfContent, modificationBoxNode, viewData, clientUpdateOnly) {
     // Clean and standardize all line endings instantly (Supports UNIX \n, Windows \r\n, and Mac \r)
     const newConfigContent = sanitizeInputText(txtArea.value) + '\n';
     const cleanOriginal = String(originalConfContent || '').trim() + '\n';
@@ -2348,34 +2617,35 @@ const handleInstanceSave = function (instance_id, role, txtArea, sBtn, sNotice, 
     }
 
     const detectedProto = viewData.statusClass.parseProtoFromConfig(newConfigContent);
-
     const isCurrentlyEnabled = isInstanceEnabled(instance_id);
+
     if (setFirewallRules || isCurrentlyEnabled) {
         if (sNotice) {
             sNotice.style.display = 'inline-block';
         }
     }
 
-    // Write the finalized configuration file directly to the disk memory (Now 100% pure UNIX format)
-    L.fs.write(CFG.FILE.dir_cfg + instance_id + '.conf', newConfigContent).then(function () {
+    try {
+        // Step 1: Write the finalized configuration file directly to the disk memory
+        await L.fs.write(CFG.FILE.dir_cfg + instance_id + '.conf', newConfigContent);
+
         // Update the local instance port property inside the RAM cache instantly
         if (Array.isArray(viewData.instances)) {
-            for (let i = 0; i < viewData.instances.length; i++) {
-                if (viewData.instances[i] && viewData.instances[i].id === instance_id) {
-                    viewData.instances[i].confContent = newConfigContent;
-                    viewData.instances[i].port = detectedPort || currentPort;
+            for (const instance of viewData.instances) {
+                if (instance && instance.id === instance_id) {
+                    instance.confContent = newConfigContent;
+                    instance.port = detectedPort || currentPort;
                     break;
                 }
             }
         }
 
-        // Return the firewall promise so LuCI waits for the network tasks to finish
-        if (setFirewallRules) {
-            return syncInstanceFirewallRule(role, instance_id, detectedPort, detectedProto, viewData);
+        // Step 2: Handle asymmetric firewall rule sync inline if required
+        if (setFirewallRules === true) {
+            await syncInstanceFirewallRule(role, instance_id, detectedPort, detectedProto, viewData);
         }
-        return Promise.resolve();
-    }).then(function () {
-        // Trigger changes system banner and restart workflow if needed
+
+        // Step 3: Trigger changes system banner and restart workflow if needed
         if (setFirewallRules || isCurrentlyEnabled) {
             showSaveApplyOpenVPN(instance_id);
         } else {
@@ -2383,13 +2653,16 @@ const handleInstanceSave = function (instance_id, role, txtArea, sBtn, sNotice, 
                 modificationBoxNode.setAttribute('data-original-content', newConfigContent);
             }
         }
-        return Promise.resolve();
-    }).then(function () {
+
+        // Compilation finished successfully
         sBtn.textContent = ICON.SUCCESS + TXT.BTN.saved;
-    }).catch(function (err) {
+
+    } catch (err) {
+        // Universal catch block intercepts all disk or firewall RPC failures
         console.error('Failed to write OpenVPN configuration for ' + instance_id + ':', err);
         sBtn.textContent = ICON.ERROR + TXT.INFO.error;
-    }).finally(function () {
+
+    } finally {
         setTimeout(function () {
             sBtn.disabled = false;
             sBtn.textContent = originalButtonText;
@@ -2397,7 +2670,7 @@ const handleInstanceSave = function (instance_id, role, txtArea, sBtn, sNotice, 
                 sNotice.style.display = 'none';
             }
         }, 1500);
-    });
+    }
 };
 
 /**
@@ -2646,7 +2919,7 @@ const renderInstanceBox = function (s, idx, viewData) {
 
     keygenBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
-        viewData.keygenClass.openKeyGenModal(instance_id, instObj.displayName, role, viewData, showSaveApplyOpenVPN);
+        viewData.keygenClass.openKeyGenModal(instance_id, instObj.displayName, role, viewData, showSaveApplyOpenVPN, L_fs_Callbacks);
     });
 
     // Create the main configuration text box field
@@ -2658,15 +2931,15 @@ const renderInstanceBox = function (s, idx, viewData) {
     }, confContent);
 
     // Instantiate the independent alert component directly from the wizard module class
-    const portAlertComponent = viewData.wizardClass.renderPortForwardingAlert('background:color-mix(in srgb, var(--text-color, #334155) 2%, transparent); border:1px solid var(--border-color, #e2e8f0);');
+    const portForwardingAlert = viewData.wizardClass.renderPortForwardingAlert(true, networkCallbacks);
 
     const runLiveDashboardPortCheck = function () {
-        portAlertComponent.check(
+        portForwardingAlert.check(
             instObj.proto || OPENVPN.PROTO.UDP,
             role,                   // Directly uses 'server' or 'client'
             instObj.port || OPENVPN.PORT.s1194,
             instObj.portExtern || OPENVPN.PORT.s1194,
-            checkNetworkStructure
+            false, false
         );
     };
     // Trigger the port warning test instantly on interface instantiation
@@ -2707,10 +2980,7 @@ const renderInstanceBox = function (s, idx, viewData) {
             const wizardData = Object.assign({}, viewData.wizardClass.WIZARD_DATA_TEMPLATE, {
                 viewData: viewData,
                 addNewInstanceCallback: addNewInstance,
-                getDdnsOrPublicIpCallback: getDdnsPublicIp,
-                checkNetworkStructureCallback: checkNetworkStructure,
-                cleanIpOrDomainCallback: cleanIpOrDomain,
-                checkDdnsCallback: checkDdns,
+                networkCallbacks: networkCallbacks,
                 showSaveApplyOpenVPNCallback: showSaveApplyOpenVPN,
                 importOvpnClientProfileCallback: importOvpnClientProfile,
                 instanceNumber: instNum,
@@ -2737,7 +3007,7 @@ const renderInstanceBox = function (s, idx, viewData) {
         // BODY WRAPPER: Implements a clean unified padding area exclusively for the lower configuration elements
         E('div', { 'style': 'padding: 20px;' }, [
 
-            portAlertComponent.node,
+            portForwardingAlert.node,
 
             renderKeysBox(instance_id, displayId, role, ovpnProfileBtn, keygenBtn, viewData),
 
@@ -2818,8 +3088,10 @@ const addNewInstance = async function (roleType, viewData, wizardParams) {
     L.uci.save();
 
     // Trigger the automated key allocation modal for ALL secondary server installations
-    if (newInstanceItem.role === OPENVPN.ROLE.SERVER && viewData.sections && viewData.sections.length > 0) {
-        viewData.keygenClass.openAutomatedPostKeyGenModal(newInstanceItem.id, viewData, showSaveApplyOpenVPN);
+    if ((newInstanceItem.role === OPENVPN.ROLE.SERVER && viewData.sections && viewData.sections.length > 0) ||
+        ((wizardParams) && (wizardParams.role === OPENVPN.ROLE.SERVER))) {
+        const cnName = wizardParams ? viewData.wizardClass.getValidCommonName(wizardParams.displayName) : '';
+        viewData.keygenClass.openAutomatedPostKeyGenModal(newInstanceItem.id, viewData, cnName, showSaveApplyOpenVPN, L_fs_Callbacks);
     } else {
         showSaveApplyOpenVPN(newInstanceItem.id);
     }
@@ -2847,19 +3119,27 @@ const openManualClientImportModal = function (viewData) {
         'style': 'margin-right:10px;'
     }, TXT.MSG.import_profile);
 
+    const fallbackBtn = E('button', {
+        'class': 'cbi-button cbi-button-neutral',
+        'style': 'margin-right:10px;'
+    }, TXT.BTN.use_fallback);
+
     const cancelBtn = E('button', {
         'class': 'cbi-button cbi-button-neutral'
-    }, TXT.MSG.cancel_use_fallback);
+    }, TXT.BTN.cancel);
 
     const nextNum = getNextInstanceNumber(viewData);
     const targetInstanceId = 'instance' + nextNum;
 
-    /**
-     * Reverts to the default standard loopback configuration if the import fails or is cancelled
-     */
+    // Reverts to the default standard loopback configuration
     const loadDefaultFallbackKeys = function () {
         L.ui.hideModal();
         addNewInstance(OPENVPN.ROLE.CLIENT, viewData, null);
+    };
+
+    // Pure cancel event: just closes the modal layout without creating any instance
+    const handlePureCancel = function () {
+        L.ui.hideModal();
     };
 
     // Attach the asynchronous click handler to manage file processing safely
@@ -2912,7 +3192,10 @@ const openManualClientImportModal = function (viewData) {
         };
         reader.readAsText(files[0]);
     });
-    cancelBtn.addEventListener('click', loadDefaultFallbackKeys);
+
+    // Connect the buttons to their independent functions
+    fallbackBtn.addEventListener('click', loadDefaultFallbackKeys);
+    cancelBtn.addEventListener('click', handlePureCancel);
 
     // Render the complete client import window layout
     L.ui.showModal(ICON.IMPORT + TXT.MSG.import_openvpn_connect_client_profile, [
@@ -2925,6 +3208,7 @@ const openManualClientImportModal = function (viewData) {
                 ]),
                 E('div', { 'style': 'text-align:right; margin-top:20px; border-top:1px solid var(--border-color, #cbd5e1); padding-top:12px;' }, [
                     importBtn,
+                    fallbackBtn,
                     cancelBtn
                 ])
             ])
@@ -2972,116 +3256,24 @@ const renderInstanceCreationBox = function (viewData) {
 
 
 /**
- * Checks the router network structure to find double NAT, AP mode, real gateway IP
- * and collects all active subnets to prevent routing deadlocks.
- */
-const checkNetworkStructure = function () {
-    const privateIpRegex = /^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|fd|fc)/i;
-
-    // We will collect all active subnet strings (e.g. "192.168.20.0") here
-    let localSubnets = [];
-
-    // 1. Fetch all local interfaces (LAN, Guest, etc.) to protect them
-    return network.getDevices().then(function (devices) {
-        if (Array.isArray(devices)) {
-            devices.forEach(function (dev) {
-                const ipaddrs = dev.getIPAddrs ? dev.getIPAddrs() : [];
-                ipaddrs.forEach(function (rawIp) {
-                    if (!rawIp) return;
-                    // Strip the subnet mask if it exists (e.g., "192.168.20.5/24" -> "192.168.20.5")
-                    const ip = String(rawIp).split('/')[0];
-                    const parts = ip.split('.');
-                    if (parts.length === 4) {
-                        localSubnets.push(parts[0] + '.' + parts[1] + '.' + parts[2] + '.0');
-                    }
-                });
-            });
-        }
-
-        // 2. Now fetch the WAN networks to find the gateway and double NAT state
-        return network.getWANNetworks();
-    }).then(function (wanNetworks) {
-        let isDoubleNat = false;
-        let isApMode = false;
-        let gatewayIp = '';
-
-        if (!wanNetworks || wanNetworks.length === 0) {
-            isApMode = true;
-            return { doubleNat: isDoubleNat, apMode: isApMode, gateway: OPENVPN.IP.ZERO, localSubnets: localSubnets };
-        }
-
-        for (let i = 0; i < wanNetworks.length; i++) {
-            const net = wanNetworks[i];
-            if (!net) continue;
-
-            const gw4 = net.getGatewayAddr ? net.getGatewayAddr() : (net.data ? net.data.gateway : null);
-            if (gw4 && gw4 !== OPENVPN.IP.ZERO) {
-                gatewayIp = gw4;
-            }
-
-            const ipaddrs = net.getIPAddrs ? net.getIPAddrs() : [];
-            for (let j = 0; j < ipaddrs.length; j++) {
-                if (!ipaddrs[j]) continue;
-
-                // Strip the subnet mask before the regex and parts logic runs
-                const ip = String(ipaddrs[j]).split('/')[0];
-
-                if (privateIpRegex.test(ip)) {
-                    isDoubleNat = true;
-                }
-
-                // Also add the WAN side IP subnet to our protection blacklist
-                const parts = ip.split('.');
-                if (parts.length === 4) {
-                    const wanSub = parts[0] + '.' + parts[1] + '.' + parts[2] + '.0';
-                    if (localSubnets.indexOf(wanSub) === -1) {
-                        localSubnets.push(wanSub);
-                    }
-                }
-            }
-
-            const ip6addrs = net.getIP6Addrs ? net.getIP6Addrs() : [];
-            for (let k = 0; k < ip6addrs.length; k++) {
-                if (!ip6addrs[k]) continue;
-                const ip6 = String(ip6addrs[k]).split('/')[0];
-                if (privateIpRegex.test(ip6)) {
-                    isDoubleNat = true;
-                }
-            }
-        }
-
-        if (!gatewayIp) {
-            gatewayIp = OPENVPN.IP.ZERO;
-        }
-
-        // Return the full, rich network state mapping profile cleanly
-        return {
-            doubleNat: isDoubleNat,
-            apMode: isApMode,
-            gateway: gatewayIp,
-            localSubnets: localSubnets // Contains clean "192.168.20.0" format now!
-        };
-    }).catch(function () {
-        return { doubleNat: false, apMode: false, gateway: OPENVPN.IP.ZERO, localSubnets: localSubnets };
-    });
-};
-
-/**
  * Creates or updates the inbound firewall rule for an OpenVPN instance (Asynchronous)
  */
-const syncInstanceFirewallRule = function (role, instance_id, customPort, customProto, viewData) {
+const syncInstanceFirewallRule = async function (role, instance_id, customPort, customProto, viewData) {
     const fwRuleSection = 'openvpn_rule_' + instance_id;
     const fwZoneSection = 'openvpn_zone_' + instance_id;
     const fwForwardLanSection = 'openvpn_fwd_lan_' + instance_id;
     const fwForwardVpnSection = 'openvpn_fwd_vpn_' + instance_id;
+
     let targetPort = customPort;
     if (!targetPort || isNaN(targetPort)) {
         targetPort = calcPortFromId(instance_id);
     }
+
     let targetProto = customProto;
     if (!targetProto || (targetProto !== OPENVPN.PROTO.UDP && targetProto !== OPENVPN.PROTO.TCP)) {
         targetProto = OPENVPN.PROTO.UDP;
     }
+
     const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
     // 1. Always create the inbound rule on the WAN interface to allow the tunnel connection
@@ -3092,12 +3284,15 @@ const syncInstanceFirewallRule = function (role, instance_id, customPort, custom
     L.uci.set(CFG.CMD.firewall, fwRuleSection, 'proto', targetProto);
     L.uci.set(CFG.CMD.firewall, fwRuleSection, 'target', 'ACCEPT');
 
-    // 2. Return a Promise chain to handle network structure check properly
+    // 2. Process routing table adjustments based on the current instance role mapping
     if (role === OPENVPN.ROLE.SERVER) {
         const tunInterfaceName = 'vpn' + getInstanceNumber(instance_id).toString();
         const zoneName = 'vpn_zone_' + instance_id;
 
-        return checkNetworkStructure().then(function (networkState) {
+        try {
+            // wait until the network structure is ready
+            const networkState = await checkNetworkStructure();
+
             // Create a separate, secure firewall zone for the VPN tunnel network
             L.uci.add(CFG.CMD.firewall, 'zone', fwZoneSection);
             L.uci.set(CFG.CMD.firewall, fwZoneSection, 'name', zoneName);
@@ -3124,15 +3319,21 @@ const syncInstanceFirewallRule = function (role, instance_id, customPort, custom
             L.uci.set(CFG.CMD.firewall, fwForwardVpnSection, 'dest', 'lan');
 
             L.uci.save();
-            return Promise.resolve();
-        });
+            return true;
+
+        } catch (err) {
+            console.error('Firewall network state validation failed:', err);
+            L.uci.save();
+            return false;
+        }
     } else {
         // Clean up the routing sections if the instance is just a client tunnel
         L.uci.remove(CFG.CMD.firewall, fwZoneSection);
         L.uci.remove(CFG.CMD.firewall, fwForwardLanSection);
         L.uci.remove(CFG.CMD.firewall, fwForwardVpnSection);
+
         L.uci.save();
-        return Promise.resolve();
+        return true;
     }
 };
 
@@ -3312,7 +3513,7 @@ const renderLogBox = function (logLines) {
     const clearLogBtn = E('button', {
         'id': 'openvpn_clear_log_btn',
         'class': 'btn cbi-button cbi-button-remove',
-        'style': 'margin-top: 10px; margin-bottom: 20px;'
+        'style': 'margin-top: 10px;'
     }, TXT.INFO.log_clear);
 
     clearLogBtn.addEventListener('click', function (ev) {
@@ -3320,23 +3521,66 @@ const renderLogBox = function (logLines) {
         handleLogFilter(clearLogBtn, logTextArea);
     });
 
-    // Automatically scroll down to reveal the newest operational log state instantly upon page load
-    setTimeout(function () {
-        const obj = document.getElementById('openvpn_terminal_box');
-        if (obj) obj.scrollTop = obj.scrollHeight;
-    }, 100);
+    // 1. Create the content wrapper for logs (Hidden by default)
+    const logContentContainer = E('div', {
+        'style': 'padding:0 2px; display:none; margin-top:5px;'
+    }, [
+        logTextArea,
+        clearLogBtn
+    ]);
 
-    return E('div', { 'class': 'cbi-map', 'id': 'system_log_section_node' }, [
+    // 2. Create a dynamic text arrow indicator to show the open/close state
+    const toggleArrow = E('span', {
+        'style': 'margin-right:8px; font-size:11px; cursor:pointer; user-select:none;'
+    }, '▶ ');
+
+    const inlineSummaryLine = E('div', {
+        'style': 'width:100%; display:block; font-size:11px; font-family:var(--font-monospace, monospace); color:var(--text-color-light, #64748b); padding:4px 2px; margin-bottom:10px; white-space:normal; word-break:break-all; font-style:italic;'
+    }, '▪ ' + TXT.MSG.system_logs);
+
+    // 3. Assemble the interactive clickable title bar header
+    const clickableTitle = E('legend', {
+        'style': 'font-weight:bold; font-size:13px; padding:0 8px; color:var(--text-color, #334155); cursor:pointer; user-select:none;',
+        'click': function () {
+            const isHidden = (logContentContainer.style.display === 'none');
+            if (isHidden) {
+                logContentContainer.style.display = 'block';
+                inlineSummaryLine.style.display = 'none'; // Hide placeholder line when box expands
+                toggleArrow.textContent = '▼ ';
+                // Automatically scroll down to reveal the newest logs when opening
+                setTimeout(function () {
+                    const obj = document.getElementById('openvpn_terminal_box');
+                    if (obj) obj.scrollTop = obj.scrollHeight;
+                }, 50);
+            } else {
+                logContentContainer.style.display = 'none';
+                inlineSummaryLine.style.display = 'block'; // Show placeholder line when box collapses
+                toggleArrow.textContent = '▶ ';
+            }
+        }
+    }, [
+        toggleArrow,
+        TXT.INFO.title_log
+    ]);
+
+
+    // 4. Return the finalized structural fieldset layout (Matches renderConfigEditor style)
+    return E('div', { 'class': 'cbi-map', 'id': 'system_log_section_node', 'style': 'margin-bottom:25px;' }, [
         E('div', { 'class': 'cbi-section' }, [
-            E('h3', { 'style': 'color:var(--text-color, #334155); font-weight:bold;' }, TXT.INFO.title_log),
-            E('div', { 'class': 'cbi-value', 'style': 'padding:0; margin:0; width:100%;' }, [
-                logTextArea,
-                E('br'),
-                clearLogBtn
+            E('fieldset', {
+                'class': 'cbi-section-fieldset',
+                'style': 'margin-bottom:0px; padding:15px; border:1px solid var(--border-color, #cbd5e1); border-radius:4px; background:var(--background-color, transparent);'
+            }, [
+                clickableTitle,
+                E('div', { 'class': 'cbi-section-node', 'style': 'padding:0 5px;' }, [
+                    logContentContainer,
+                    inlineSummaryLine // Stays visible until expanded
+                ])
             ])
         ])
     ]);
 };
+
 
 /**
  * Filters log lines based on the session storage timestamp.

@@ -24,6 +24,7 @@ const TXT = {
 	INFO: {
 		action: _('Action'),
 		connection_type: _('Connection Type'),
+		closed: _('CLOSED'),
 		creating_vpn: _('Creating VPN...'),
 		custom_update_url: _('Custom Update URL'),
 		ddns_provider: _('DDNS Provider'),
@@ -42,6 +43,7 @@ const TXT = {
 		netmask: _('Netmask'),
 		office_ip_address: _('Office IP Address'),
 		office_name: _('Office Name'),
+		open: _('OPEN'),
 		openvpn_profile_valid: _('OpenVPN Profile Valid:'),
 		outside_port: _('Outside Port:'),
 		port_forwarding: _('Port Forwarding:'),
@@ -58,6 +60,7 @@ const TXT = {
 		secure_tunnel: _('Secure Full Tunnel (Route all traffic over VPN)'),
 		server_address: _('Server Address:'),
 		split_tunnel: _('Split Tunnel (Access home LAN only, faster web browsing)'),
+		status: _('Status'),
 		token_password: _('Token / Password'),
 		username: _('Username'),
 		vpn_name: _('VPN Name (Optional)')
@@ -74,8 +77,8 @@ const TXT = {
 	},
 	MSG: {
 		add_your_other_office: _('Add your other offices below. The server will connect all networks automatically.'),
-		another_router_detected: _('Another Main Internet Router Detected!'),
-		behind_another_router: _('This device is behind another main internet router. To allow connections from the internet, you need to setup Port Forwarding. Please enable Port Forwarding on your main internet router.'),
+		another_router_detected: _('Another Router detected!!'),
+		another_internet_router_detected: _('Another Main Internet Router Detected!'),
 		choose_how_send_through_vpn: _('Choose how your internet traffic is sent through the VPN. You can use any free OpenVPN app on your phone or laptop to import this profile.'),
 		client_for_branch_office: _('Client for Branch Office (Branch)'),
 		create_vpn_few_clicks: _('Create a secure VPN connection in just a few clicks.'),
@@ -84,24 +87,32 @@ const TXT = {
 		for_phones_and_laptops: _('For Phones & Laptops (OpenVPN Connect App)'),
 		internet_provides_static_ip: _('If your internet provides a static IP address.'),
 		ip_static_bypassed_by_admin: _('Static IP check bypassed by administrator.'),
+		ip_static_now_checked_by_admin: _('Static IP now checked by administrator.'),
 		ip_validation_bypassed_after_net_failure: _('Validation bypassed after network failure.'),
 		ip_validation_bypassed_by_admin: _('Validation bypassed by administrator.'),
 		ip_valid_and_resolvable: _('Success: The IP address is valid and fully resolvable!'),
+		is_already: _('is already'),
+		is_currently: _('is currently'),
 		keep_ip_setup: _('Keep IP Setup anyway'),
 		keys_updated_successfully: _('Keys updated successfully!'),
 		no_offices_added_yet: _('No offices added yet. Use the fields below to add the first office.'),
 		no_file_choosen: _('No file chosen'),
 		only_vpn_client_keys: _('This file contains only VPN client keys.'),
+		open_port_success: _('Port Open Success!'),
 		placeholder_mydomain_publicip: _('e.g. mydomain.com or your public IP'),
 		placeholder_myhomevpn: _('e.g. MyHomeVPN, MainOffice'),
 		please_check_profe_file: _('Please check your profile file. A valid configuration file needs a remote target endpoint and key blocks.'),
 		port_used_main_router: _('The port used on your main internet router.'),
 		port_used_this_router: _('The port used on this OpenWrt router.'),
+		please_create_port_forwarding: _('Please create a port forwarding rule inside your main internet router.'),
 		public_ip_or_domainname: _('The public IP address or your own external domain name.'),
+		ready_for_connection: _('Ready for openvpn connections.'),
 		select_ovpn_profile: _('Select the (.ovpn) profile or (.crt) multi-key bundle. Settings will be configured or updated automatically.'),
 		server_for_main_office: _('Server for Main Office (Headquarters)'),
 		skip_check_unlock_create: _('Skip Check & Unlock Create Button'),
 		switch_to_ddns: _('Switch to Dynamic DNS (DDNS)'),
+		the_port_forward: _('The port forward'),
+		the_external_port: _('The external port'),
 		tcp_for_traveling: _('TCP (Good for traveling - works behind firewalls)'),
 		udp_recommended: _('UDP (Recommended - Fast)'),
 		use_ddns_service: _('Use Dynamic DNS (DDNS) Service'),
@@ -112,7 +123,7 @@ const TXT = {
 		custom_placeholder: _('e.g. myname-custom-provider.com'),
 		custom_provider: _('Custom / Manual Update URL'),
 		custom_token: _('Token / Password'),
-		custom_url_placeholder: _('e.g. https://custom-provider.com&token...'),
+		custom_url_placeholder: _('e.g. https://custom-provider.com?domain=...&key=...'),
 		duckdns_description: _('Number 1 for Open-Source and Home-Assistant setups.'),
 		duckdns_placeholder: _('e.g. myname.duckdns.org'),
 		duckdns_provider: _('DuckDNS (duckdns.org)'),
@@ -122,7 +133,7 @@ const TXT = {
 		dynu_provider: _('Dynu Systems (dynu.com)'),
 		dynu_token: _('MD5 Password / Key'),
 		dynu_username: _('Username (Optional)'),
-		dynv6_description: _('Classic and stable free dynamic DNS provider.'),
+		dynv6_description: _('Classic free provider with exceptional IPv6 and dual-stack support.'),
 		dynv6_placeholder: _('e.g. myname.dynv6.net'),
 		dynv6_provider: _('dynv6 (dynv6.com)'),
 		dynv6_token: _('HTTP Token String'),
@@ -130,7 +141,6 @@ const TXT = {
 		freedns_placeholder: _('e.g. myname.mooo.com'),
 		freedns_provider: _('FreeDNS (afraid.org)'),
 		freedns_token: _('Direct Update Token'),
-		freedns_username: _('Username (Optional)'),
 		freemyip_description: _('Simple free service using text-based HTTPS tokens.'),
 		freemyip_placeholder: _('e.g. myname.freemyip.com'),
 		freemyip_provider: _('FreeMYIP (freemyip.com)'),
@@ -139,7 +149,7 @@ const TXT = {
 		ipv64_placeholder: _('e.g. myname.ipv64.net'),
 		ipv64_provider: _('IPv64 (ipv64.net)'),
 		ipv64_token: _('Account Update Key'),
-		noip_description: _('Worldwide number 1 provider. Highly compatible with many systems.'),
+		noip_description: _('Very popular provider. Requires manual activation every 30 days in free account.'),
 		noip_placeholder: _('e.g. myname.ddns.net'),
 		noip_provider: _('No-IP (noip.com)'),
 		noip_token: _('DDNS Key / Password'),
@@ -206,7 +216,7 @@ const OPENVPN = Object.freeze({
 		s1194: '1194',
 		s443: '443',
 		s444: '444',
-		n1194: 1194,
+		n1194: 1194
 	}),
 	IP: Object.freeze({
 		ZERO: '0.0.0.0'
@@ -229,10 +239,7 @@ const OPENVPN = Object.freeze({
 const WIZARD_DATA_TEMPLATE = {
 	viewData: null,								// Holds the main application interface context data
 	addNewInstanceCallback: null,				// Function to create or update an OpenVPN instance configuration
-	getDdnsOrPublicIpCallback: null,			// Function to query the active public internet IP or DDNS hostname
-	checkNetworkStructureCallback: null,		// Function to detect if the router is behind a Double-NAT gateway
-	cleanIpOrDomainCallback: null,				// Function wrapper to strip prefixes, ports, folders, and formatting from hosts
-	checkDdnsCallback: null,					// Function wrapper to run DNS lookups and verify live host connectivity via ping
+	networkCallbacks: null,						// Network callbacks container
 	showSaveApplyOpenVPNCallback: null,			// Function to trigger the official green save-and-apply banner in LuCI
 	importOvpnClientProfileCallback: null,		// Function to parse text, key bundles, and routing layouts from uploaded files
 	instanceNumber: 1,							// Stores the current or next available numeric instance identification index
@@ -269,6 +276,48 @@ const WIZARD_PARAMS_TEMPLATE = {
 
 
 /**
+ * Generates the final update URL for the selected DDNS provider.
+ */
+const buildDdnsUpdateUrl = function (provider, domain, token, ddnsUser) {
+	// Security check: We always need a provider, a domain, and a token/password
+	if (!provider || !domain) {
+		return '';
+	}
+	let url = '';
+	if (provider === 'custom') {
+		url = ddnsUser;
+	} else {
+		if (!token) {
+			return '';
+		}
+		// Generate the final update URL structure using the clean domain
+		if (provider === 'duckdns') {
+			url = 'https://duckdns.org/update?domain=' + domain + '&token=' + token;
+		} else if (provider === 'ipv64') {
+			url = 'https://ipv64.net/nic/update?key=' + token + '&domain=' + domain;
+		} else if (provider === 'freemyip') {
+			url = 'https://freemyip.com/update?token=' + token + '&domain=' + domain;
+		} else if (provider === 'dynv6') {
+			url = 'https://dynv6.com/api/update?zone=' + domain + '&token=' + token;
+		} else if (provider === 'dynu') {
+			if (ddnsUser) {
+				url = 'https://api.dynu.com/nic/update?hostname=' + domain + '&username=' + ddnsUser + '&password=' + token;
+			} else {
+				url = 'https://api.dynu.com/nic/update?hostname=' + domain + '&password=' + token;
+			}
+		} else if (provider === 'freedns') {
+			url = 'https://sync.afraid.org/u/' + token + '/';
+		} else if (provider === 'noip') {
+			if (!ddnsUser) {
+				return '';
+			}
+			url = 'https://' + ddnsUser + ':' + token + '@dynupdate.no-ip.com/nic/update?hostname=' + domain;
+		}
+	}
+	return url;
+}
+
+/**
  * Strips all accidental Windows or Mac line breaks and trims spaces.
  */
 const sanitizeInputLine = function (value) {
@@ -299,16 +348,19 @@ const getValidCommonName = function (name, isFilename) {
 	if (isFilename === true) {
 		// Restrictive rule: "Instance #1" -> "Instance__1" -> "Instance_1"
 		return trimmedName
-			.replace(/[^a-zA-Z0-9_-]/g, '_')
-			.replace(/_+/g, '_')
-			.replace(/-+/g, '-');
+			.replace(/[^a-zA-Z0-9_-]/g, '_') // Turn dots, spaces, special chars into _
+			.replace(/_+/g, '_')             // Collapse multiple underscores
+			.replace(/-+/g, '-')             // Collapse multiple dashes
+			.trim()                          // Clean spaces if any left
+			.replace(/^[_-]+|[_-]+$/g, '');  // Fix: Remove leading/trailing dashes and underscores
 	}
 
 	// Loose rule: "Instance #1" -> "Instance  1" -> "Instance 1"
 	return trimmedName
 		.replace(/[^a-zA-Z0-9_. -]/g, ' ')
 		.replace(/ +/g, ' ')
-		.replace(/_+/g, '_');
+		.replace(/_+/g, '_')
+		.trim();
 }
 
 /**
@@ -403,76 +455,143 @@ const renderSubnetInputs = function () {
 };
 
 /**
- * Creates Port Forwarding warning block with custom external mapping support.
+ * Creates Port Forwarding warning block with dynamic port state checking and local caching.
  */
-const renderPortForwardingAlert = function (custromStyle) {
-	// 1. Create the main warning HTML box
+const renderPortForwardingAlert = function (hideOnPortOpen, networkCallbacks) {
+	let last_portValue = null;
+	let last_clientPortValue = null;
+	let last_portCheckTime = 0;
+	let last_isPortOpen = null;
+
+	// Create the main alert box element
 	const alertNode = E('div', {
 		'class': 'alert-message warning',
-		'style': 'margin-bottom:20px; padding:10px; font-size:12px; line-height:1.5; display:none; ' + custromStyle,
-		'data-is-ap': 'false' // This stores the true/false status state
+		'style': 'margin-bottom:20px; padding:10px; font-size:12px; line-height:1.5; display:none;',
+		'data-is-ap': 'false'
 	});
 
+	const alertStyleInfo = 'margin-bottom:20px; padding:10px; font-size:12px; line-height:1.5; ' +
+		'background:color-mix(in srgb, var(--text-color, #334155) 2%, transparent); ' +
+		'border:1px solid var(--border-color, #e2e8f0);';
+
+	const alertStyleWarning = 'margin-bottom:20px; padding:10px; font-size:12px; line-height:1.5;';
+
 	return {
-		// The physical HTML element to insert into the view layout
+		// The HTML element to insert into the view layout
 		node: alertNode,
 
-		// Quick check to see if the alert is active (returns true or false)
+		// Check if the alert is currently visible
 		isAlertActive: function () {
 			return alertNode.getAttribute('data-is-ap') === 'true';
 		},
 
-		// Accepts clientPortValue as an explicit fourth param for clean mapping
-		check: function (protoValue, roleValue, portValue, clientPortValue, checkNetworkCallback) {
+		// Check if we need to show the PortForwardingAlert
+		check: async function (protoValue, roleValue, portValue, clientPortValue, force) {
 			const currentHost = window.location.hostname;
 			const isServer = (roleValue === OPENVPN.ROLE.SERVER);
 
-			// Port Forwarding rules are only needed if this device works as a VPN server
-			if (isServer === true && typeof checkNetworkCallback === 'function') {
-
-				checkNetworkCallback().then(function (networkState) {
-					// Show warning if this router is behind another main router/modem
-					if (networkState.doubleNat === true || networkState.apMode === true) {
-
-						// Unpack the internal port safely (handling arrays if passed)
-						const rawIntPort = Array.isArray(portValue) ? (portValue[1] || portValue[0]) : portValue;
-						const internalPort = String(rawIntPort || OPENVPN.PORT.s1194).trim();
-
-						// Unpack the external client port safely (fallback to internal if empty)
-						const rawExtPort = Array.isArray(clientPortValue) ? (clientPortValue[1] || clientPortValue[0]) : clientPortValue;
-						const externalPort = String(rawExtPort || internalPort).trim();
-
-						// Get the gateway IP address from your network check function
-						const routerIp = networkState.gateway || OPENVPN.IP.ZERO;
-						let forwardLine = '';
-
-						// Build the clean rule chain map (e.g. 192.168.20.1:443 ➔ YourOpenWrt:444)
-						if (routerIp && routerIp !== OPENVPN.IP.ZERO) {
-							forwardLine = routerIp + ':' + externalPort + ' ' + ICON.ARROW + currentHost + ':' + internalPort;
-						} else {
-							forwardLine = TXT.INFO.outside_port + ' ' + externalPort + ' ' + ICON.ARROW + TXT.INFO.inside_port + ' ' + internalPort;
-						}
-
-						let forwardHint = '<div style="margin-top:10px; padding:5px; background:color-mix(in srgb, var(--action-bg, #00a8ff) 10%, transparent); border-left:4px solid var(--action-bg, #00a8ff); font-family:var(--font-monospace, monospace); line-height:1.6; font-weight:bold; font-size:13px; text-align:center; border-radius:4px;">';
-						forwardHint += TXT.INFO.port_forwarding + ' ' + forwardLine + ' (' + protoValue.toUpperCase() + ')';
-						forwardHint += '</div>';
-
-						// Put the text into the HTML alert box safely
-						alertNode.innerHTML = '<strong>' + ICON.WARNING + TXT.MSG.another_router_detected + '</strong><br/>' + TXT.MSG.behind_another_router + ' (IP: ' + routerIp + ').<br/>' + forwardHint;
-
-						alertNode.setAttribute('data-is-ap', 'true');
-						alertNode.style.display = 'block';
-					} else {
-						alertNode.setAttribute('data-is-ap', 'false');
-						alertNode.style.display = 'none';
-					}
-				}).catch(function () {
-					alertNode.setAttribute('data-is-ap', 'false');
-					alertNode.style.display = 'none';
-				});
-			} else {
+			// Port tests are only needed if this machine works as a VPN server
+			if (isServer !== true) {
 				alertNode.setAttribute('data-is-ap', 'false');
 				alertNode.style.display = 'none';
+				return true;
+			}
+
+			try {
+				// 1. Fetch the network structure blueprint
+				const networkState = await networkCallbacks.checkNetworkStructure();
+				if (networkState.doubleNat !== true && networkState.apMode !== true) {
+					alertNode.setAttribute('data-is-ap', 'false');
+					alertNode.style.display = 'none';
+					return true;
+				}
+
+				// 2. Cache evaluation
+				let skipPortcheck = false;
+				const currentTime = Date.now();
+				if (force !== true &&
+					last_portValue === portValue &&
+					last_clientPortValue === clientPortValue &&
+					last_isPortOpen !== null &&
+					Math.abs(currentTime - last_portCheckTime) < 60000) {
+					skipPortcheck = true;
+				} else {
+					last_portValue = portValue;
+					last_clientPortValue = clientPortValue;
+					last_portCheckTime = currentTime;
+				}
+
+				// Unpack ports safely
+				const rawIntPort = Array.isArray(portValue) ? (portValue || portValue) : portValue;
+				const internalPort = String(rawIntPort || OPENVPN.PORT.s1194).trim();
+				const rawExtPort = Array.isArray(clientPortValue) ? (clientPortValue || clientPortValue) : clientPortValue;
+				const externalPort = String(rawExtPort || internalPort).trim();
+
+				// 3. Resolve public IP
+				const publicIp = await networkCallbacks.queryPublicIp(force);
+				const targetHost = publicIp || currentHost;
+
+				// 4. Resolve port condition (cached or fresh live background nftables scan)
+				let isPortOpen = last_isPortOpen;
+				if (skipPortcheck !== true) {
+					isPortOpen = await networkCallbacks.checkPort(targetHost, externalPort, internalPort, protoValue);
+					last_isPortOpen = isPortOpen;
+				}
+
+				// 5. Run layout compilation and HTML rendering
+				if (isPortOpen === true && hideOnPortOpen === true) {
+					alertNode.setAttribute('data-is-ap', 'false');
+					alertNode.style.display = 'none';
+					return true;
+				}
+
+				const routerIp = networkState.gateway || OPENVPN.IP.ZERO;
+				let forwardLine = '';
+				if (routerIp && routerIp !== OPENVPN.IP.ZERO) {
+					forwardLine = routerIp + ':' + externalPort + ' ' + ICON.ARROW + currentHost + ':' + internalPort;
+				} else {
+					forwardLine = TXT.INFO.outside_port + ' ' + externalPort + ' ' + ICON.ARROW + TXT.INFO.inside_port + ' ' + internalPort;
+				}
+
+				let forwardHint = '<div style="margin-top:10px; padding:5px; background:color-mix(in srgb, var(--action-bg, #00a8ff) 10%, transparent); border-left:4px solid var(--action-bg, #00a8ff); font-family:var(--font-monospace, monospace); line-height:1.6; font-weight:bold; font-size:13px; text-align:center; border-radius:4px;">';
+				forwardHint += TXT.INFO.port_forwarding + ' ' + forwardLine + ' (' + protoValue.toUpperCase() + ')';
+				forwardHint += '</div>';
+
+				let port_info;
+				if (externalPort != internalPort) {
+					port_info = TXT.MSG.the_port_forward + ' <strong>' + externalPort + ICON.ARROW + internalPort + '</strong> ';
+				} else {
+					port_info = TXT.MSG.the_external_port + ' <strong>' + externalPort + '</strong> ';
+				}
+
+				if (isPortOpen === true) {
+					alertNode.className = 'alert-message';
+					alertNode.style.cssText = alertStyleInfo;
+					alertNode.innerHTML = '<strong>' + ICON.CHECK + TXT.MSG.open_port_success + '</strong><br/>' +
+						TXT.MSG.another_internet_router_detected + ' (IP: <strong>' + routerIp + '</strong>), ' + port_info + TXT.MSG.is_already +
+						'<span class="label success"> ' + TXT.INFO.open + '</span><br/>' +
+						'<strong>' + TXT.INFO.status + ':</strong> ' + TXT.MSG.ready_for_connection + '<br/>' + forwardHint;
+				} else {
+					if (hideOnPortOpen === true) {
+						alertNode.className = 'alert-message';
+						alertNode.style.cssText = alertStyleInfo;
+					} else {
+						alertNode.className = 'alert-message warning';
+						alertNode.style.cssText = alertStyleWarning;
+					}
+					alertNode.innerHTML = '<strong>' + ICON.WARNING + TXT.MSG.another_router_detected + '</strong><br/>' +
+						TXT.MSG.another_internet_router_detected + ' (IP: <strong>' + routerIp + '</strong>). ' + port_info + TXT.MSG.is_currently +
+						'<span class="label" style="background:var(--sysstat-text-red, #ef4444); color:#fff; font-weight:bold; padding:2px 6px; border-radius:3px;"> ' + TXT.INFO.closed + '</span><br/>' +
+						'<strong>' + TXT.INFO.action + ':</strong> ' + TXT.MSG.please_create_port_forwarding + '<br/>' + forwardHint;
+				}
+
+				alertNode.setAttribute('data-is-ap', 'true');
+				alertNode.style.display = 'block';
+				return true;
+			} catch {
+				alertNode.setAttribute('data-is-ap', 'false');
+				alertNode.style.display = 'none';
+				return false;
 			}
 		}
 	};
@@ -665,57 +784,29 @@ const createServerInstance = async function (scenarioSelect, elements, protoSele
 	if (connType === OPENVPN.CONN_TYPE.DDNS) {
 		provider = elements.inputs.ddnsProvider.value;
 		const rawDomain = sanitizeInputLine(elements.inputs.ddnsDomain.value);
-		const token = sanitizeInputLine(elements.inputs.ddnsToken.value);
-
+		domain = await wizardData.networkCallbacks.cleanIpOrDomain(rawDomain);
+		let token = '';
 		let ddnsUser = '';
-		if (elements.inputs.ddnsUsername) {
-			ddnsUser = sanitizeInputLine(elements.inputs.ddnsUsername.value);
+		if (provider === 'custom') {
+			if (elements.inputs.ddnsCustomUrl) {
+				ddnsUser = sanitizeInputLine(elements.inputs.ddnsCustomUrl.value);
+			}
+		}
+		else {
+			token = sanitizeInputLine(elements.inputs.ddnsToken.value);
+			if (elements.inputs.ddnsUsername) {
+				ddnsUser = sanitizeInputLine(elements.inputs.ddnsUsername.value);
+			}
 		}
 
-		// strip wrong characters from domain field
-		if (typeof wizardData.cleanIpOrDomainCallback === 'function') {
-			domain = await wizardData.cleanIpOrDomainCallback(rawDomain);
-		} else {
-			domain = rawDomain;
-		}
+		url = buildDdnsUpdateUrl(provider, domain, token, ddnsUser);
 
-		// Generate the final update URL structure using the clean domain
-		if (provider === 'duckdns') {
-			url = 'https://duckdns.org/update?domain=' + domain + '&token=' + token;
-		} else if (provider === 'ipv64') {
-			url = 'https://ipv64.net/nic/update?key=' + token + '&domain=' + domain;
-		} else if (provider === 'freemyip') {
-			url = 'https://freemyip.com/update?token=' + token + '&domain=' + domain;
-		} else if (provider === 'dynv6') {
-			url = 'https://dynv6.com/api/update?zone=' + domain + '&token=' + token;
-		} else if (provider === 'dynu') {
-			if (ddnsUser) {
-				url = 'https://api.dynu.com/nic/update?hostname=' + domain + '&username=' + ddnsUser + '&password=' + token;
-			} else {
-				url = 'https://api.dynu.com/nic/update?hostname=' + domain + '&password=' + token;
-			}
-		} else if (provider === 'freedns') {
-			if (ddnsUser) {
-				url = 'https://freedns.afraid.org/api/?action=getkeys&username=' + ddnsUser + '&password=' + token;
-			} else {
-				url = 'https://freedns.afraid.org/dynamic/update.php?' + token;
-			}
-		} else if (provider === 'noip') {
-			url = 'https://' + ddnsUser + ':' + token + '@dynupdate.no-ip.com/nic/update?hostname=' + domain;
-		} else if (provider === 'custom') {
-			url = sanitizeInputLine(elements.inputs.ddnsCustomUrl.value);
-		}
 	}
 	// PATH B: If standard IP connection is selected, clean the ddns input field
 	else {
 		const rawIpOrDomain = sanitizeInputLine(elements.inputs.ddns.value);
-
 		// clean the raw IP or connection host field
-		if (typeof wizardData.cleanIpOrDomainCallback === 'function') {
-			publicIpOrDomain = await wizardData.cleanIpOrDomainCallback(rawIpOrDomain);
-		} else {
-			publicIpOrDomain = rawIpOrDomain;
-		}
+		publicIpOrDomain = await wizardData.networkCallbacks.cleanIpOrDomain(rawIpOrDomain);
 	}
 
 	// Assemble only the structural parameters required by the system
@@ -893,7 +984,7 @@ const renderOptionSiteServer = function (portForwardingAlert, wizardData) {
 		}
 
 		// Run the asynchronous network state tracker check
-		wizardData.checkNetworkStructureCallback().then(function (networkState) {
+		wizardData.networkCallbacks.checkNetworkStructure().then(function (networkState) {
 			const blockedSubnets = networkState.localSubnets || [];
 
 			// HARD PROTECTION: Check if input matches any local LAN or WAN network range
@@ -1435,24 +1526,27 @@ const createWizardInputElements = function (buttons, wizardData, selectedScenari
 		'class': 'cbi-input-select',
 		'style': 'width:100%; font-weight:bold; color:var(--cbi-input-text-color-active, #3b82f6);'
 	}, [
-		// 1. Worldwide Commercial & Router Standards (Highest compatibility)
-		E('option', { 'value': 'noip', 'data-placeholder': TXT.DDNS.noip_placeholder, 'data-description': TXT.DDNS.noip_description, 'data-token-label': TXT.DDNS.noip_token, 'data-username': 'visible', 'data-username-label': TXT.DDNS.noip_username }, TXT.DDNS.noip_provider),
-		E('option', { 'value': 'dynu', 'data-placeholder': TXT.DDNS.dynu_placeholder, 'data-description': TXT.DDNS.dynu_description, 'data-token-label': TXT.DDNS.dynu_token, 'data-username': 'optional', 'data-username-label': TXT.DDNS.dynu_username }, TXT.DDNS.dynu_provider),
 
-		// 2. Most Popular Free Open-Source & Privacy Providers (Widely used in OpenWrt)
+		// 1. Top Recommended & Maintenance-Free (Best for OpenWrt users)
 		E('option', { 'value': 'duckdns', 'data-placeholder': TXT.DDNS.duckdns_placeholder, 'data-description': TXT.DDNS.duckdns_description, 'data-token-label': TXT.DDNS.duckdns_token }, TXT.DDNS.duckdns_provider),
+		E('option', { 'value': 'dynu', 'data-placeholder': TXT.DDNS.dynu_placeholder, 'data-description': TXT.DDNS.dynu_description, 'data-token-label': TXT.DDNS.dynu_token, 'data-username': 'optional', 'data-username-label': TXT.DDNS.dynu_username }, TXT.DDNS.dynu_provider),
 		E('option', { 'value': 'ipv64', 'data-placeholder': TXT.DDNS.ipv64_placeholder, 'data-description': TXT.DDNS.ipv64_description, 'data-token-label': TXT.DDNS.ipv64_token }, TXT.DDNS.ipv64_provider),
+
+		// 2. Specialized & Minimalist Providers (Privacy / IPv6 / Token-only)
 		E('option', { 'value': 'dynv6', 'data-placeholder': TXT.DDNS.dynv6_placeholder, 'data-description': TXT.DDNS.dynv6_description, 'data-token-label': TXT.DDNS.dynv6_token }, TXT.DDNS.dynv6_provider),
-		E('option', { 'value': 'freedns', 'data-placeholder': TXT.DDNS.freedns_placeholder, 'data-description': TXT.DDNS.freedns_description, 'data-token-label': TXT.DDNS.freedns_token, 'data-username': 'optional', 'data-username-label': TXT.DDNS.freedns_username }, TXT.DDNS.freedns_provider),
 		E('option', { 'value': 'freemyip', 'data-placeholder': TXT.DDNS.freemyip_placeholder, 'data-description': TXT.DDNS.freemyip_description, 'data-token-label': TXT.DDNS.freemyip_token }, TXT.DDNS.freemyip_provider),
+
+		// 3. Commercial & Legacy Standards (High compatibility but Free-Tier limitations)
+		E('option', { 'value': 'noip', 'data-placeholder': TXT.DDNS.noip_placeholder, 'data-description': TXT.DDNS.noip_description, 'data-token-label': TXT.DDNS.noip_token, 'data-username': 'visible', 'data-username-label': TXT.DDNS.noip_username }, TXT.DDNS.noip_provider),
+		E('option', { 'value': 'freedns', 'data-placeholder': TXT.DDNS.freedns_placeholder, 'data-description': TXT.DDNS.freedns_description, 'data-token-label': TXT.DDNS.freedns_token }, TXT.DDNS.freedns_provider),
 
 		// 3. Manual Fallback Configuration
 		E('option', { 'value': 'custom', 'data-placeholder': TXT.DDNS.custom_placeholder, 'data-description': TXT.DDNS.custom_description, 'data-token-label': TXT.DDNS.custom_token }, TXT.DDNS.custom_provider)
 	]);
 
 
-	const ddnsDomainInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.DDNS.noip_placeholder, 'style': 'width:100%; font-family:var(--font-monospace, monospace)' });
-	const ddnsUsernameInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.DDNS.noip_username, 'style': 'width:100%; font-family:var(--font-monospace, monospace);' });
+	const ddnsDomainInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.DDNS.duckdns_placeholder, 'style': 'width:100%; font-family:var(--font-monospace, monospace)' });
+	const ddnsUsernameInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'style': 'width:100%; font-family:var(--font-monospace, monospace);' });
 	const ddnsTokenInput = E('input', { 'type': 'password', 'class': 'cbi-input-text cbi-input-password', 'style': 'width:100%; font-family:var(--font-monospace, monospace);' });
 	const ddnsCustomUrlInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.DDNS.custom_url_placeholder, 'style': 'width:100%; font-family:var(--font-monospace, monospace)' });
 
@@ -1492,21 +1586,45 @@ const createWizardNavigationButtons = function () {
 /**
  * Changes the default ports automatically based on protocol and network type
  */
-const updateDefaultWizardPorts = function (protoValue, portForwardingAlert, portInput, clientPortInput, scenario, wizardData) {
+const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert, portInput, clientPortInput, scenario, wizardData) {
 	const isTcp = (protoValue === OPENVPN.PROTO.TCP);
-	let port = OPENVPN.PORT.s443;
+	let defaultPort = OPENVPN.PORT.s443;
+
 	if (!isTcp) {
-		port = String(getPortFromInstNum(wizardData.instanceNumber));
+		defaultPort = String(getPortFromInstNum(wizardData.instanceNumber));
 	}
 
-	// Check if this router in behind another router
-	portForwardingAlert.check(protoValue, getRoleFromScenarioValue(scenario), port, clientPortInput ? sanitizeInputLine(clientPortInput.value) : port, wizardData.checkNetworkStructureCallback);
+	const role = getRoleFromScenarioValue(scenario);
+	const isServer = (role === OPENVPN.ROLE.SERVER);
+	let isAp = false;
 
-	const isAp = portForwardingAlert.isAlertActive();
+	// Port tests are only needed if this machine works as a VPN server
+	if (isServer === true && wizardData && wizardData.networkCallbacks && typeof wizardData.networkCallbacks.checkNetworkStructure === 'function') {
+		try {
+			const networkState = await wizardData.networkCallbacks.checkNetworkStructure();
+			if (networkState.doubleNat === true || networkState.apMode === true) {
+				isAp = true;
+			}
+		} catch {
+			isAp = false;
+		}
+	}
+
+	const clientPortRow = document.getElementById('row_client_port_container');
+	if (clientPortRow) {
+		if (isAp === true) {
+			// show (remove display none !important)
+			clientPortRow.style.removeProperty('display');
+			clientPortRow.style.display = '';
+		} else {
+			// hide
+			clientPortRow.style.setProperty('display', 'none', 'important');
+		}
+	}
 
 	if (isTcp) {
 		// HELP-RULE: If TCP is selected behind Double-NAT, auto-fill External=443 and Internal=444!
-		if (isAp) {
+		if (isAp === true) {
 			// Internal target port (444)
 			portInput.value = OPENVPN.PORT.s444;
 			if (clientPortInput) {
@@ -1519,10 +1637,12 @@ const updateDefaultWizardPorts = function (protoValue, portForwardingAlert, port
 		}
 	} else {
 		// Default standard UDP port calculation matching the instance number
-		portInput.value = port;
-		if (clientPortInput) clientPortInput.value = port;
+		portInput.value = defaultPort;
+		if (clientPortInput) clientPortInput.value = defaultPort;
 	}
+
 };
+
 
 /**
  * Helper to find out which VPN type is selected
@@ -1631,37 +1751,15 @@ const updateStepVisibility = function (elements, state, buttons, wizardData) {
 /**
  * Runs the check and synchronizes the external port field visibility dynamically
  */
-const triggerWizardNetworkCheck = function (elements, portForwardingAlert, wizardData) {
+const triggerWizardNetworkCheck = function (elements, portForwardingAlert, force) {
 	const protoStr = getActiveProtoValue(elements);
 	const scenarioStr = getSelectedScenarioValue(elements);
 	const roleStr = getRoleFromScenarioValue(scenarioStr);
 	const internalPort = sanitizeInputLine(elements.inputs.port.value);
 	const externalPort = sanitizeInputLine(elements.inputs.clientPort.value);
 
-	/// Check if this router in behind another router
-	portForwardingAlert.check(protoStr, roleStr, internalPort, externalPort, wizardData.checkNetworkStructureCallback);
-
-	// Synchronize the external port row view based on the alert state after the promise resolved
-	setTimeout(function () {
-		// Replaced querySelector with getElementById to accurately catch the ID string target
-		const clientPortRow = document.getElementById('row_client_port_container');
-		if (clientPortRow) {
-			const isApActive = portForwardingAlert.isAlertActive();
-			if (isApActive) {
-				// Remove the style completely to let the theme apply its own perfect grid (flex/inline-flex/table)!
-				clientPortRow.style.removeProperty('display');
-				clientPortRow.style.display = '';
-			} else {
-				// Hide the row completely if no Double-NAT is active
-				clientPortRow.style.setProperty('display', 'none', 'important');
-			}
-
-			// Sync external input value if it was empty to match the internal port default
-			if (isApActive && !sanitizeInputLine(elements.inputs.clientPort.value)) {
-				elements.inputs.clientPort.value = internalPort;
-			}
-		}
-	}, 150);
+	// Promises inside .check() handle the background thread automatically.
+	return portForwardingAlert.check(protoStr, roleStr, internalPort, externalPort, force);
 };
 
 /**
@@ -1699,7 +1797,11 @@ const renderIpValidationWarning = function (elements, scenario, wizardData, butt
 			'class': 'cbi-button cbi-button-neutral',
 			'click': function (clickEv) {
 				clickEv.preventDefault();
-				showMessage(ICON.INFO + TXT.MSG.ip_static_bypassed_by_admin, MESSAGE_TYPE.INFO, elements.info.messageBox);
+				if (!elements.inputs.isStatic.checked) {
+					showMessage(ICON.INFO + TXT.MSG.ip_static_bypassed_by_admin, MESSAGE_TYPE.INFO, elements.info.messageBox);
+				} else {
+					showMessage(ICON.INFO + TXT.MSG.ip_static_now_checked_by_admin, MESSAGE_TYPE.INFO, elements.info.messageBox);
+				}
 				buttons.create.disabled = false;
 			}
 		}, TXT.MSG.keep_ip_setup)
@@ -1746,10 +1848,9 @@ const handleButtonNextClick = function (state, elements, buttons, portForwarding
 
 			state.currentStep = 3;
 			updateStepVisibility(elements, state, buttons, wizardData);
-			updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, scenario, wizardData);
-
-			// Execute live validation upon entering step 3 container view
-			triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
+			updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, scenario, wizardData).then(function () {
+				triggerWizardNetworkCheck(elements, portForwardingAlert, false);
+			});
 		}
 			break;
 
@@ -1835,7 +1936,7 @@ const handleButtonNextClick = function (state, elements, buttons, portForwarding
 
 			// Final save execution path
 			const currentProto = { value: getActiveProtoValue(elements) };
-			createServerInstance({ value: scenario }, elements, currentProto, wizardData, buttons.next, buttons.prev);
+			createServerInstance({ value: scenario }, elements, currentProto, wizardData, buttons.next, buttons.prev, wizardData);
 		}
 			break;
 
@@ -1907,9 +2008,10 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 
 	// Update ports and warnings when the protocol changes
 	const handleProtoContextChange = function () {
-		updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, getSelectedScenarioValue(elements), wizardData);
-		triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
-	};
+		updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, getSelectedScenarioValue(elements), wizardData).then(function () {
+			triggerWizardNetworkCheck(elements, portForwardingAlert, true);
+		});
+	}
 
 	// When the user changes a ddns provider clear error color, set placeholder and description text
 	// Change placeholder, description, token label, and username visibility on provider change
@@ -1918,12 +2020,28 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 		handleDdnsProviderChange(selectedOption, elements, buttons)
 	});
 
-	// Run validation lock when the user clicks out of the public IP/Domain field
+	// Run validation lock and FULL alert re-trigger when the user leaves the public IP/Domain field
 	elements.inputs.ddns.addEventListener('blur', function () {
-		// 1. Remove the invalid red border if the user has changed something
 		this.classList.remove('cbi-input-invalid');
+		lockCreateButton(buttons);
+		triggerWizardNetworkCheck(elements, portForwardingAlert, false);
+	});
 
-		// 2. Lock the create button to force a new network check
+	// Also re-trigger if the user hits "Enter" inside the IP field
+	elements.inputs.ddns.addEventListener('keyup', function (ev) {
+		if (ev.keyCode === 13) {
+			lockCreateButton(buttons);
+		}
+	});
+
+	// Re-trigger when switching between "Public IP" and "DDNS Service"
+	elements.inputs.connectionType.addEventListener('change', function () {
+		lockCreateButton(buttons);
+		triggerWizardNetworkCheck(elements, portForwardingAlert, false);
+	});
+
+	// Re-trigger when the DDNS domain input changes
+	elements.inputs.ddnsDomain.addEventListener('blur', function () {
 		lockCreateButton(buttons);
 	});
 
@@ -1932,20 +2050,19 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 
 	// Listen to manual internal port modifications
 	elements.inputs.port.addEventListener('input', function () {
-		triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
+		lockCreateButton(buttons);
 	});
 
 	// Listen to manual external client port modifications to update the alert live
 	elements.inputs.clientPort.addEventListener('input', function () {
-		triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
+		lockCreateButton(buttons);
 	});
+
 
 	// Update visibility and ports when the VPN type radio changes
 	const handleRadioContextChange = function () {
 		syncScenarioSubNodeVisibility(elements);
-		updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, getSelectedScenarioValue(elements), wizardData);
-		triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
-	};
+	}
 
 	elements.radios.connectServer.addEventListener('change', handleRadioContextChange);
 	elements.radios.siteServer.addEventListener('change', handleRadioContextChange);
@@ -1968,84 +2085,153 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 
 	// Initialize the default layout states on window load
 	syncScenarioSubNodeVisibility(elements);
-	updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, getSelectedScenarioValue(elements), wizardData);
-	triggerWizardNetworkCheck(elements, portForwardingAlert, wizardData);
 	updateStepVisibility(elements, state, buttons, wizardData);
 };
 
 /**
  * Locks the wizard creation flow by enforcing a mandatory network check.
  */
-const lockCreateButton = function (buttons) {
+const lockCreateButton = function (buttons, focus) {
 	buttons.check.style.setProperty('display', 'inline-block', 'important');
 	buttons.create.style.setProperty('display', 'none', 'important');
-	buttons.check.focus();
+	if (focus === true) {
+		buttons.check.focus();
+	}
 };
 
 /**
  * Unlocks the wizard creation flow after a successful network diagnostic.
  */
-const unlockCreateButton = function (buttons) {
+const unlockCreateButton = function (buttons, focus) {
 	buttons.check.style.setProperty('display', 'none', 'important');
 	buttons.create.style.setProperty('display', 'inline-block', 'important');
-	buttons.create.focus();
+	if (focus === true) {
+		buttons.create.focus();
+	}
 };
 
 /**
  * Sets up the diagnostic event routing for the network address check button.
  */
-const setupAddressValidator = function (elements, buttons, wizardData) {
-	buttons.check.addEventListener('click', function (ev) {
+const setupAddressValidator = function (elements, buttons, portForwardingAlert, wizardData) {
+	buttons.check.addEventListener('click', async function (ev) {
 		ev.preventDefault();
-
 		const connType = elements.inputs.connectionType.value;
 		let targetToTest = '';
 		let targetInputField = null;
 
+		// Check if we are using standard IP or Dynamic DNS
 		if (connType === OPENVPN.CONN_TYPE.IP) {
 			targetToTest = sanitizeInputLine(elements.inputs.ddns.value);
 			targetInputField = elements.inputs.ddns;
-		} else {
-			targetToTest = sanitizeInputLine(elements.inputs.ddnsDomain.value);
-			targetInputField = elements.inputs.ddnsDomain;
-		}
-
-		if (!targetToTest) {
-			if (targetInputField) {
-				targetInputField.classList.add('cbi-input-invalid');
-				targetInputField.focus();
+			if (!targetToTest) {
+				if (targetInputField) {
+					targetInputField.classList.add('cbi-input-invalid');
+					targetInputField.focus();
+				}
+				return;
 			}
-			return;
+			if (targetInputField) targetInputField.classList.remove('cbi-input-invalid');
+		} else {
+			// --- DDNS MODE VALIDATION ---
+			const ddnsDomainField = elements.inputs.ddnsDomain;
+			const ddnsTokenField = elements.inputs.ddnsToken;
+			const ddnsUserField = elements.inputs.ddnsUsername;
+			const rawDomain = sanitizeInputLine(ddnsDomainField.value);
+			const rawToken = sanitizeInputLine(ddnsTokenField.value);
+			const rawUser = ddnsUserField ? sanitizeInputLine(ddnsUserField.value) : '';
+
+			ddnsDomainField.classList.remove('cbi-input-invalid');
+			ddnsTokenField.classList.remove('cbi-input-invalid');
+			if (ddnsUserField) ddnsUserField.classList.remove('cbi-input-invalid');
+
+			if (!rawDomain) {
+				ddnsDomainField.classList.add('cbi-input-invalid');
+				ddnsDomainField.focus();
+				return;
+			}
+			if (!rawToken && elements.inputs.ddnsProvider.value !== 'custom') {
+				ddnsTokenField.classList.add('cbi-input-invalid');
+				ddnsTokenField.focus();
+				return;
+			}
+			const activeProviderOption = elements.inputs.ddnsProvider.options[elements.inputs.ddnsProvider.selectedIndex];
+			if (activeProviderOption && activeProviderOption.getAttribute('data-username') === 'visible') {
+				if (!rawUser && ddnsUserField) {
+					ddnsUserField.classList.add('cbi-input-invalid');
+					ddnsUserField.focus();
+					return;
+				}
+			}
+			targetToTest = rawDomain;
+			targetInputField = ddnsDomainField;
 		}
 
-		if (targetInputField) {
-			targetInputField.classList.remove('cbi-input-invalid');
-		}
-
-		// Hide old status messages when starting a new lookup test
 		if (elements.info.messageBox) {
 			elements.info.messageBox.style.setProperty('display', 'none', 'important');
 		}
 
 		buttons.check.disabled = true;
-		let btn_check_textContent = buttons.check.textContent;
+		const btn_check_textContent = buttons.check.textContent;
 		buttons.check.textContent = ICON.LOADING + TXT.INFO.resolving_target;
 
-		// Check if the logic callback is operational
-		if (typeof wizardData.checkDdnsCallback !== 'function') {
-			buttons.check.disabled = false;
-			buttons.check.textContent = btn_check_textContent;
-			return;
-		}
+		// Start the asynchronous background port scanner immediately
+		const activePortCheckPromise = triggerWizardNetworkCheck(elements, portForwardingAlert, true);
 
-		// Invoke the clean main dashboard logic execution path
-		wizardData.checkDdnsCallback(targetToTest).then(function (res) {
+		// --- START DDNS PROVIDER LOGIN AND UPDATE CHECK ---
+		let providerResponse = null;
+		let sendingInfoMsg = '';
+
+		try {
+			if (connType === OPENVPN.CONN_TYPE.DDNS) {
+				const provider = elements.inputs.ddnsProvider.value;
+				const domain = sanitizeInputLine(elements.inputs.ddnsDomain.value);
+				const token = sanitizeInputLine(elements.inputs.ddnsToken.value);
+				let ddnsUser = '';
+
+				if (provider === 'custom') {
+					ddnsUser = elements.inputs.ddnsCustomUrl ? sanitizeInputLine(elements.inputs.ddnsCustomUrl.value) : '';
+				} else {
+					ddnsUser = elements.inputs.ddnsUsername ? sanitizeInputLine(elements.inputs.ddnsUsername.value) : '';
+				}
+
+				const updateUrl = buildDdnsUpdateUrl(provider, domain, token, ddnsUser);
+				if (updateUrl) {
+					let displayUrl = updateUrl;
+					const tokenField = elements.inputs.ddnsToken;
+					if (token && tokenField && tokenField.type === 'password') {
+						const maskedStars = '*'.repeat(token.length);
+						displayUrl = buildDdnsUpdateUrl(provider, domain, maskedStars, ddnsUser);
+					}
+
+					sendingInfoMsg = ICON.INFO + ' <strong>DDNS Service:</strong> Sending update URL...<br/>' +
+						'<small style="font-family:monospace; opacity:0.7; word-break:break-all;">' + displayUrl + '</small><br/>';
+					showMessage(sendingInfoMsg, MESSAGE_TYPE.INFO, elements.info.messageBox);
+					providerResponse = await wizardData.networkCallbacks.updateDdnsProvider(updateUrl, domain);
+				}
+			}
+
+			if (providerResponse && providerResponse.isError) {
+				buttons.check.disabled = false;
+				buttons.check.textContent = btn_check_textContent;
+				if (targetInputField) targetInputField.classList.add('cbi-input-invalid');
+				const authErrorMsg = sendingInfoMsg + ICON.ERROR + ' <strong>DDNS Service Error:</strong><br/>' + providerResponse.raw;
+				showMessage(authErrorMsg, MESSAGE_TYPE.ERROR, elements.info.messageBox);
+				return;
+			}
+
+			const providerTextHint = providerResponse ? '<br/><small style="opacity:0.8;">' + providerResponse.raw + '</small>' : '';
+
+			// Start standard DNS lookup and bundle it with the running port checker in parallel
+			const activeDdnsCheckPromise = wizardData.networkCallbacks.checkDdns(targetToTest);
+			const results = await Promise.all([activeDdnsCheckPromise, activePortCheckPromise]);
+			const res = results[0];
+
 			buttons.check.disabled = false;
 			buttons.check.textContent = btn_check_textContent;
 
 			if (res && res.success === true) {
-				// Success path: IP resolved, unlock the "Create VPN" path
-				let successMsg = ICON.CHECK + TXT.MSG.ip_valid_and_resolvable + '<br/><br/>' + ICON.GLOBE;
+				let successMsg = sendingInfoMsg + ICON.CHECK + TXT.MSG.ip_valid_and_resolvable + providerTextHint + '<br/>' + ICON.GLOBE;
 				const hasLetters = /[a-zA-Z]/.test(targetToTest);
 				if ((connType === OPENVPN.CONN_TYPE.DDNS) || (hasLetters)) {
 					successMsg += targetToTest + ' ';
@@ -2054,11 +2240,7 @@ const setupAddressValidator = function (elements, buttons, wizardData) {
 				showMessage(successMsg, MESSAGE_TYPE.OK, elements.info.messageBox);
 				unlockCreateButton(buttons);
 			} else {
-				// Address could not be resolved
-				if (targetInputField) {
-					targetInputField.classList.add('cbi-input-invalid');
-				}
-
+				if (targetInputField) targetInputField.classList.add('cbi-input-invalid');
 				const errorBox = E('div', {}, [
 					E('p', {}, TXT.WARNING.ip_cannot_be_resolved),
 					E('button', {
@@ -2071,17 +2253,12 @@ const setupAddressValidator = function (elements, buttons, wizardData) {
 						}
 					}, TXT.MSG.skip_check_unlock_create)
 				]);
-
 				showMessage(errorBox, MESSAGE_TYPE.ERROR, elements.info.messageBox);
 			}
-		}).catch(function () {
+		} catch {
 			buttons.check.disabled = false;
 			buttons.check.textContent = btn_check_textContent;
-
-			if (targetInputField) {
-				targetInputField.classList.add('cbi-input-invalid');
-			}
-
+			if (targetInputField) targetInputField.classList.add('cbi-input-invalid');
 			const nativeErrorBox = E('div', {}, [
 				E('p', {}, TXT.ERROR.dns_ip_check_failed),
 				E('button', {
@@ -2094,11 +2271,11 @@ const setupAddressValidator = function (elements, buttons, wizardData) {
 					}
 				}, TXT.MSG.skip_check_unlock_create)
 			]);
-
 			showMessage(nativeErrorBox, MESSAGE_TYPE.ERROR, elements.info.messageBox);
-		});
+		}
 	});
 };
+
 
 /**
  * MAIN WIZARD
@@ -2106,7 +2283,7 @@ const setupAddressValidator = function (elements, buttons, wizardData) {
 const openWizardModal = function (wizardData) {
 
 	// Instantiate the new independent port forwarding warning component
-	const portForwardingAlert = renderPortForwardingAlert();
+	const portForwardingAlert = renderPortForwardingAlert(false, wizardData.networkCallbacks);
 	const selectedScenario = wizardData.forcedScenario || OPENVPN.SCENARIO.CONNECT_SERVER;
 
 	// Create all text boxes, buttons, and radio controls
@@ -2131,15 +2308,15 @@ const openWizardModal = function (wizardData) {
 	};
 
 	// Execute the decoupled external address check validator logic routine
-	setupAddressValidator(elements, buttons, wizardData);
+	setupAddressValidator(elements, buttons, portForwardingAlert, wizardData);
 
 	// Connect core multi-step page transition handler
 	setupWizardEventListeners(elements, buttons, portForwardingAlert, wizardData, state);
 
 	// Try to find your public IP address automatically in the background
-	if (typeof wizardData.getDdnsOrPublicIpCallback === 'function') {
+	if (typeof wizardData.networkCallbacks.getDdnsOrPublicIp === 'function') {
 		elements.inputs.ddns.value = TXT.MSG.finding_your_public_ip;
-		wizardData.getDdnsOrPublicIpCallback().then(function (detectedAddress) {
+		wizardData.networkCallbacks.getDdnsOrPublicIp().then(function (detectedAddress) {
 			elements.inputs.ddns.value = detectedAddress;
 		});
 	} else {

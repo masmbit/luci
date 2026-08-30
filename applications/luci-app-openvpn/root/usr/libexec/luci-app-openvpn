@@ -11,7 +11,7 @@
 
 # Check if the user gave an argument
 if [ -z "$1" ]; then
-    echo "Usage: $0 {ovpnservice|symlink|iroute|cleanipdns|checkip|checkddns|publicip|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
+    echo "Usage: $0 {ovpnservice|symlink|iroute|cleanipdns|checkip|checkport|checkddns|publicip|wgetddns|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
     exit 1
 fi
 
@@ -19,8 +19,10 @@ fi
 ovpnservice() {
 	shift # Remove "ovpnservice" from the arguments list
 	local action_cmd="$1"
+
 	if [ "$action_cmd" = "stop" ] || [ "$action_cmd" = "start" ] || [ "$action_cmd" = "restart" ]; then
-		( sleep 0.2; /etc/init.d/openvpn "$action_cmd" >/dev/null 2>&1 ) &
+		# Safe background execution with sleep 3, wrapped into a single daemon thread
+		start-stop-daemon -S -b -x /bin/sh -- -c "sleep 3; /etc/init.d/openvpn $action_cmd >/dev/null 2>&1"
 	fi
 	return 0
 }
@@ -217,6 +219,93 @@ checkip() {
 	return 1
 }
 
+# Python script: Advanced Asymmetric Port Scanner for TCP and UDP.
+#   Sends TCP/UDP from random local port to fixed public port.
+#   We use the firewall (nftables) to count the return packet.
+PY_UNIFIED_SCAN=$(cat << 'EOF'
+import socket, subprocess, time, re, sys
+
+host = sys.argv[1]
+ext_port = int(sys.argv[2]) # External WAN port on the main modem
+int_port = int(sys.argv[3]) # Expected internal landing port on OpenWrt
+proto = sys.argv[4].lower() # Protocol choice: "tcp" or "udp"
+
+# 1. Open the firewall counter rules matching the INTERNAL landing port
+subprocess.run(f"nft add chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True)
+subprocess.run(f"nft add rule inet fw4 openvpn_wiz_check {proto} dport {int_port} counter accept 2>/dev/null", shell=True)
+subprocess.run(f"nft insert rule inet fw4 input jump openvpn_wiz_check 2>/dev/null", shell=True)
+
+# 2. Transmit the probe packet based on the selected protocol
+if proto == "tcp":
+    # TCP Mode: Try to connect to the external public port mapping
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1.0)
+    try: s.connect((host, ext_port))
+    except: pass
+    finally: s.close()
+else:
+    # UDP Mode: Fire a test token from a safe random local source port
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try: s.sendto(b"LUCI_APP_OPENVPN_PORT_CHECK_UDP", (host, ext_port))
+    finally: s.close()
+
+# 3. Wait for the hardware packet loopback reflection to hit the kernel
+time.sleep(1.0)
+
+# 4. Read the nftables chain and verify the packet hit the internal port
+res = subprocess.run("nft list chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True, capture_output=True, text=True)
+packets = [int(p) for p in re.findall(r"counter packets (\d+)", res.stdout)]
+
+if packets and packets[0] > 0:
+    print("PORT_OPEN")
+else:
+    print("PORT_CLOSED")
+
+# 5. Clean up ALL old ghost firewall rules to keep the router fast and safe
+jump_res = subprocess.run("nft -a list chain inet fw4 input", shell=True, capture_output=True, text=True)
+for line in jump_res.stdout.splitlines():
+    if "jump openvpn_wiz_check" in line:
+        match = re.search(r"handle (\d+)", line)
+        if match:
+            subprocess.run(f"nft delete rule inet fw4 input handle {match.group(1)} 2>/dev/null", shell=True)
+
+subprocess.run("nft delete chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True)
+EOF
+)
+
+# Check if TCP or UDP port is accessible from outside on Double NAT
+checkport() {
+	shift # Remove the word "checkport" from the arguments list
+
+	local public_host="$1"   # Public WAN IP or DDNS domain name
+	local ext_port="$2"      # External Port on WAN main modem (e.g. 443)
+	local int_port="$3"      # Internal Port on LAN OpenVPN router (e.g. 444)
+	local proto="$4"         # Protocol "udp" or "tcp"
+
+	# Stop if vital parameters are empty
+	if [ -z "$public_host" ] || [ -z "$ext_port" ] || [ -z "$int_port" ]; then
+		echo "ERROR: Missing parameters."
+		return 1
+	fi
+
+	# Set protocol to lowercase using native awk
+	[ -z "$proto" ] && proto="udp"
+	if command -v awk >/dev/null 2>&1; then
+		proto=$(awk "BEGIN {print tolower(\"$proto\")}")
+	else
+		proto="udp"
+	fi
+
+	# Scan Port with phyton socket and firewall
+	local scan_res=$(python3 -c "$PY_UNIFIED_SCAN" "$public_host" "$ext_port" "$int_port" "$proto" 2>/dev/null)
+
+	# Fallback safety if python breaks down unexpectedly
+	[ -z "$scan_res" ] && scan_res="PORT_CLOSED"
+	echo "$scan_res"
+
+	if [ "$scan_res" = "PORT_OPEN" ]; then return 0; else return 1; fi
+}
+
 # Check a DDNS domain name or validate a raw public WAN IP address, and verify if it is online
 checkddns() {
 	shift # Remove the command word from the arguments list
@@ -287,6 +376,119 @@ publicip() {
 	return 1
 }
 
+# Sends the update URL to the DDNS provider, checks the response for errors, and returns a clean status message.
+wgetddns() {
+	shift # Remove the command word from the arguments list
+	local url="$1"
+	local instance_name="$2"
+
+	if [ -z "$url" ]; then
+		echo "ERROR: Missing URL parameter for ${instance_name}."
+		return 1
+	fi
+
+	local clean_res=""
+	local wget_output
+	# Standard BusyBox wget - captures stderr (like "HTTP error 401") into the variable
+	wget_output=$(wget -T 10 -qO- "$url" 2>&1)
+	local wget_status=$?
+
+	if [ "$wget_status" -ne 0 ]; then
+		# -i ignores case, -E matches specific HTTP error strings from wget stderr
+		if echo "$wget_output" | grep -q -i -E "401|unauthorized"; then
+			clean_res="badauth"
+		elif echo "$wget_output" | grep -q -i -E "404|not found"; then
+			clean_res="notfound"
+		elif echo "$wget_output" | grep -q -i -E "403|forbidden"; then
+			clean_res="blocked"
+		elif echo "$wget_output" | grep -q -i -E "429|too many requests"; then
+			clean_res="abuse"
+		elif echo "$wget_output" | grep -q -i -E "400|bad request"; then
+			clean_res="badrequest"
+		elif echo "$wget_output" | grep -q -i -E "502|bad gateway"; then
+			clean_res="dnserr"
+		elif echo "$wget_output" | grep -q -i -E "500|503|server error"; then
+			clean_res="server_error"
+		else
+			echo "Update network connection failed for ${instance_name} (wget code: $wget_status)."
+			return 1
+		fi
+	else
+		clean_res=$(echo "$wget_output" | tr -d ' \t\r\n' | head -c 50)
+	fi
+
+	local nice_output
+	if [ "$wget_status" -ne 0 ]; then
+		nice_output="HTTP Error ($clean_res)"
+	else
+		nice_output=$(echo "$wget_output" | tr -d '\r\n' | head -c 60)
+	fi
+
+	# --- THE UNIVERSAL DDNS ENGINE (DuckDNS, IPv64, dynv6, Dyn, Dynu, No-IP & FreeDNS) ---
+	case "$clean_res" in
+		*DOCTYPE*|*html*|*xml*)
+			echo "Error: Provider returned a web page instead of API text for ${instance_name}. Please check your Custom Update URL!"
+			return 1
+			;;
+		*good*|*nochg*|ok|OK|*success*|*[Uu]pdated*|*[Nn]o[Cc]hange*)
+			echo "Update successful for ${instance_name}. Provider response: $nice_output"
+			return 0
+			;;
+		*badauth*|*badkey*|*invalid*|*[Aa]uthentication*|*[Ii]nvalid[Tt]oken*)
+			echo "Warning: Provider rejected credentials for ${instance_name}. Response: $nice_output. Check your token or username!"
+			return 1
+			;;
+		*unknown*)
+			echo "Error: Unknown or badly formatted request sent to ${instance_name}. Please check your Wizard inputs!"
+			return 1
+			;;
+		*badrequest*)
+			echo "Error: Invalid parameters sent to ${instance_name}. Please verify your domain syntax!"
+			return 1
+			;;
+		*badagent*)
+			echo "Error: Client blocked by provider for ${instance_name}. Your User-Agent string is invalid!"
+			return 1
+			;;
+		*nohost*|*notfqdn*|*notfound*|*[Uu]nableto[Ll]ocate*)
+			echo "Warning: Provider domain, hostname, or format parameters not found for ${instance_name}. Check your setup!"
+			return 1
+			;;
+		*numhost*)
+			echo "Error: Too many hostnames specified or DNS configuration is ambiguous on provider side for ${instance_name}!"
+			return 1
+			;;
+		*badip*|*[Aa]ddress[Mm]issing*)
+			echo "Error: Provider rejected the IP address for ${instance_name}. Invalid IP address format detected!"
+			return 1
+			;;
+		*noipv6*)
+			echo "Error: IPv6 update failed for ${instance_name}. IPv6 records are not supported under this profile!"
+			return 1
+			;;
+		*dnserr*|*dns_error*)
+			echo "Error: Server-side DNS update failed on provider infrastructure for ${instance_name}. Response: $nice_output"
+			return 1
+			;;
+		*!donator*)
+			echo "Error: Feature not allowed for ${instance_name}. You are using premium features on a free account!"
+			return 1
+			;;
+		*abuse*|*blocked*|*disver*)
+			echo "Error: Update blocked due to abuse or rate limit for ${instance_name}. Response: $nice_output"
+			return 1
+			;;
+		*servererror*|*server_error*|*[Ee]mergency[Ss]ervices*)
+			echo "Error: Internal server error on provider side for ${instance_name}. Response: $nice_output"
+			return 1
+			;;
+		*)
+			echo "Update finished for ${instance_name}. Raw response: $nice_output"
+			return 0
+			;;
+	esac
+}
+
 # Autonomous background DDNS checker (called from '/etc/hotplug.d/openvpn/10-luci-app-openvpn-ddns' on every OpenVPN instance start)
 ddns() {
 	shift # Remove "ddns" string modifier from the system arguments list
@@ -304,7 +506,7 @@ ddns() {
 		return 0
 	fi
 
-	logger -t openvpn-luci "Daemon: Background DDNS checker initiated for ${instance_name}."
+	logger -t openvpn-luci "DDNS Service: Background DDNS checker initiated for ${instance_name}."
 
 	# Protect process lifecycle: disable exit-on-error during network drops
 	set +e
@@ -347,39 +549,15 @@ ddns() {
 			# Evaluate core synchronization conditions
 			if [ "$last_update_uptime" -eq 0 ] || [ "$seconds_passed" -ge "$cool_down_period" ] || [ "$seconds_passed" -lt 0 ] || [ "$url" != "$last_url" ]; then
 				if [ -n "$last_url" ] && [ "$url" != "$last_url" ]; then
-					logger -t openvpn-luci "Daemon: URL change detected for ${instance_name}. Forcing immediate update."
+					logger -t openvpn-luci "DDNS Service: URL change detected for ${instance_name}. Forcing immediate update."
 				else
-					logger -t openvpn-luci "Daemon: Different IP found for ${instance_name}. WAN: ${current_router_ip} vs DNS: ${last_resolved_ip}. Sending update URL."
+					logger -t openvpn-luci "DDNS Service: Different IP found for ${instance_name}. WAN: ${current_router_ip} vs DNS: ${last_resolved_ip}. Sending update URL."
 				fi
 
-				local wget_output
-				wget_output=$(wget -T 10 -qO- "$url" 2>&1)
-				local wget_status=$?
+				local wgetddns_response
+				wgetddns_response=$(wgetddns "wgetddns" "$url" "$instance_name")
 
-				if [ "$wget_status" -ne 0 ]; then
-					logger -t openvpn-luci "Daemon Error: Update network connection failed for ${instance_name} (wget code: $wget_status)."
-				else
-					local clean_res
-					clean_res=$(echo "$wget_output" | tr -d ' \t\r\n' | head -c 50)
-
-					case "$clean_res" in
-						*good*|*nochg*|*OK*|*success*|*Updated*)
-							logger -t openvpn-luci "Daemon: Update successful for ${instance_name}. Provider response: $clean_res"
-							;;
-						*badauth*|*badagent*|*ko*|*badkey*|*invalid*|*ERROR:Authentication*)
-							logger -t openvpn-luci "Daemon Warning: Provider rejected credentials for ${instance_name}. Response: $clean_res. Check your token or username!"
-							;;
-						*nohost*|*notfqdn*|*notfound*)
-							logger -t openvpn-luci "Daemon Warning: Provider domain not found for ${instance_name}. Response: $clean_res. Check your domain name!"
-							;;
-						*abuse*|*blocked*|*disver*)
-							logger -t openvpn-luci "Daemon Error: Update blocked by provider for ${instance_name}. Response: $clean_res. You are sending updates too fast!"
-							;;
-						*)
-							logger -t openvpn-luci "Daemon: Update finished for ${instance_name}. Raw response: $clean_res"
-							;;
-					esac
-				fi
+				logger -t openvpn-luci "DDNS Service: ${wgetddns_response}"
 
 				local fresh_uptime=$(awk '{print int($1)}' /proc/uptime)
 				echo "$fresh_uptime" > "$status_file"
@@ -632,7 +810,7 @@ keygen_worker() {
 	case "$type" in
 	"ca")
 		active_out="$out_ca_file"
-		rm -f "$out_ca_file" "$out_server_key_file" "$out_server_cert_file" "$out_dh_file" "$out_tls_file" "$out_client_key_file" "$out_client_cert_file"
+		rm -f "$out_ca_file" "$out_server_key_file" "$out_server_cert_file" "$out_client_key_file" "$out_client_cert_file"
 
 		ca_key_buffer="$out_ca_file"
 		ca_cert_buffer="$out_server_cert_file"
@@ -855,8 +1033,10 @@ case "$1" in
 	iroute) 		iroute "$@" ;;
 	cleanipdns)		cleanipdns "$@" ;;
 	checkip)		checkip "$@" ;;
+	checkport) 		checkport "$@" ;;
 	checkddns)		checkddns "$@" ;;
 	publicip)		publicip ;;
+	wgetddns)		wgetddns "$@" ;;
 	ddns)			ddns "$@" ;;
 	cleanup)        cleanup "$@" ;;
     keymeta)        keymeta "$@" ;;
@@ -895,7 +1075,7 @@ case "$1" in
 
     *)
         echo "Error: Unknown command '$1'"
-        echo "Valid commands: ovpnservice, symlink, iroute, cleanipdns, checkip, checkddns, publicip, ddns, cleanup, keymeta, initkeys, keygen"
+        echo "Valid commands: ovpnservice, symlink, iroute, cleanipdns, checkip, checkport, checkddns, publicip, wgetddns, ddns, cleanup, keymeta, initkeys, keygen"
         exit 1
         ;;
 esac
