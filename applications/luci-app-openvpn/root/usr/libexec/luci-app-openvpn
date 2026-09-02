@@ -11,10 +11,19 @@
 
 # Check if the user gave an argument
 if [ -z "$1" ]; then
-    echo "Usage: $0 {ovpnservice|symlink|iroute|cleanipdns|checkip|checkport|checkddns|publicip|wgetddns|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
+    echo "Usage: $0 {getmac|ovpnservice|symlink|readstatus|iroute|cleanipdns|checkip|checkport|checkddns|publicip|wgetddns|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
     exit 1
 fi
 
+getmac() {
+    if [ -f "/sys/class/net/br-lan/address" ]; then
+        cat /sys/class/net/br-lan/address
+    else
+        echo "00:00:00:00:00:00"
+    fi
+    return 0
+}
+	
 # openvpn service stop/start
 ovpnservice() {
 	shift # Remove "ovpnservice" from the arguments list
@@ -92,6 +101,29 @@ symlink() {
 	return 0
 }
 
+# Read active multi-user server status logs securely bypassing rpcd nobody restrictions in LuCI
+readstatus() {
+	shift # Remove the "readstatus" command word from the arguments list
+	local instance_id="$1"
+	
+	if [ -z "$instance_id" ]; then
+		echo "ERROR: Missing instance ID parameter."
+		return 1
+	fi
+
+	local status_path="/var/run/openvpn.${instance_id}.status"
+
+	# Check if the targeted runtime status file exists and contains real data payload
+	if [ -s "$status_path" ]; then
+		cat "$status_path"
+		return 0
+	else
+		# Return an explicit empty line to indicate a non-initialized routing socket channel
+		echo ""
+		return 0
+	fi
+}
+	
 # Validates connecting clients and applies dynamic routing topologies for TCP and UDP protocols.
 iroute() {
     shift # Remove "iroute" from the arguments list
@@ -1028,8 +1060,10 @@ keygen_worker() {
 
 # Main entry point
 case "$1" in
+	getmac)			getmac ;;
 	ovpnservice)	ovpnservice "$@" ;;
     symlink)        symlink "$@" ;;
+	readstatus)		readstatus "$@" ;;
 	iroute) 		iroute "$@" ;;
 	cleanipdns)		cleanipdns "$@" ;;
 	checkip)		checkip "$@" ;;

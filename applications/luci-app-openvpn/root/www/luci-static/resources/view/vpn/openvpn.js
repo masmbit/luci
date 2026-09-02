@@ -216,6 +216,7 @@ const CFG = Object.freeze({
         openvpn_log_stamp: 'openvpn_log_stamp',
         modern_vpn_client: '# Modern OpenVPN Client Configuration Instance',
         modern_vpn_server: '# Modern OpenVPN Server Configuration Instance',
+        openvpn_instance1_status: 'openvpn.instance1.status'
     })
 })
 
@@ -353,34 +354,6 @@ const isAnyInstanceEnabled = function (sections) {
         }
     }
     return false;
-};
-
-/**
- * Get instance number from instance_id
- */
-const getInstanceNumber = function (instance_id, default_number) {
-    const numMatch = instance_id.match(/\d+$/);
-    if (default_number) {
-        return numMatch ? parseInt(numMatch, 10) : default_number;
-    } else {
-        return numMatch ? parseInt(numMatch, 10) : 1;
-    }
-}
-
-/**
- * Calculates the default port from the instance id
- */
-const calcPortFromId = function (instance_id, optional_instance_number) {
-    let instNum;
-    if (optional_instance_number) {
-        instNum = (typeof optional_instance_number === 'number') ? optional_instance_number : parseInt(optional_instance_number, 10);
-        if (isNaN(optional_instance_number)) {
-            instNum = getInstanceNumber(instance_id);
-        }
-    } else {
-        instNum = getInstanceNumber(instance_id);
-    }
-    return OPENVPN.PORT.n1194 - 1 + instNum;
 };
 
 /**
@@ -690,7 +663,7 @@ const networkCallbacks = ({
     checkDdns: checkDdns,
     checkPort: checkPort,
     updateDdnsProvider: updateDdnsProvider,
-    checkNetworkStructure: checkNetworkStructure
+    checkNetworkStructure: checkNetworkStructure    
 });
 
 /**
@@ -806,6 +779,7 @@ const generateConfigContentServer = function (viewData, newInstanceItem, wizardP
 
     const chosenPort = (wizardParams && wizardParams.port) ? wizardParams.port : newInstanceItem.port;
     const chosenProto = (wizardParams && wizardParams.proto) ? wizardParams.proto : OPENVPN.PROTO.UDP;
+    const displayName = (wizardParams && wizardParams.displayName) ? wizardParams.displayName.trim() : '';
 
     // Calculate the external client port target safely
     let externPortValue = chosenPort;
@@ -830,12 +804,18 @@ const generateConfigContentServer = function (viewData, newInstanceItem, wizardP
         .replace(new RegExp(escapeRegExp(CFG.FILE.server_def_key), 'g'), 'server_' + id + '.key')
         .replace(new RegExp(escapeRegExp(CFG.FILE.dh_def_pem), 'g'), 'dh_' + id + '.pem')
         .replace(new RegExp(escapeRegExp(CFG.FILE.tls_def_key), 'g'), 'tls-crypt_' + id + '.key')
-        .replace(CFG.ID.modern_vpn_server, CFG.ID.modern_vpn_server + ' #' + instNum)
         .replace(/^port\s+\d+/m, 'port ' + chosenPort)
         .replace(/^setenv\s+port-extern\s+\d+/m, 'setenv portextern ' + externPortValue)
         .replace(/^proto\s+\S+/m, 'proto ' + chosenProto)
         .replace(/^server\s+10\.8\.0\.0/m, 'server ' + targetIpv4Subnet)
-        .replace(/^server-ipv6\s+fd00:db8:0:1::\/64/m, 'server-ipv6 ' + targetIpv6Subnet);
+        .replace(/^server-ipv6\s+fd00:db8:0:1::\/64/m, 'server-ipv6 ' + targetIpv6Subnet)
+        .replace(CFG.ID.openvpn_instance1_status, 'openvpn.instance' + instNum + '.status');
+
+    if (displayName) {
+        config = config.replace(CFG.ID.modern_vpn_server, CFG.ID.modern_vpn_server + ' #' + instNum + ' (' + displayName + ')');
+    } else {
+        config = config.replace(CFG.ID.modern_vpn_server, CFG.ID.modern_vpn_server + ' #' + instNum);
+    }
 
     // Option A: Mobile clients profile settings (Route all traffic over VPN)
     if (wizardParams && wizardParams.strategy === OPENVPN.STRATEGY.REDIRECT) {
@@ -1025,7 +1005,7 @@ const generateConfigContentClient = function (viewData, newInstanceItem, wizardP
         .replace(new RegExp(escapeRegExp(CFG.FILE.tls_def_key), 'g'), 'tls-crypt_' + id + '.key');
 
     if (displayName) {
-        config = config.replace(CFG.ID.modern_vpn_client, CFG.ID.modern_vpn_client + ' (' + displayName + ')');
+        config = config.replace(CFG.ID.modern_vpn_client, CFG.ID.modern_vpn_client + ' #' + instNum + ' (' + displayName + ')');
     } else {
         config = config.replace(CFG.ID.modern_vpn_client, CFG.ID.modern_vpn_client + ' #' + instNum);
     }
@@ -1047,7 +1027,7 @@ const generateConfigContentClient = function (viewData, newInstanceItem, wizardP
  */
 const syncInstanceFiles = async function (newInstanceItem, viewData, wizardParams) {
     const id = newInstanceItem.id;
-    const calculatedPort = calcPortFromId(id, newInstanceItem.instNum);
+    const calculatedPort = viewData.statusClass.calcPortFromId(id, newInstanceItem.instNum);
     const rolePrefix = newInstanceItem.role + '_';
 
     if (!wizardParams && newInstanceItem.role === OPENVPN.ROLE.CLIENT) {
@@ -1179,7 +1159,7 @@ const loadInstanceData = async function (viewData) {
 
         sections.forEach(function (s, idx) {
             const id = s['.name'];
-            const instNum = getInstanceNumber(id, idx + 1);
+            const instNum = viewData.statusClass.getInstanceNumber(id, idx + 1);
             const role = L.uci.get(CFG.CMD.openvpn, id, 'role') || OPENVPN.ROLE.SERVER;
 
             // Initialize a clean newInstanceItem template for the synchronization loop
@@ -1515,7 +1495,7 @@ const renderClientOvpnProfileQr = function (containerNode, downloadUrl) {
             console.error('Native uqr framework (QR-Code) execution failed:', e);
         }
     } else {
-        containerNode.appendChild(E('div', { 'style': 'color:#64748b; font-size:12px; padding:20px;' }, [
+        containerNode.appendChild(E('div', { 'style': 'color: var(--text-color-light, #64748b); font-size:12px; padding:20px;' }, [
             E('strong', {}, ICON.WARNING + TXT.WARNING.profile_link_without_qr_code)
         ]));
     }
@@ -1544,7 +1524,7 @@ const renderClientOvpnProfileModal = function (ipFieldWrapper, urlContainer, qrC
                     qrContainer
                 ]),
                 E('div', { 'style': 'width:100%; text-align:center; margin-top:8px; font-size:12px; color:var(--text-color-light, #475569); padding-top:10px; border-top:1px dashed var(--border-color, #e2e8f0); font-weight:500;' }, [
-                    E('span', { 'style': 'color:#e11d48; font-weight:bold; margin-right:4px;' }, ICON.WARNING + TXT.WARNING.security_notice + ' '),
+                    E('span', { 'style': 'color: var(--danger-text, #e11d48); font-weight:bold; margin-right:4px;' }, ICON.WARNING + TXT.WARNING.security_notice + ' '),
                     TXT.MSG.download_only_available_window_open
                 ])
             ]),
@@ -1588,12 +1568,12 @@ const createQrBoxElements = function (initialHost) {
 /**
  * Setup all click actions and update the view when things change
  */
-const setupQrBoxEvents = function (elements, ovpnParams, files) {
+const setupQrBoxEvents = function (elements, ovpnParams, files, viewData) {
     // Update data, links and the QR code when the host changes
     const refreshModalState = function () {
         const activeHost = elements.nodes.input.value ? sanitizeInputLine(elements.nodes.input.value) : window.location.hostname;
         const fullProfileText = compileOvpnProfileText(ovpnParams.displayId, activeHost, ovpnParams.port, ovpnParams.proto, files);
-        const instNumber = getInstanceNumber(ovpnParams.nextId);
+        const instNumber = viewData.statusClass.getInstanceNumber(ovpnParams.nextId);
 
         const sanitizedFileName = ovpnParams.displayId.replace(/\s+/g, '_');
         const downloadUrl = window.location.protocol + '//' + window.location.host + '/' + sanitizedFileName + '_client.ovpn';
@@ -1650,7 +1630,7 @@ const setupQrBoxEvents = function (elements, ovpnParams, files) {
 
     // Delete temporary files and close the window when clicking the close button
     elements.buttons.close.addEventListener('click', function () {
-        const instNumber = getInstanceNumber(ovpnParams.nextId);
+        const instNumber = viewData.statusClass.getInstanceNumber(ovpnParams.nextId);
         L.fs.remove(ovpnParams.exportPath).then(function () {
             return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.symlink, instNumber.toString(), 'delete', ovpnParams.displayId]);
         }).then(function () {
@@ -1708,7 +1688,7 @@ const openSiteToSiteExportModal = function (instance_id, nextId, files, activeBr
 
     const statusFeedbackNode = E('textarea', {
         'class': 'cbi-input-textarea',
-        'style': 'width:100%; max-width:100%; resize:none; font-family:monospace; font-size:11px; display:none; background:#111; color:#0f0; padding:10px; margin-top:12px;',
+        'style': 'width:100%; max-width:100%; resize:none; font-family:monospace; font-size:11px; display:none; background:#111; color: var(--success-text, #00ff00); padding:10px; margin-top:12px;',
         'rows': '8', 'readonly': 'readonly'
     });
 
@@ -1962,7 +1942,7 @@ const downloadClientOvpnProfile = async function (instance_id, instObj, customUc
                 ovpnParamsUpdated.saveApplyOpenVPN = saveApplyOpenVPN;
             }
             const ui = createQrBoxElements(finalHost);
-            setupQrBoxEvents(ui, ovpnParamsUpdated, finalCryptoBundle);
+            setupQrBoxEvents(ui, ovpnParamsUpdated, finalCryptoBundle, viewData);
             L.ui.showModal(title + ': ' + ovpnParamsUpdated.displayId, [
                 renderClientOvpnProfileModal(ui.nodes.wrapper, ui.nodes.url, ui.nodes.qr, ui.buttons.download, ui.buttons.close)
             ]);
@@ -2224,6 +2204,26 @@ const updateMainBoxTooltip = function (initialRawState, totalInstances, updatedI
 };
 
 /**
+ * Open Wizard normally
+ */
+const openWizardBtnClick = function (viewData, totalInstances, hideClient) {
+    if (!totalInstances) {
+        totalInstances = (viewData.sections && viewData.sections.length) ? viewData.sections.length : 0;
+    }
+    const wizardData = Object.assign({}, viewData.wizardClass.WIZARD_DATA_TEMPLATE, {
+        viewData: viewData,
+        addNewInstanceCallback: addNewInstance,
+        networkCallbacks: networkCallbacks,
+        showSaveApplyOpenVPNCallback: showSaveApplyOpenVPN,
+        importOvpnClientProfileCallback: importOvpnClientProfile,
+        instanceNumber: totalInstances + 1,
+        overwrite: false,
+        forcedScenario: null,
+    });
+    viewData.wizardClass.openWizardModal(wizardData, hideClient);
+}
+
+/**
  * Renders the main control and setup wizard box for OpenVPN
  */
 const renderMainControlBox = function (initialRawState, addServerBtn, addClientBtn, devDataRaw, viewData) {
@@ -2320,18 +2320,7 @@ const renderMainControlBox = function (initialRawState, addServerBtn, addClientB
     // Bind click handler to bridge execution flow into the separate wizard module class
     openWizardBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
-
-        const wizardData = Object.assign({}, viewData.wizardClass.WIZARD_DATA_TEMPLATE, {
-            viewData: viewData,
-            addNewInstanceCallback: addNewInstance,
-            networkCallbacks: networkCallbacks,
-            showSaveApplyOpenVPNCallback: showSaveApplyOpenVPN,
-            importOvpnClientProfileCallback: importOvpnClientProfile,
-            instanceNumber: totalInstances + 1,
-            overwrite: false,
-            forcedScenario: null,
-        });
-        viewData.wizardClass.openWizardModal(wizardData);
+        openWizardBtnClick(viewData, totalInstances, false)
     });
 
 
@@ -2609,7 +2598,7 @@ const handleInstanceSave = async function (instance_id, role, txtArea, sBtn, sNo
 
     let currentPort = viewData.statusClass.parsePortFromConfig(role, originalConfContent);
     if (!currentPort || isNaN(currentPort)) {
-        currentPort = calcPortFromId(instance_id);
+        currentPort = viewData.statusClass.calcPortFromId(instance_id);
     }
     const detectedPort = viewData.statusClass.parsePortFromConfig(role, newConfigContent);
     if (currentPort !== detectedPort && detectedPort && !isNaN(detectedPort)) {
@@ -2857,7 +2846,7 @@ const renderInstanceBox = function (s, idx, viewData) {
     const role = instObj.role || OPENVPN.ROLE.SERVER;
     const confContent = instObj.confContent || '';
     const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
-    const instNum = getInstanceNumber(instance_id, idx + 1);
+    const instNum = viewData.statusClass.getInstanceNumber(instance_id, idx + 1);
     const customDisplayName = L.uci.get(CFG.CMD.openvpn, instance_id, 'displayname') || '';
     const displayId = customDisplayName || (TXT.INFO.instance_x + instNum);
     instObj.displayName = displayId;
@@ -2956,7 +2945,7 @@ const renderInstanceBox = function (s, idx, viewData) {
     let ovpnProfileBtn = '';
     if (role === OPENVPN.ROLE.SERVER) {
         ovpnProfileBtn = E('button', {
-            'class': 'cbi-button cbi-button-save',
+            'class': 'btn cbi-button cbi-button-positive important',
             'style': 'float: right; margin: 10px 10px 0 0;'
         }, TXT.MSG.export_ovpn);
         ovpnProfileBtn.addEventListener('click', function (ev) {
@@ -2972,7 +2961,7 @@ const renderInstanceBox = function (s, idx, viewData) {
         });
     } else {
         ovpnProfileBtn = E('button', {
-            'class': 'cbi-button cbi-button-save',
+            'class': 'btn cbi-button cbi-button-positive important',
             'style': 'float: right; margin: 10px 10px 0 0;'
         }, TXT.MSG.import_ovpn);
         ovpnProfileBtn.addEventListener('click', function (ev) {
@@ -3017,9 +3006,6 @@ const renderInstanceBox = function (s, idx, viewData) {
         ])
     ]);
 
-
-
-
     sectionRootNode.setAttribute('data-original-content', confContent);
 
     sBtn.addEventListener('click', function (ev) {
@@ -3037,17 +3023,9 @@ const renderInstanceBox = function (s, idx, viewData) {
 };
 
 /**
- * Core routine to create a new OpenVPN instance and its firewall rules safely
+ * Subroutine of addNewInstance to create a new OpenVPN instance and its firewall rules safely.
  */
-const addNewInstance = async function (roleType, viewData, wizardParams) {
-    const nextNum = getNextInstanceNumber(viewData);
-    const nextId = 'instance' + nextNum;
-
-    const newInstanceItem = Object.assign({}, viewData.statusClass.INSTANCE_TEMPLATE, {
-        id: nextId,
-        instNum: nextNum,
-        role: roleType,
-    });
+const createInstance = async function (newInstanceItem, viewData, wizardParams) {
 
     // Use await to generate all initial configuration and key assets lineary
     await syncInstanceFiles(newInstanceItem, viewData, wizardParams);
@@ -3073,6 +3051,11 @@ const addNewInstance = async function (roleType, viewData, wizardParams) {
     L.uci.set(CFG.CMD.openvpn, newInstanceItem.id, 'role', newInstanceItem.role);
     L.uci.set(CFG.CMD.openvpn, newInstanceItem.id, 'config', CFG.FILE.dir_cfg + newInstanceItem.id + '.conf');
 
+    if (newInstanceItem.role === OPENVPN.ROLE.SERVER) {
+        L.uci.set(CFG.CMD.openvpn, newInstanceItem.id, 'status', 'openvpn.' + newInstanceItem.id + '.status');
+        L.uci.set(CFG.CMD.openvpn, newInstanceItem.id, 'status_version', '1'); // Enforces CSV matrix structure
+    }
+
     if ((wizardParams) && (wizardParams.displayName)) {
         L.uci.set(CFG.CMD.openvpn, newInstanceItem.id, 'displayname', wizardParams.displayName);
     }
@@ -3086,13 +3069,36 @@ const addNewInstance = async function (roleType, viewData, wizardParams) {
     await syncInstanceFirewallRule(newInstanceItem.role, newInstanceItem.id, newInstanceItem.port, newInstanceItem.proto, viewData);
 
     L.uci.save();
+}
 
-    // Trigger the automated key allocation modal for ALL secondary server installations
-    if ((newInstanceItem.role === OPENVPN.ROLE.SERVER && viewData.sections && viewData.sections.length > 0) ||
-        ((wizardParams) && (wizardParams.role === OPENVPN.ROLE.SERVER))) {
-        const cnName = wizardParams ? viewData.wizardClass.getValidCommonName(wizardParams.displayName) : '';
-        viewData.keygenClass.openAutomatedPostKeyGenModal(newInstanceItem.id, viewData, cnName, showSaveApplyOpenVPN, L_fs_Callbacks);
+/**
+ * Core routine to create a new OpenVPN instance and its firewall rules safely.
+ */
+const addNewInstance = async function (roleType, viewData, wizardParams, optionalShowBtnCancel) {
+
+    const nextNum = getNextInstanceNumber(viewData);
+    const nextId = 'instance' + nextNum;
+
+    const newInstanceItem = Object.assign({}, viewData.statusClass.INSTANCE_TEMPLATE, {
+        id: nextId,
+        instNum: nextNum,
+        role: roleType,
+    });
+
+    // Trigger the automated key allocation modal for ALL server installations
+    if ((newInstanceItem.role === OPENVPN.ROLE.SERVER) || ((wizardParams) && (wizardParams.role === OPENVPN.ROLE.SERVER))) {        
+
+        const callbacks = ({
+            openWizardBtnClick: openWizardBtnClick,
+            L_fs_Callbacks: L_fs_Callbacks,
+            showSaveApplyOpenVPN: showSaveApplyOpenVPN,
+            createInstance: createInstance,
+        });
+
+        viewData.keygenClass.openAutomatedPostKeyGenModal(newInstanceItem, viewData, wizardParams, callbacks, optionalShowBtnCancel);
+
     } else {
+        await createInstance(newInstanceItem, viewData, wizardParams);
         showSaveApplyOpenVPN(newInstanceItem.id);
     }
 
@@ -3229,7 +3235,7 @@ const renderInstanceCreationBox = function (viewData) {
     // Start the regular server creation flow when clicking the server button
     addServerBtn.addEventListener('click', function (ev) {
         ev.preventDefault();
-        addNewInstance(OPENVPN.ROLE.SERVER, viewData, null);
+        addNewInstance(OPENVPN.ROLE.SERVER, viewData, null, true);
     });
 
     // Start the import modal flow directly when clicking the client button
@@ -3266,7 +3272,7 @@ const syncInstanceFirewallRule = async function (role, instance_id, customPort, 
 
     let targetPort = customPort;
     if (!targetPort || isNaN(targetPort)) {
-        targetPort = calcPortFromId(instance_id);
+        targetPort = viewData.statusClass.calcPortFromId(instance_id);
     }
 
     let targetProto = customProto;
@@ -3286,26 +3292,43 @@ const syncInstanceFirewallRule = async function (role, instance_id, customPort, 
 
     // 2. Process routing table adjustments based on the current instance role mapping
     if (role === OPENVPN.ROLE.SERVER) {
-        const tunInterfaceName = 'vpn' + getInstanceNumber(instance_id).toString();
+        // Example: instance1 -> tun0, instance2 -> tun1
+
+        const deviceName = 'tun' + (viewData.statusClass.getInstanceNumber(instance_id) - 1).toString();
         const zoneName = 'vpn_zone_' + instance_id;
 
         try {
-            // wait until the network structure is ready
+            // Inline tracking pauses the engine until the network structure scan finishes
             const networkState = await checkNetworkStructure();
 
             // Create a separate, secure firewall zone for the VPN tunnel network
             L.uci.add(CFG.CMD.firewall, 'zone', fwZoneSection);
             L.uci.set(CFG.CMD.firewall, fwZoneSection, 'name', zoneName);
-            L.uci.set(CFG.CMD.firewall, fwZoneSection, 'network', tunInterfaceName);
+            L.uci.set(CFG.CMD.firewall, fwZoneSection, 'device', deviceName);
             L.uci.set(CFG.CMD.firewall, fwZoneSection, 'input', 'ACCEPT');
             L.uci.set(CFG.CMD.firewall, fwZoneSection, 'output', 'ACCEPT');
             L.uci.set(CFG.CMD.firewall, fwZoneSection, 'forward', 'ACCEPT');
+            L.uci.set(CFG.CMD.firewall, fwZoneSection, 'mtu_fix', '1');
+            L.uci.set(CFG.CMD.firewall, fwZoneSection, 'masq', '1');
 
-            // Set masquerade dynamically based on the network structure result
-            if (networkState.doubleNat === true || networkState.apMode === true) {
-                L.uci.set(CFG.CMD.firewall, fwZoneSection, 'masq', '1');
-            } else {
-                L.uci.set(CFG.CMD.firewall, fwZoneSection, 'masq', '0');
+            // Resolve the main LAN zone safely
+            const fwSections = L.uci.sections(CFG.CMD.firewall, 'zone') || [];
+            let lanSectionId = null;
+
+            for (let z = 0; z < fwSections.length; z++) {
+                if (fwSections[z] && fwSections[z].name === 'lan') {
+                    lanSectionId = fwSections[z]['.name'];
+                    break;
+                }
+            }
+
+            // Apply masquerade rules targeting the explicit LAN configuration sector securely
+            if (lanSectionId) {
+                if (networkState.apMode === true || networkState.doubleNat === true) {
+                    L.uci.set(CFG.CMD.firewall, lanSectionId, 'masq', '1');
+                } else {
+                    L.uci.set(CFG.CMD.firewall, lanSectionId, 'masq', '0');
+                }
             }
 
             // Allow data traffic to flow from your local LAN into the VPN tunnel zone
@@ -3320,12 +3343,12 @@ const syncInstanceFirewallRule = async function (role, instance_id, customPort, 
 
             L.uci.save();
             return true;
-
         } catch (err) {
             console.error('Firewall network state validation failed:', err);
             L.uci.save();
             return false;
         }
+
     } else {
         // Clean up the routing sections if the instance is just a client tunnel
         L.uci.remove(CFG.CMD.firewall, fwZoneSection);
@@ -3440,27 +3463,27 @@ const colorizeLogLines = function (text) {
 
         // 1. Show openvpn-luci script messages in purple color (highest priority)
         if (/openvpn-luci/i.test(cleanLine)) {
-            return '<span style="color:#a855f7; font-weight:bold;">' + cleanLine + '</span>';
+            return '<span style="color: var(--badge-purple-text, #a855f7); font-weight:bold;">' + cleanLine + '</span>';
         }
 
         // 2. Show critical errors and bad statuses in red color
         if (/error|failed|auth_failed|rejected/i.test(cleanLine)) {
-            return '<span style="color:#ef4444; font-weight:bold;">' + cleanLine + '</span>';
+            return '<span style="color: var(--danger-text, #ef4444); font-weight:bold;">' + cleanLine + '</span>';
         }
 
         // 3. Show system warnings and notes in orange color
         if (/warning|warn|note/i.test(cleanLine)) {
-            return '<span style="color:#f97316; font-weight:bold;">' + cleanLine + '</span>';
+            return '<span style="color: var(--warning-text, #f97316); font-weight:bold;">' + cleanLine + '</span>';
         }
 
         // 4. Show connection attempts and handshakes in green color
         if (/attempting/i.test(cleanLine)) {
-            return '<span style="color:#10b981; font-weight:bold;">' + cleanLine + '</span>';
+            return '<span style="color: var(--success-text, #10b981); font-weight:bold;">' + cleanLine + '</span>';
         }
 
         // 5. Show successful connections and status updates in blue color
         if (/initiated|established|completed|success/i.test(cleanLine)) {
-            return '<span style="color:#3b82f6; font-weight:bold;">' + cleanLine + '</span>';
+            return '<span style="var(--sysstat-text-blue, #3b82f6); font-weight:bold;">' + cleanLine + '</span>';
         }
 
         return cleanLine;
@@ -3487,7 +3510,7 @@ const handleLogFilter = function (clearLogBtn, logTextArea) {
                 }
             }
         }
-        logTextArea.innerHTML = '<span style="color:#64748b; font-style:italic;">' + TXT.MSG.no_vpn_log + '</span>';
+        logTextArea.innerHTML = '<span style="color: var(--text-color-light, #64748b); font-style:italic;">' + TXT.MSG.no_vpn_log + '</span>';
         clearLogBtn.textContent = ICON.SUCCESS + TXT.INFO.log_cleared;
         setTimeout(function () {
             clearLogBtn.disabled = false;
@@ -3508,7 +3531,7 @@ const renderLogBox = function (logLines) {
     });
 
     // Colorize the initial log stream entries safely upon creation
-    logTextArea.innerHTML = logLines ? colorizeLogLines(logLines) : '<span style="color:#64748b; font-style:italic;">' + TXT.MSG.no_vpn_log + '</span>';
+    logTextArea.innerHTML = logLines ? colorizeLogLines(logLines) : '<span style="color: var(--text-color-light, #64748b); font-style:italic;">' + TXT.MSG.no_vpn_log + '</span>';
 
     const clearLogBtn = E('button', {
         'id': 'openvpn_clear_log_btn',
@@ -3629,7 +3652,7 @@ const refreshLog = function (viewData) {
             // Dynamically compile the syntax highlighting markers into the live DOM frame
             terminal.innerHTML = colorizeLogLines(updatedLines);
         } else {
-            terminal.innerHTML = '<span style="color:#64748b; font-style:italic;">' + TXT.MSG.no_active_log_entries + '</span>';
+            terminal.innerHTML = '<span style="color: var(--text-color-light, #64748b); font-style:italic;">' + TXT.MSG.no_active_log_entries + '</span>';
         }
     });
 };
@@ -3759,6 +3782,8 @@ return view.extend({
                 viewData.wizardClass = results[1];
                 viewData.keygenClass = results[2];
 
+                await viewData.statusClass.onLoad();
+
                 const sections = L.uci.sections(CFG.CMD.openvpn, CFG.CMD.openvpn) || [];
 
                 // No nested .then loops for empty views
@@ -3866,23 +3891,4 @@ return view.extend({
         ]);
     }
 });
-
-
-/**
- * DEBUG: OpenWRT / LuCI developer shell debug commands
- *
- * # Show active live openvpn processes
- * ps | grep openvpn
- *
- * # Show active openvpn configuration
- * uci show openvpn
- *
- * # Force fast LuCI interface layout cache refresh:
- * rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/ && /etc/init.d/uhttpd restart
- *
- * # Force complete system workflow refresh (Requires user re-login):
- * rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/ && /etc/init.d/uhttpd restart && /etc/init.d/rpcd restart && /etc/init.d/openvpn restart
- */
-
-
 

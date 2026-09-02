@@ -10,43 +10,42 @@
 # /etc/uci-defaults/99_luci-app-openvpn
 
 # Path to the UCI configuration file
-CONFIG_FILE="/etc/config/openvpn"
+CONFIG_FILE="${IPKG_INSTROOT}/etc/config/openvpn"
 
 if [ -f "$CONFIG_FILE" ]; then
-    # 1. Verify that all three standard firmware sample entries exist exactly as delivered
-    if grep -q "config openvpn custom_config" "$CONFIG_FILE" 2>/dev/null && \
-       grep -q "config openvpn sample_server" "$CONFIG_FILE" 2>/dev/null && \
-       grep -q "config openvpn sample_client" "$CONFIG_FILE" 2>/dev/null; then
+	# 1. Verify that all three standard firmware sample entries exist exactly as delivered
+	if grep -q "config openvpn custom_config" "$CONFIG_FILE" 2>/dev/null && \
+	   grep -q "config openvpn sample_server" "$CONFIG_FILE" 2>/dev/null && \
+	   grep -q "config openvpn sample_client" "$CONFIG_FILE" 2>/dev/null; then
 
-        # 2. Check specifically for the UCI section pattern created by LuCI
-        if ! grep -q "config openvpn 'instance" "$CONFIG_FILE" 2>/dev/null; then
-            logger -t luci-app-openvpn "Unmodified factory samples detected. Backing up to openvpn-def."
+		# 2. Check specifically for the UCI section pattern created by LuCI
+		if ! grep -q "config openvpn 'instance" "$CONFIG_FILE" 2>/dev/null; then
+			logger -t luci-app-openvpn "Unmodified factory samples detected. Backing up to openvpn-def."
 
-            # Backup the cluttered firmware default file safely
-            cp -f "$CONFIG_FILE" /etc/config/openvpn-def 2>/dev/null
+			# Backup the cluttered firmware default file safely
+			cp -f "$CONFIG_FILE" "${IPKG_INSTROOT}/etc/config/openvpn-def" 2>/dev/null
 
-            # Create a clean, empty base configuration for your LuCI app
-            echo "# Clean OpenVPN base configuration" > "$CONFIG_FILE"
+			# Create a clean, empty base configuration for your LuCI app
+			echo "# Clean OpenVPN base configuration" > "$CONFIG_FILE"
 
-            # 3. Check if we are running during "opkg install" on a live system
-            # If the router is currently booting, procd is not fully initialized yet.
-            if ubus call service list '{"name":"openvpn"}' 2>/dev/null | grep -q "openvpn"; then
-                # This block runs ONLY during a runtime 'opkg install'
-                logger -t luci-app-openvpn "Package installed at runtime. Purging active processes and restarting service."
+			# 3. Check if we are running on a live runtime system (opkg install)
+			if [ -z "${IPKG_INSTROOT}" ]; then
+				logger -t luci-app-openvpn "Package installed at runtime. Purging active processes and restarting service."
+				
+				# Reload the official system service to register the empty config
+				if [ -x "/etc/init.d/openvpn" ]; then
+					/etc/init.d/openvpn reload
+				fi
+			else
+				logger -t luci-app-openvpn "Image building state detected. Skipping live runtime triggers."
+			fi
 
-                # Reload the official system service to register the empty config
-                /etc/init.d/openvpn reload
-            else
-                # This block runs ONLY during the first boot of the firmware
-                logger -t luci-app-openvpn "First boot detected. Skipping service actions as procd handles it later."
-            fi
+			exit 0
+		fi
+	fi
 
-            exit 0
-        fi
-    fi
-
-    # If any check fails, the user has modified the file. DO NOT TOUCH IT!
-    logger -t luci-app-openvpn "Modified or custom OpenVPN configuration detected. Keeping user data safe."
+	# If any check fails, the user has modified the file. DO NOT TOUCH IT!
+	logger -t luci-app-openvpn "Modified or custom OpenVPN configuration detected. Keeping user data safe."
 fi
 
 exit 0

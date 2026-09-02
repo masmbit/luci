@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2008-2026 The OpenWrt Project
 # Copyright (C) 2026 Manfred Jaider <masmbit@users.noreply.github.com>
 #
@@ -25,6 +24,29 @@ define Package/$(PKG_NAME)/description
   design optimized for current OpenWrt builds.
 endef
 
+# 1. Custom Linux system integration folders (Ignored by luci.mk)
+define Package/$(PKG_NAME)/install
+	
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/openvpn
+	$(INSTALL_BIN) ./root/etc/hotplug.d/openvpn/10-luci-app-openvpn-ddns $(1)/etc/hotplug.d/openvpn/10-luci-app-openvpn-ddns
+	
+	$(INSTALL_DIR) $(1)/etc/openvpn/keys
+	
+	$(INSTALL_DIR) $(1)/etc/openvpn/luci
+	$(INSTALL_DATA) ./root/etc/openvpn/luci/server.default.conf $(1)/etc/openvpn/luci/server.default.conf
+	$(INSTALL_DATA) ./root/etc/openvpn/luci/client.default.conf $(1)/etc/openvpn/luci/client.default.conf	
+
+	$(INSTALL_DIR) $(1)/etc/uci-defaults
+	$(INSTALL_BIN) ./root/etc/uci-defaults/99_luci-app-openvpn ./root/etc/uci-defaults/99_luci-app-openvpn	
+	
+	$(INSTALL_DIR) $(1)/usr/libexec
+	$(INSTALL_BIN) ./root/usr/libexec/luci-app-openvpn $(1)/usr/libexec/luci-app-openvpn
+
+	# 2. Installs JS-Views, Menus, ACLs, and compiles PO to LMO
+	$(call Package/$(PKG_NAME)/install/Default,$(1))
+endef
+
+# 3. LuCI build engine
 include ../../luci.mk
 
 # call BuildPackage - OpenWrt buildroot signature

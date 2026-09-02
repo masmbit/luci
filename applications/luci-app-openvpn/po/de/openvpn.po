@@ -1,0 +1,1185 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:135
+msgid ""
+"A client connection needs the server keys and config. Select an .ovpn "
+"profile to import them automatically, or click Cancel to use the default "
+"settings."
+msgstr "Eine Client-Verbindung benötigt die Server-Schlüssel und die Konfiguration. Wählen Sie ein .ovpn-Profil aus, um diese automatisch zu importieren, oder klicken Sie auf Abbrechen, um die Standardeinstellungen zu verwenden."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:128
+msgid "A secure firewall zone for all"
+msgstr "Eine sichere Firewall-Zone für alle"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:130
+msgid "API Token"
+msgstr "API-Token"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:151
+msgid "Account Update Key"
+msgstr "Konto-Aktualisierungsschlüssel"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:25
+msgid "Action"
+msgstr "Aktion"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:18
+#: root/www/luci-static/resources/view/vpn/openvpn.js:36
+msgid "Active"
+msgstr "Aktiv"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:37
+msgid "Active PIDs:"
+msgstr "Aktive PIDs:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:24
+msgid "Actual"
+msgstr "Aktuell"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:67
+msgid "Add Client Instance"
+msgstr "Client-Instanz hinzufügen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:69
+msgid "Add Office"
+msgstr "Standort hinzufügen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:68
+msgid "Add Server Instance"
+msgstr "Server-Instanz hinzufügen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:79
+msgid ""
+"Add your other offices below. The server will connect all networks "
+"automatically."
+msgstr "Fügen Sie unten Ihre weiteren Standorte hinzu. Der Server wird alle Netzwerke automatisch verbinden."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:38
+msgid "Aggregated RX:"
+msgstr "Gesamter Empfang (RX):"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:39
+msgid "Aggregated TX:"
+msgstr "Gesamtes Senden (TX):"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:81
+msgid "Another Main Internet Router Detected"
+msgstr "Weiterer Haupt-Internetrouter erkannt"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:80
+msgid "Another Router detected!!"
+msgstr "Weiterer Router erkannt!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:92
+msgid "Are you sure you want to delete"
+msgstr "Sind Sie sicher, dass Sie dies löschen möchten:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:120
+msgid "Automated Zone Setup:"
+msgstr "Automatische Zonen-Einrichtung:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:70
+msgid "Back"
+msgstr "Zurück"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:27
+msgid "CLOSED"
+msgstr "GESCHLOSSEN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:36
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:71
+#: root/www/luci-static/resources/view/vpn/openvpn.js:69
+msgid "Cancel"
+msgstr "Abbrechen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:46
+msgid "Certificate"
+msgstr "Zertifikat"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:133
+msgid "Certification Authority"
+msgstr "Zertifizierungsstelle (CA)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:70
+msgid "Change"
+msgstr "Ändern"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:72
+msgid "Check Address Status"
+msgstr "Adress-Status prüfen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:121
+msgid "Check Traffic Rules:"
+msgstr "Verkehrsregeln prüfen:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:74
+msgid "Choose File..."
+msgstr "Datei auswählen..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:82
+msgid ""
+"Choose how your internet traffic is sent through the VPN. You can use any "
+"free OpenVPN app on your phone or laptop to import this profile."
+msgstr "Wählen Sie, wie Ihr Internetverkehr durch das VPN geleitet wird. Sie können jede kostenlose OpenVPN-App auf Ihrem Smartphone oder Laptop verwenden, um dieses Profil zu importieren."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:136
+msgid "Classic free provider with exceptional IPv6 and dual-stack support."
+msgstr "Klassischer kostenloser Anbieter mit hervorragender IPv6- und Dual-Stack-Unterstützung."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:51
+msgid "Clear Log"
+msgstr "Protokoll löschen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:40
+msgid "Clearing..."
+msgstr "Lösche..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:134
+msgid "Client Certificate"
+msgstr "Client-Zertifikat"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:47
+msgid "Client Certificate & Private Key (issued by CA)"
+msgstr "Client-Zertifikat & privater Schlüssel (von CA ausgestellt)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:83
+msgid "Client for Branch Office (Branch)"
+msgstr "Client für Außenstelle (Filiale)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:48
+msgid "Client keys generated successfully!"
+msgstr "Client-Schlüssel erfolgreich generiert!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:49
+msgid "Client keys exported successfully."
+msgstr "Client-Schlüssel erfolgreich exportiert."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:35
+#: root/www/luci-static/resources/view/vpn/openvpn.js:72
+msgid "Close"
+msgstr "Schließen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:51
+msgid "Common Name (CN)"
+msgstr "Common Name (CN)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:91
+msgid ""
+"Configuration changed! Applying will temporarily restart the OpenVPN "
+"instance. Once the page has reloaded, click Apply a second time to complete "
+"the reactivation."
+msgstr "Konfiguration geändert! Das Anwenden wird die OpenVPN-Instanz vorübergehend neu starten. Sobald die Seite neu geladen wurde, klicken Sie ein zweites Mal auf 'Anwenden', um die Reaktivierung abzuschließen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:41
+msgid "Connected:"
+msgstr "Verbunden:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:26
+msgid "Connection Type"
+msgstr "Verbindungstyp"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:73
+msgid "Create VPN"
+msgstr "VPN erstellen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:84
+msgid "Create a secure VPN connection in just a few clicks."
+msgstr "Erstellen Sie eine sichere VPN-Verbindung mit nur wenigen Klicks."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:136
+msgid "Create keys for a new office..."
+msgstr "Schlüssel für einen neuen Standort erstellen..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:28
+msgid "Creating VPN..."
+msgstr "VPN wird erstellt..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:25
+#: root/www/luci-static/resources/view/vpn/openvpn.js:42
+msgid "Creating..."
+msgstr "Erstelle..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:77
+msgid "Crypto operation running. Please wait..."
+msgstr "Kryptografischer Vorgang läuft. Bitte warten..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:155
+msgid "Cryptographic Key Warning"
+msgstr "Kryptografische Schlüsselwarnung"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:124
+msgid "Custom / Manual Update URL"
+msgstr "Benutzerdefinierte / Manuelle Update-URL"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:52
+msgid "Custom CLI Options"
+msgstr "Benutzerdefinierte CLI-Optionen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:29
+msgid "Custom Update URL"
+msgstr "Benutzerdefinierte Update-URL"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:155
+msgid "DDNS Key / Password"
+msgstr "DDNS-Schlüssel / Passwort"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:30
+msgid "DDNS Provider"
+msgstr "DDNS-Anbieter"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:26
+msgid "Default"
+msgstr "Standard"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:75
+msgid "Delete"
+msgstr "Löschen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:73
+msgid "Delete Instance"
+msgstr "Instanz löschen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:85
+msgid "Delete this office"
+msgstr "Diesen Standort löschen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:74
+msgid "Deleted - Save & Apply"
+msgstr "Gelöscht - Speichern & Anwenden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:92
+msgid "Deployment Recommendation:"
+msgstr "Bereitstellungs-Empfehlung:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:137
+msgid "Diffie - Hellman Parameters"
+msgstr "Diffie-Hellman-Parameter"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:62
+msgid "Diffie-Hellman Parameters (Perfect Forward Secrecy)"
+msgstr "Diffie-Hellman-Parameter (Perfect Forward Secrecy)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:53
+msgid "Diffie-Hellman parameters enforce numeric prime bit boundaries exclusively."
+msgstr "Diffie-Hellman-Parameter erzwingen ausschließlich numerische Primzahl-Bitgrenzen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:143
+msgid "Direct Update Token"
+msgstr "Direktes Update-Token"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:43
+msgid "Disable"
+msgstr "Deaktivieren"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:19
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:26
+#: root/www/luci-static/resources/view/vpn/openvpn.js:44
+msgid "Disabled"
+msgstr "Deaktiviert"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:154
+msgid "Do you want to proceed and save this file anyway?"
+msgstr "Möchten Sie fortfahren und diese Datei trotzdem speichern?"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:31
+msgid "Domain Name"
+msgstr "Domainname"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:37
+#: root/www/luci-static/resources/view/vpn/openvpn.js:75
+msgid "Download"
+msgstr "Herunterladen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:76
+msgid "Download (.ovpn)"
+msgstr "Herunterladen (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:45
+msgid "Download Profile"
+msgstr "Profil herunterladen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:93
+msgid "Download and QR code link are only available while this window is open."
+msgstr "Der Download und der QR-Code-Link sind nur verfügbar, solange dieses Fenster geöffnet ist."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:129
+msgid "DuckDNS (duckdns.org)"
+msgstr "DuckDNS (duckdns.org)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:133
+msgid "Dynu Systems (dynu.com)"
+msgstr "Dynu Systems (dynu.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:97
+msgid "ERROR: Safety polling threshold exceeded boundaries. Process deadlocked."
+msgstr "FEHLER: Sicherheits-Abfragegrenze überschritten. Prozess blockiert (Deadlock)."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:94
+msgid "Edit Config file"
+msgstr "Konfigurationsdatei bearbeiten"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:46
+msgid "Enable"
+msgstr "Aktivieren"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:38
+msgid "Enable Save"
+msgstr "Speichern freigeben"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:77
+msgid "Enabled"
+msgstr "Aktiviert"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:47
+msgid "Enabled:"
+msgstr "Aktiviert:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:35
+msgid "Encryption"
+msgstr "Verschlüsselung"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:122
+msgid "Enter your own manual HTTP update URL structure."
+msgstr "Geben Sie Ihre eigene manuelle HTTP-Update-URL-Struktur ein."
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:21
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:27
+#: root/www/luci-static/resources/view/vpn/openvpn.js:48
+msgid "Error"
+msgstr "Fehler"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:171
+msgid "Error: An office with this name is already in the list."
+msgstr "Fehler: Ein Standort mit diesem Namen existiert bereits in der Liste."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:162
+msgid "Error: Configuration or cryptographic keys are missing on disk."
+msgstr "Fehler: Konfiguration oder kryptografische Schlüssel fehlen auf dem Datenträger."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:174
+msgid "Error: File is corrupted or missing vital fields."
+msgstr "Fehler: Datei ist beschädigt oder es fehlen essentielle Felder."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:170
+msgid "Error: Network status check failed. Please try again."
+msgstr "Fehler: Netzwerk-Statusprüfung fehlgeschlagen. Bitte versuchen Sie es erneut."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:166
+msgid "Error: Please add at least one office to the list before you continue."
+msgstr "Fehler: Bitte fügen Sie mindestens einen Standort zur Liste hinzu, bevor Sie fortfahren."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:169
+msgid ""
+"Error: This IP address is already used by another office. Every office needs "
+"a different IP address!"
+msgstr "Fehler: Diese IP-Adresse wird bereits von einem anderen Standort verwendet. Jeder Standort benötigt eine eigene IP-Adresse!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:172
+msgid ""
+"Error: You cannot use this IP network! It is the local network of this "
+"router and will block all traffic."
+msgstr "Fehler: Sie können dieses IP-Netzwerk nicht verwenden! Es ist das lokale Netzwerk dieses Routers und würde den gesamten Datenverkehr blockieren."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:131
+msgid "Excellent free option. No monthly email confirmation needed."
+msgstr "Hervorragende kostenlose Option. Keine monatliche E-Mail-Bestätigung erforderlich."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:96
+msgid "Export (.ovpn)"
+msgstr "Exportieren (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:54
+msgid "Export Keys"
+msgstr "Schlüssel exportieren"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:32
+msgid "External Port"
+msgstr "Externer Port"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:161
+msgid "Failed to build profile:"
+msgstr "Profil-Erstellung fehlgeschlagen:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:167
+msgid "Failed to create new OpenVPN server:"
+msgstr "Erstellung des OpenVPN-Servers fehlgeschlagen:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:27
+msgid "File Location:"
+msgstr "Dateipfad:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:86
+msgid "Finding your public IP address..."
+msgstr "Ermittle Ihre öffentliche IP-Adresse..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:123
+msgid "Firewall"
+msgstr "Firewall"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:124
+msgid "Firewall & Routing Information"
+msgstr "Firewall- & Routing-Informationen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:87
+msgid "For Phones & Laptops (OpenVPN Connect App)"
+msgstr "Für Smartphones & Laptops (OpenVPN Connect App)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:142
+msgid "FreeDNS (afraid.org)"
+msgstr "FreeDNS (afraid.org)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:146
+msgid "FreeMYIP (freemyip.com)"
+msgstr "FreeMYIP (freemyip.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:63
+msgid "Full PKI Suite (CA + Server Certificate + Private Server Key)"
+msgstr "Vollständige PKI-Suite (CA + Server-Zertifikat + privater Server-Schlüssel)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:39
+msgid "Generate"
+msgstr "Generieren"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:91
+msgid "Generated keys are not saved! Close window and discard keys?"
+msgstr "Die generierten Schlüssel sind nicht gespeichert! Fenster schließen und Schlüssel verwerfen?"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:55
+msgid "Generating TLS-Crypt key..."
+msgstr "Generiere TLS-Crypt-Schlüssel..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:58
+msgid "Generating private client key..."
+msgstr "Generiere privaten Client-Schlüssel..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:78
+msgid "Generating..."
+msgstr "Generiere..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:139
+msgid "HTTP Token String"
+msgstr "HTTP-Token-String"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:41
+msgid "IP Address"
+msgstr "IP-Adresse"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:43
+msgid "Netmask"
+msgstr "Netzwerkmaske"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:126
+msgid "Network"
+msgstr "Netzwerk"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:168
+msgid "Network Error: DNS/IP query failed."
+msgstr "Netzwerkfehler: DNS/IP-Abfrage fehlgeschlagen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:76
+#: root/www/luci-static/resources/view/vpn/openvpn.js:79
+msgid "Next"
+msgstr "Weiter"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:53
+msgid "No"
+msgstr "Nein"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:50
+msgid "No (Clone Default Keys)"
+msgstr "Nein (Standard-Schlüssel klonen)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:106
+msgid ""
+"No OpenVPN instances configured yet. Use the buttons below to create an "
+"instance."
+msgstr "Noch keine OpenVPN-Instanzen konfiguriert. Nutzen Sie die Schaltflächen unten, um eine Instanz zu erstellen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:105
+#: root/www/luci-static/resources/view/vpn/openvpn.js:107
+msgid "No active OpenVPN log entries found."
+msgstr "Keine aktiven OpenVPN-Protokolleinträge gefunden."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:54
+msgid "No changes detected"
+msgstr "Keine Änderungen erkannt"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:29
+msgid "No clients connected"
+msgstr "Keine Clients verbunden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:99
+msgid "No file chosen"
+msgstr "Keine Datei ausgewählt"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:38
+msgid "No instances configured"
+msgstr "Keine Instanzen konfiguriert"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:98
+msgid "No offices added yet. Use the fields below to add the first office."
+msgstr "Noch keine Standorte hinzugefügt. Nutzen Sie die Felder unten, um den ersten Standort hinzuzufügen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:154
+msgid "No-IP (noip.com)"
+msgstr "No-IP (noip.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:61
+msgid "Not applicable"
+msgstr "Nicht zutreffend"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:127
+msgid "Number 1 for Open-Source and Home-Assistant setups."
+msgstr "Die Nummer 1 für Open-Source- und Home-Assistant-Setups."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:80
+msgid "OK"
+msgstr "OK"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:46
+msgid "OPEN"
+msgstr "OFFEN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:44
+msgid "Office IP Address"
+msgstr "Standort IP-Adresse"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:45
+msgid "Office Name"
+msgstr "Standort-Name"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:108
+msgid "Office Profile:"
+msgstr "Standort-Profil:"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:17
+#: root/www/luci-static/resources/view/vpn/openvpn.js:55
+msgid "OpenVPN"
+msgstr "OpenVPN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:90
+msgid "OpenVPN Client Export"
+msgstr "OpenVPN-Client-Export"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:104
+msgid "OpenVPN Connect Mobile Export"
+msgstr "OpenVPN Connect Mobile-Export"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:82
+msgid "OpenVPN Instance Key Generator"
+msgstr "OpenVPN-Instanz Schlüsselgenerator"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:143
+msgid "OpenVPN Keys"
+msgstr "OpenVPN-Schlüssel"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:161
+msgid "OpenVPN Keys Detected:"
+msgstr "OpenVPN-Schlüssel erkannt:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:47
+msgid "OpenVPN Profile Valid:"
+msgstr "OpenVPN-Profil gültig:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:61
+msgid "OpenVPN Server/Client"
+msgstr "OpenVPN-Server/Client"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:59
+msgid "OpenVPN Setup Wizard"
+msgstr "OpenVPN Einrichtungs-Assistent"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:127
+msgid "OpenVPN tunnel interfaces (tun0, tun1, tun3, etc.)"
+msgstr "OpenVPN-Tunnel-Schnittstellen (tun0, tun1, tun3, etc.)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:48
+msgid "Outside Port:"
+msgstr "Externer Port:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:68
+msgid "PKI Suite components successfully saved to disk!"
+msgstr "Komponenten der PKI-Suite erfolgreich auf dem Datenträger gespeichert!"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:20
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:30
+#: root/www/luci-static/resources/view/vpn/openvpn.js:56
+msgid "Pending..."
+msgstr "Ausstehend..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:104
+msgid ""
+"Please check your profile file. A valid configuration file needs a remote "
+"target endpoint and key blocks."
+msgstr "Bitte überprüfen Sie Ihre Profil-Datei. Eine gültige Konfigurationsdatei benötigt einen Remote-Zielendpunkt und Schlüsselblöcke."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:71
+msgid "Please click \"Save & Apply\"."
+msgstr "Bitte klicken Sie auf 'Speichern & Anwenden'."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:107
+msgid "Please create a port forwarding rule inside your main internet router."
+msgstr "Bitte erstellen Sie eine Port-Weiterleitungsregel in Ihrem Haupt-Internetrouter."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:144
+msgid ""
+"Please select a valid .ovpn file first or click cancel to utilize fallback "
+"keys."
+msgstr "Bitte wählen Sie zuerst eine gültige .ovpn-Datei aus oder klicken Sie auf Abbrechen, um die Fallback-Schlüssel zu verwenden."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:141
+msgid ""
+"Please wait while secure cryptographic, router-unique default assets are "
+"being generated."
+msgstr "Bitte warten Sie, während sichere, kryptografische und router-einzigartige Standard-Schlüssel generiert werden."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:49
+msgid "Port Forwarding:"
+msgstr "Port-Weiterleitung:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:101
+msgid "Port Open Success!"
+msgstr "Port erfolgreich geöffnet!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:145
+msgid "Private Client Key"
+msgstr "Privater Client-Schlüssel"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:72
+msgid "Private Key"
+msgstr "Privater Schlüssel"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:147
+msgid "Private Server Key"
+msgstr "Privater Server-Schlüssel"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:153
+msgid ""
+"Proceeding with invalid cryptographic keys will cause total connection "
+"failure and may lead to service instability or infinite daemon crash loops."
+msgstr "Das Fortfahren mit ungültigen kryptografischen Schlüsseln führt zum totalen Verbindungsabbruch und kann zu Systeminstabilität oder endlosen Absturzschleifen des Dienstes führen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:81
+msgid "Processing..."
+msgstr "Verarbeite..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:156
+msgid "Profile link active (Native uqr framework (QR-Code) not loaded)."
+msgstr "Profil-Link aktiv (Natives UQR-Framework (QR-Code) nicht geladen)."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:73
+msgid "Progress & Output"
+msgstr "Fortschritt & Ausgabe"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:50
+msgid "Protocol"
+msgstr "Protokoll"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:52
+msgid "Public IP Address or Domain"
+msgstr "Öffentliche IP-Adresse oder Domain"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:53
+msgid "Public Static IP"
+msgstr "Öffentliche statische IP"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:74
+msgid "Pure ECC"
+msgstr "Reines ECC"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:75
+msgid "Pure RSA"
+msgstr "Reines RSA"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:76
+msgid "Ready for key generation."
+msgstr "Bereit für die Schlüsselgenerierung."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:109
+msgid "Ready for openvpn connections."
+msgstr "Bereit für OpenVPN-Verbindungen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:79
+msgid ""
+"Recommended: RSA-2048 + ECC-Prime256v1. RSA ensures CA compatibility, while "
+"ECC accelerates the data tunnel."
+msgstr "Empfohlen: RSA-2048 + ECC-Prime256v1. RSA sichert die CA-Kompatibilität, während ECC den Datentunnel beschleunigt."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:39
+msgid "Remote IP / Port"
+msgstr "Remote IP / Port"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:54
+msgid "Remote Office Name"
+msgstr "Name der entfernten Außenstelle"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:55
+msgid "Resolving Target..."
+msgstr "Löse Zieladresse auf..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:56
+msgid "Reveal/hide password"
+msgstr "Passwort anzeigen/verbergen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:157
+msgid "Reverting to fallback configuration."
+msgstr "Setze auf Fallback-Konfiguration zurück."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:31
+msgid "Running"
+msgstr "Läuft"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:40
+msgid "Save & Apply"
+msgstr "Speichern & Anwenden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:41
+#: root/www/luci-static/resources/view/vpn/openvpn.js:82
+msgid "Save Config"
+msgstr "Konfiguration speichern"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:43
+#: root/www/luci-static/resources/view/vpn/openvpn.js:84
+msgid "Saved"
+msgstr "Gespeichert"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:42
+#: root/www/luci-static/resources/view/vpn/openvpn.js:83
+msgid "Saving..."
+msgstr "Speichere..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:110
+msgid "Scan QR Code with Mobile Phone Camera:"
+msgstr "QR-Code mit der Smartphone-Kamera scannen:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:147
+msgid "Secret Key Token"
+msgstr "Secret-Key-Token"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:60
+msgid "Secure Full Tunnel (Route all traffic over VPN)"
+msgstr "Sicherer Voll-Tunnel (Gesamten Verkehr über das VPN leiten)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:111
+msgid "Secure Temporary Profile URL Field:"
+msgstr "Feld für sichere temporäre Profil-URL:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:158
+msgid "Security Notice:"
+msgstr "Sicherheitshinweis:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:112
+msgid "Select Profile (.ovpn)"
+msgstr "Profil auswählen (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:57
+msgid "Select VPN Type"
+msgstr "VPN-Typ auswählen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:110
+msgid ""
+"Select the (.ovpn) profile or (.crt) multi-key bundle. Settings will be "
+"configured or updated automatically."
+msgstr "Wählen Sie das (.ovpn)-Profil oder das (.crt) Multi-Schlüssel-Bundle aus. Die Einstellungen werden automatisch konfiguriert oder aktualisiert."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:61
+msgid "Server Address:"
+msgstr "Server-Adresse:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:146
+msgid "Server Certificate"
+msgstr "Server-Zertifikat"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:111
+msgid "Server for Main Office (Headquarters)"
+msgstr "Server für Hauptstandort (Zentrale)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:58
+msgid "Setup"
+msgstr "Einrichtung"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:85
+msgid "Show"
+msgstr "Anzeigen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:78
+msgid "Signing client certificate using server CA..."
+msgstr "Signiere Client-Zertifikat mit der Server-CA..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:144
+msgid "Simple free service using text-based HTTPS tokens."
+msgstr "Einfacher kostenloser Dienst mit textbasierten HTTPS-Token."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:32
+msgid "Since"
+msgstr "Seit"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:112
+msgid "Skip Check & Unlock Create Button"
+msgstr "Prüfung überspringen & Erstellen-Button freigeben"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:62
+msgid "Split Tunnel (Access home LAN only, faster web browsing)"
+msgstr "Split-Tunnel (Nur Zugriff auf das Heimnetz-LAN, schnelleres Websurfen)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:57
+msgid "Starting..."
+msgstr "Starte..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:89
+msgid "Static IP check bypassed by administrator."
+msgstr "Prüfung der statischen IP vom Administrator übersprungen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:90
+msgid "Static IP now checked by administrator."
+msgstr "Statische IP wird nun vom Administrator geprüft."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:40
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:63
+#: root/www/luci-static/resources/view/vpn/openvpn.js:58
+msgid "Status"
+msgstr "Status"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:69
+msgid "Step 1/3: Generating Certificate Authority (CA)..."
+msgstr "Schritt 1/3: Generiere Zertifizierungsstelle (CA)..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:70
+msgid "Step 2/3: Generating Private Server Key..."
+msgstr "Schritt 2/3: Generiere privaten Server-Schlüssel..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:71
+msgid "Step 3/3: Generating & Signing Server Certificate..."
+msgstr "Schritt 3/3: Generiere & Signiere Server-Zertifikat..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:93
+msgid "Success: The IP address is valid and fully resolvable!"
+msgstr "Erfolgreich: Die IP-Adresse ist gültig und vollständig auflösbar!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:113
+msgid "Switch to Dynamic DNS (DDNS)"
+msgstr "Auf Dynamisches DNS (DDNS) umschalten"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:80
+msgid "Symmetric static encryption key for encryption protection layer."
+msgstr "Symmetrischer statischer Schlüssel für die zusätzliche Verschlüsselungs-Schutzschicht."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:114
+msgid "System logs ..."
+msgstr "Systemprotokoll ..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:116
+msgid "TCP (Good for traveling - works behind firewalls)"
+msgstr "TCP (Ideal auf Reisen - funktioniert hinter Firewalls)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:148
+msgid "TLS Crypt Secret"
+msgstr "TLS-Crypt-Geheimnis"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:64
+msgid "TLS Crypt Secret (Anti-DoS / Port-Scan Protection)"
+msgstr "TLS-Crypt-Schlüssel (Anti-DoS / Portscan-Schutz)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:81
+msgid "TLS-Crypt key saved successfully."
+msgstr "TLS-Crypt-Schlüssel erfolgreich gespeichert."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:115
+msgid "The external port"
+msgstr "Der externe Port"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:114
+msgid "The port forward"
+msgstr "Die Port-Weiterleitung"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:106
+msgid "The port used on this OpenWrt router."
+msgstr "Der auf diesem OpenWrt-Router verwendete Port."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:105
+msgid "The port used on your main internet router."
+msgstr "Der auf Ihrem Haupt-Internetrouter verwendete Port."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:108
+msgid "The public IP address or your own external domain name."
+msgstr "Die öffentliche IP-Adresse oder Ihr eigener externer Domainname."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:96
+msgid "The saved key data contains structural format corruption!"
+msgstr "Die gespeicherten Schlüsseldaten enthalten strukturelle Formatfehler!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:167
+msgid "The uploaded file is empty."
+msgstr "Die hochgeladene Datei ist leer."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:109
+msgid ""
+"This automated initialization process can take a few minutes on your "
+"device..."
+msgstr "Dieser automatische Initialisierungsprozess kann auf Ihrem Gerät einige Minuten dauern..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:100
+msgid "This file contains only VPN client keys."
+msgstr "Diese Datei enthält ausschließlich VPN-Client-Schlüssel."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:95
+msgid ""
+"This is the address your VPN clients will use to connect from the internet. "
+"Scan the QR code with your phone camera or use the link below to download "
+"your connection profile."
+msgstr "Dies ist die Adresse, die Ihre VPN-Clients zur Verbindung aus dem Internet verwenden. Scannen Sie den QR-Code mit der Smartphone-Kamera oder nutzen Sie den Link unten, um das Verbindungsprofil herunterzuladen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:113
+msgid ""
+"This server handles network rules for multiple remote offices. Please choose "
+"an existing office name or write a name to make a new connection profile."
+msgstr "Dieser Server verwaltet die Netzwerkregeln für mehrere entfernte Standorte. Bitte wählen Sie einen bestehenden Standortnamen aus oder vergeben Sie einen neuen Namen, um ein neues Verbindungsprofil zu erstellen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:57
+msgid ""
+"To be secure, a new instance needs its own key files. Do you want to create "
+"them now? (Recommended - usually takes just a few moments)"
+msgstr "Um die Sicherheit zu gewährleisten, benötigt eine neue Instanz eigene Schlüsseldateien. Möchten Sie diese jetzt erstellen? (Empfohlen - dauert meist nur wenige Augenblicke)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:64
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:125
+msgid "Token / Password"
+msgstr "Token / Passwort"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:129
+msgid "Traffic Rules"
+msgstr "Verkehrsregeln"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:41
+msgid "Transfer (Rx / Tx)"
+msgstr "Übertragung (Empfangen / Senden)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:28
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:42
+#: root/www/luci-static/resources/view/vpn/openvpn.js:62
+msgid "Type"
+msgstr "Typ"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:117
+msgid "UDP (Recommended - Fast)"
+msgstr "UDP (Empfohlen - Schnell)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:84
+msgid "Unknown Asset"
+msgstr "Unbekanntes Element"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:43
+msgid "UpTime"
+msgstr "Laufzeit"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:86
+msgid "Upload"
+msgstr "Hochladen"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:115
+msgid "Uploaded file is invalid or corrupt!"
+msgstr "Die hochgeladene Datei ist ungültig oder beschädigt!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:118
+msgid "Use Dynamic DNS (DDNS) Service"
+msgstr "Dynamischen DNS-Dienst (DDNS) verwenden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:87
+msgid "Use Fallback"
+msgstr "Fallback verwenden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:119
+msgid "Use Public IP Address / Domain"
+msgstr "Öffentliche IP-Adresse / Domain verwenden"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:65
+msgid "Username"
+msgstr "Benutzername"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:135
+msgid "Username (Optional)"
+msgstr "Benutzername (Optional)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:156
+msgid "Username / E-Mail"
+msgstr "Benutzername / E-Mail"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:44
+msgid "VPN"
+msgstr "VPN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:116
+msgid "VPN Client Connection Domain or Address:"
+msgstr "Domain oder Adresse für VPN-Client-Verbindung:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:87
+msgid "VPN Key Type:"
+msgstr "VPN-Schlüsseltyp:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:66
+msgid "VPN Name"
+msgstr "VPN-Name"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:30
+msgid "Valid Until"
+msgstr "Gültig bis"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:29
+msgid "Validated"
+msgstr "Validiert"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:173
+msgid ""
+"Validation Error: The VPN Name must contain only letters, numbers, hyphens "
+"or underscores."
+msgstr "Validierungsfehler: Der VPN-Name darf nur Buchstaben, Zahlen, Bindestriche oder Unterstriche enthalten."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:91
+msgid "Validation bypassed after network failure."
+msgstr "Validierung nach Netzwerkfehler übersprungen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:92
+msgid "Validation bypassed by administrator."
+msgstr "Validierung vom Administrator übersprungen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:86
+msgid "Validity (Days)"
+msgstr "Gültigkeit (Tage)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:152
+msgid ""
+"Very popular provider. Requires manual activation every 30 days in free "
+"account."
+msgstr "Sehr beliebter Anbieter. Erfordert bei kostenlosen Konten alle 30 Tage eine manuelle Aktivierung."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:130
+msgid "WAN ports"
+msgstr "WAN-Ports"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:90
+msgid ""
+"WARNING: Clicking save will instantly break all active VPN tunnels. You must "
+"generate and share new client profiles (.ovpn) to restore the connections."
+msgstr "WARNUNG: Das Speichern wird sofort alle aktiven VPN-Tunnel trennen. Sie müssen neue Client-Profile (.ovpn) generieren und verteilen, um die Verbindungen wiederherzustellen."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:163
+msgid "Warning: If you upload wrong keys, your connection will stop!"
+msgstr "Warnung: Wenn Sie falsche Schlüssel hochladen, wird die Verbindung unterbrochen!"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:159
+msgid ""
+"Warning: The IP address cannot be resolved. Your router might be offline."
+msgstr "Warnung: Die IP-Adresse kann nicht aufgelöst werden. Ihr Router ist möglicherweise offline."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:152
+msgid ""
+"Warning: The uploaded file structure does not match the expected key type."
+msgstr "Warnung: Die Struktur der hochgeladenen Datei entspricht nicht dem erwarteten Schlüsseltyp."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:160
+msgid ""
+"Warning: You did not select \"Public Static IP\". If your public IP address "
+"changes, your VPN tunnel will crash."
+msgstr "Warnung: Sie haben 'Öffentliche statische IP' nicht ausgewählt. Wenn sich Ihre öffentliche IP-Adresse ändert, bricht der VPN-Tunnel ab."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:162
+msgid ""
+"Warning: You have un-saved text in the input fields. Please click the blue "
+"\"Add Office\" button to save it, or clear the fields to continue."
+msgstr "Warnung: Sie haben ungespeicherten Text in den Eingabefeldern. Bitte klicken Sie auf die blaue Schaltfläche 'Standort hinzufügen', um diesen zu speichern, oder leeren Sie die Felder, um fortzufahren."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:32
+#: root/www/luci-static/resources/view/vpn/openvpn.js:63
+msgid "Wizard"
+msgstr "Assistent"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:168
+msgid "Wrong key type! Please upload the correct cryptographic file."
+msgstr "Falscher Schlüsseltyp! Bitte laden Sie die korrekte kryptografische Datei hoch."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:31
+msgid "Years"
+msgstr "Jahre"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:64
+msgid "Yes"
+msgstr "Ja"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:56
+msgid "Yes (Generate Unique Keys)"
+msgstr "Ja (Einzigartige Schlüssel generieren)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:119
+msgid "are opened automatically for secure OpenVPN connections."
+msgstr "werden für sichere OpenVPN-Verbindungen automatisch geöffnet."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:122
+msgid "devices is created automatically."
+msgstr "Geräte wird automatisch erstellt."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:138
+msgid "dynv6 (dynv6.com)"
+msgstr "dynv6 (dynv6.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:65
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:66
+msgid "e.g. -text (shows hex output)"
+msgstr "z. B. -text (zeigt Hex-Ausgabe)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:51
+msgid "e.g. 1194"
+msgstr "z. B. 1194"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:103
+msgid "e.g. Mobile-Server, Main Office"
+msgstr "z. B. Mobil-Server, Hauptstandort"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:126
+msgid "e.g. https://custom-provider.com..."
+msgstr "z. B. https://custom-provider.com..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:102
+msgid "e.g. mydomain.com or your public IP"
+msgstr "z. B. meine-domain.de oder Ihre öffentliche IP"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:123
+msgid "e.g. myname-custom-provider.com"
+msgstr "z. B. meinname-custom-provider.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:153
+msgid "e.g. myname.ddns.net"
+msgstr "z. B. meinname.ddns.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:128
+msgid "e.g. myname.duckdns.org"
+msgstr "z. B. meinname.duckdns.org"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:132
+msgid "e.g. myname.dynu.net"
+msgstr "z. B. meinname.dynu.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:137
+msgid "e.g. myname.dynv6.net"
+msgstr "z. B. meinname.dynv6.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:145
+msgid "e.g. ://freemyip.com"
+msgstr "z. B. ://freemyip.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:149
+msgid "e.g. myname.ipv64.net"
+msgstr "z. B. meinname.ipv64.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:141
+msgid "e.g. ://mooo.com"
+msgstr "z. B. ://mooo.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:94
+msgid "is already"
+msgstr "ist bereits"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:95
+msgid "is currently"
+msgstr "ist momentan"
+

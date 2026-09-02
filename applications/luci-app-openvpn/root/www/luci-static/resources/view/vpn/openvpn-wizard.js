@@ -63,7 +63,7 @@ const TXT = {
 		status: _('Status'),
 		token_password: _('Token / Password'),
 		username: _('Username'),
-		vpn_name: _('VPN Name (Optional)')
+		vpn_name: _('VPN Name')
 	},
 	BTN: {
 		add_office: _('Add Office'),
@@ -78,7 +78,7 @@ const TXT = {
 	MSG: {
 		add_your_other_office: _('Add your other offices below. The server will connect all networks automatically.'),
 		another_router_detected: _('Another Router detected!!'),
-		another_internet_router_detected: _('Another Main Internet Router Detected!'),
+		another_internet_router_detected: _('Another Main Internet Router Detected'),
 		choose_how_send_through_vpn: _('Choose how your internet traffic is sent through the VPN. You can use any free OpenVPN app on your phone or laptop to import this profile.'),
 		client_for_branch_office: _('Client for Branch Office (Branch)'),
 		create_vpn_few_clicks: _('Create a secure VPN connection in just a few clicks.'),
@@ -100,7 +100,7 @@ const TXT = {
 		only_vpn_client_keys: _('This file contains only VPN client keys.'),
 		open_port_success: _('Port Open Success!'),
 		placeholder_mydomain_publicip: _('e.g. mydomain.com or your public IP'),
-		placeholder_myhomevpn: _('e.g. MyHomeVPN, MainOffice'),
+		placeholder_myhomevpn: _('e.g. Mobile-Server, Main-Office'),
 		please_check_profe_file: _('Please check your profile file. A valid configuration file needs a remote target endpoint and key blocks.'),
 		port_used_main_router: _('The port used on your main internet router.'),
 		port_used_this_router: _('The port used on this OpenWrt router.'),
@@ -332,10 +332,6 @@ const sanitizeInputText = function (value) {
 	return rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 };
 
-const getPortFromInstNum = function (instNum) {
-	return OPENVPN.PORT.n1194 - 1 + instNum;
-}
-
 /**
  * Cleans a name string to remove bad characters and make it safe for files or text.
  */
@@ -538,13 +534,6 @@ const renderPortForwardingAlert = function (hideOnPortOpen, networkCallbacks) {
 					last_isPortOpen = isPortOpen;
 				}
 
-				// 5. Run layout compilation and HTML rendering
-				if (isPortOpen === true && hideOnPortOpen === true) {
-					alertNode.setAttribute('data-is-ap', 'false');
-					alertNode.style.display = 'none';
-					return true;
-				}
-
 				const routerIp = networkState.gateway || OPENVPN.IP.ZERO;
 				let forwardLine = '';
 				if (routerIp && routerIp !== OPENVPN.IP.ZERO) {
@@ -554,7 +543,7 @@ const renderPortForwardingAlert = function (hideOnPortOpen, networkCallbacks) {
 				}
 
 				let forwardHint = '<div style="margin-top:10px; padding:5px; background:color-mix(in srgb, var(--action-bg, #00a8ff) 10%, transparent); border-left:4px solid var(--action-bg, #00a8ff); font-family:var(--font-monospace, monospace); line-height:1.6; font-weight:bold; font-size:13px; text-align:center; border-radius:4px;">';
-				forwardHint += TXT.INFO.port_forwarding + ' ' + forwardLine + ' (' + protoValue.toUpperCase() + ')';
+				forwardHint += TXT.INFO.port_forwarding + ' ' + forwardLine + ' (' + protoValue + ')';
 				forwardHint += '</div>';
 
 				let port_info;
@@ -568,7 +557,7 @@ const renderPortForwardingAlert = function (hideOnPortOpen, networkCallbacks) {
 					alertNode.className = 'alert-message';
 					alertNode.style.cssText = alertStyleInfo;
 					alertNode.innerHTML = '<strong>' + ICON.CHECK + TXT.MSG.open_port_success + '</strong><br/>' +
-						TXT.MSG.another_internet_router_detected + ' (IP: <strong>' + routerIp + '</strong>), ' + port_info + TXT.MSG.is_already +
+						TXT.MSG.another_internet_router_detected + ' (IP: <strong>' + routerIp + '</strong>). ' + port_info + TXT.MSG.is_already +
 						'<span class="label success"> ' + TXT.INFO.open + '</span><br/>' +
 						'<strong>' + TXT.INFO.status + ':</strong> ' + TXT.MSG.ready_for_connection + '<br/>' + forwardHint;
 				} else {
@@ -581,7 +570,7 @@ const renderPortForwardingAlert = function (hideOnPortOpen, networkCallbacks) {
 					}
 					alertNode.innerHTML = '<strong>' + ICON.WARNING + TXT.MSG.another_router_detected + '</strong><br/>' +
 						TXT.MSG.another_internet_router_detected + ' (IP: <strong>' + routerIp + '</strong>). ' + port_info + TXT.MSG.is_currently +
-						'<span class="label" style="background:var(--sysstat-text-red, #ef4444); color:#fff; font-weight:bold; padding:2px 6px; border-radius:3px;"> ' + TXT.INFO.closed + '</span><br/>' +
+						'<span class="label" style="background:var(--sysstat-text-red, #ef4444); color: var(--badge-text, #fff); font-weight:bold; padding:2px 6px; border-radius:3px;"> ' + TXT.INFO.closed + '</span><br/>' +
 						'<strong>' + TXT.INFO.action + ':</strong> ' + TXT.MSG.please_create_port_forwarding + '<br/>' + forwardHint;
 				}
 
@@ -771,7 +760,7 @@ const createServerInstance = async function (scenarioSelect, elements, protoSele
 		activeSubParams = elements.subNodes.siteServer.getParams();
 	}
 
-	const internalPortVal = parseInt(sanitizeInputLine(elements.inputs.port.value), 10) || (getPortFromInstNum(wizardData.instanceNumber));
+	const internalPortVal = parseInt(sanitizeInputLine(elements.inputs.port.value), 10) || (wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber));
 	const externalPortVal = elements.inputs.clientPort ? (parseInt(sanitizeInputLine(elements.inputs.clientPort.value), 10) || internalPortVal) : internalPortVal;
 	const connType = elements.inputs.connectionType.value;
 
@@ -964,7 +953,7 @@ const renderOptionSiteServer = function (portForwardingAlert, wizardData) {
 	// 5. Create the "Add" button
 	const addEntryBtn = E('button', {
 		'class': 'cbi-button cbi-button-add',
-		'style': 'margin-top:8px; margin-bottom:20px; font-weight:bold; background:var(--action-bg, #00a8ff) !important; color:#fff !important;'
+		'style': 'margin-top:8px; margin-bottom:20px; font-weight:bold; background:var(--action-bg, #00a8ff) !important; color: var(--badge-text, #fff) !important;'
 	}, [ICON.PLUS + TXT.BTN.add_office]);
 
 	// 6. Create the red error box below the button
@@ -1190,7 +1179,7 @@ const renderOptionSiteClient = function (buttons, messageBox) {
 					E('span', {}, [
 						ICON.ARROW + ' ' + TXT.INFO.server_address + ' ',
 						E('code', { 'style': 'font-weight:bold; color:var(--sysstat-text-blue, #3b82f6);' },
-							remoteMatch[1] + ':' + remoteMatch[2] + ' (' + (protoMatch ? protoMatch[1].toUpperCase() : 'UDP') + ')'
+							remoteMatch[1] + ':' + remoteMatch[2] + ' (' + (protoMatch ? protoMatch[1] : OPENVPN.PROTO.UDP) + ')'
 						)
 					])
 				]);
@@ -1278,7 +1267,13 @@ const renderOptionSiteClient = function (buttons, messageBox) {
 /**
  * Builds the HTML layout block for Step 1 (VPN Name and Selection)
  */
-const buildWizardStep1Row = function (displayNameInput, radioConnectServer, radioSiteServer, radioSiteClientMatrix) {
+const buildWizardStep1Row = function (displayNameInput, radioConnectServer, radioSiteServer, radioSiteClientMatrix, hideClient) {
+
+	let styleHide = '';
+	if (hideClient == true) {
+		styleHide = ' display:none !important;';
+	}
+
 	return E('div', { 'style': 'display:block; margin-bottom:15px;' }, [
 		// Row A: Choose a custom name for the VPN instance
 		E('div', { 'class': 'cbi-value' }, [
@@ -1304,7 +1299,7 @@ const buildWizardStep1Row = function (displayNameInput, radioConnectServer, radi
 				]),
 
 				// Option 3: Client for branch office
-				E('label', { 'style': 'display:inline-flex; align-items:center; cursor:pointer; font-weight:bold;' }, [
+				E('label', { 'style': 'display:inline-flex; align-items:center; cursor:pointer; font-weight:bold;' + styleHide }, [
 					radioSiteClientMatrix,
 					E('span', { 'style': 'margin-left:8px;' }, ICON.BRANCH + TXT.MSG.client_for_branch_office)
 				])
@@ -1367,13 +1362,13 @@ const buildWizardStep3Row = function (elements_inputs, radioUdp, radioTcp, butto
 		}
 	}, ['∗']);
 
-	const ddnsUsernameContainer = E('div', { 'id': 'ddns_username_container', 'class': 'cbi-value' }, [
+	const ddnsUsernameContainer = E('div', { 'id': 'ddns_username_container', 'class': 'cbi-value', 'style': 'display:none !important' }, [
 		// set No-Ip (noip.com) default
 		E('label', { 'id': 'ddns_username_label', 'class': 'cbi-value-title' }, TXT.DDNS.noip_username),
 		E('div', { 'class': 'cbi-value-field' }, [elements_inputs.ddnsUsername])
 	]);
 	const ddnsTokenContainer = E('div', { 'class': 'cbi-value' }, [
-		E('label', { 'id': 'ddns_token_label', 'class': 'cbi-value-title' }, TXT.DDNS.noip_token),
+		E('label', { 'id': 'ddns_token_label', 'class': 'cbi-value-title' }, TXT.DDNS.duckdns_token),
 		E('div', { 'class': 'cbi-value-field', 'style': 'display:flex; width:100%;' }, [
 			elements_inputs.ddnsToken,
 			togglePasswordBtn
@@ -1393,7 +1388,7 @@ const buildWizardStep3Row = function (elements_inputs, radioUdp, radioTcp, butto
 				elements_inputs.ddnsProvider,
 				// Inject ICON.INFO in cbi-value-description
 				E('style', {}, '#' + 'ddns_provider_description' + '.cbi-value-description:not(:empty)::before {' + 'content: "' + ICON.TAG + '" !important; left:-1.35em; top:-0.1em; mask-image: none !important; -webkit-mask-image: none !important; background: transparent !important}'),
-				E('div', { 'id': 'ddns_provider_description', 'class': 'cbi-value-description', 'style': 'margin-top:4px;' }, TXT.DDNS.noip_description)
+				E('div', { 'id': 'ddns_provider_description', 'class': 'cbi-value-description', 'style': 'margin-top:4px;' }, TXT.DDNS.duckdns_description)
 			]),
 		]),
 		E('div', { 'class': 'cbi-value' }, [
@@ -1481,10 +1476,15 @@ const buildWizardStep3Row = function (elements_inputs, radioUdp, radioTcp, butto
 /**
  * Creates all the text fields, buttons, and radio controls for the wizard steps
  */
-const createWizardInputElements = function (buttons, wizardData, selectedScenario, portForwardingAlert) {
+const createWizardInputElements = function (buttons, wizardData, selectedScenario, portForwardingAlert, hideClient) {
+	let styleHide = '';
+	if (hideClient == true) {
+		styleHide = ' display:none !important;';
+	}
+
 	const radioConnect = E('input', { 'type': 'radio', 'name': 'wizard_scenario_group', 'value': OPENVPN.SCENARIO.CONNECT_SERVER, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
 	const radioSiteServer = E('input', { 'type': 'radio', 'name': 'wizard_scenario_group', 'value': OPENVPN.SCENARIO.SITE_TO_SITE_SERVER, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
-	const radioSiteClient = E('input', { 'type': 'radio', 'name': 'wizard_scenario_group', 'value': OPENVPN.SCENARIO.SITE_TO_SITE_CLIENT, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
+	const radioSiteClient = E('input', { 'type': 'radio', 'name': 'wizard_scenario_group', 'value': OPENVPN.SCENARIO.SITE_TO_SITE_CLIENT, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' + styleHide });
 
 	const forcedScenario = wizardData.forcedScenario;
 	if (selectedScenario === OPENVPN.SCENARIO.CONNECT_SERVER) {
@@ -1506,7 +1506,7 @@ const createWizardInputElements = function (buttons, wizardData, selectedScenari
 	const radioTcp = E('input', { 'type': 'radio', 'name': 'wizard_proto_group', 'value': OPENVPN.PROTO.TCP, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
 	const displayNameInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.MSG.placeholder_myhomevpn, 'style': 'width:100%;' });
 	const ddnsInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.MSG.placeholder_mydomain_publicip, 'style': 'width:100%; font-weight:bold; color:var(--action-bg, #00a8ff);' });
-	const portInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'value': String(getPortFromInstNum(wizardData.instanceNumber)), 'placeholder': TXT.INFO.placeholder_1194, 'style': 'font-family:var(--font-monospace, monospace)' });
+	const portInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'value': String(wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber)), 'placeholder': TXT.INFO.placeholder_1194, 'style': 'font-family:var(--font-monospace, monospace)' });
 	const clientPortInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.INFO.placeholder_1194, 'style': 'font-family:var(--font-monospace, monospace)' });
 
 	const messageBoxInfo = E('div', { 'id': 'dns_check_result_container', 'style': 'margin: 15px 0; display: none;' });
@@ -1591,7 +1591,7 @@ const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert
 	let defaultPort = OPENVPN.PORT.s443;
 
 	if (!isTcp) {
-		defaultPort = String(getPortFromInstNum(wizardData.instanceNumber));
+		defaultPort = String(wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber));
 	}
 
 	const role = getRoleFromScenarioValue(scenario);
@@ -1599,7 +1599,7 @@ const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert
 	let isAp = false;
 
 	// Port tests are only needed if this machine works as a VPN server
-	if (isServer === true && wizardData && wizardData.networkCallbacks && typeof wizardData.networkCallbacks.checkNetworkStructure === 'function') {
+	if (isServer) {
 		try {
 			const networkState = await wizardData.networkCallbacks.checkNetworkStructure();
 			if (networkState.doubleNat === true || networkState.apMode === true) {
@@ -1636,13 +1636,11 @@ const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert
 			if (clientPortInput) clientPortInput.value = OPENVPN.PORT.s443;
 		}
 	} else {
-		// Default standard UDP port calculation matching the instance number
+		// Default standard UDP port calculation
 		portInput.value = defaultPort;
 		if (clientPortInput) clientPortInput.value = defaultPort;
 	}
-
 };
-
 
 /**
  * Helper to find out which VPN type is selected
@@ -2280,7 +2278,7 @@ const setupAddressValidator = function (elements, buttons, portForwardingAlert, 
 /**
  * MAIN WIZARD
  */
-const openWizardModal = function (wizardData) {
+const openWizardModal = function (wizardData, optionalHideClient) {
 
 	// Instantiate the new independent port forwarding warning component
 	const portForwardingAlert = renderPortForwardingAlert(false, wizardData.networkCallbacks);
@@ -2288,7 +2286,7 @@ const openWizardModal = function (wizardData) {
 
 	// Create all text boxes, buttons, and radio controls
 	const buttons = createWizardNavigationButtons();
-	const elements = createWizardInputElements(buttons, wizardData, selectedScenario, portForwardingAlert);
+	const elements = createWizardInputElements(buttons, wizardData, selectedScenario, portForwardingAlert, optionalHideClient);
 
 	// Create the description text line that changes on every step
 	const descrNode = E('div', {
@@ -2301,7 +2299,7 @@ const openWizardModal = function (wizardData) {
 		currentStep: wizardData.forcedScenario ? 2 : 1,
 		nodes: { descr: descrNode },
 		rows: {
-			step1: buildWizardStep1Row(elements.inputs.displayName, elements.radios.connectServer, elements.radios.siteServer, elements.radios.siteClient),
+			step1: buildWizardStep1Row(elements.inputs.displayName, elements.radios.connectServer, elements.radios.siteServer, elements.radios.siteClient, optionalHideClient),
 			step2: buildWizardStep2Row(elements.subNodes.connectServer.node, elements.subNodes.siteServer.node, elements.subNodes.siteClient.node),
 			step3: buildWizardStep3Row(elements.inputs, elements.radios.udp, elements.radios.tcp, buttons, portForwardingAlert.node)
 		}

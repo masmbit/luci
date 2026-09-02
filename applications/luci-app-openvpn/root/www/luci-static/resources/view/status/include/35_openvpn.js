@@ -14,7 +14,7 @@
 
 const TXT = {
 	STATUS: {
-		title: _('OpenVPN'),
+		openvpn: _('OpenVPN'),
 		active: _('Active'),
 		disabled: _('Disabled'),
 		pending: _('Pending...'),
@@ -29,7 +29,7 @@ const CFG = Object.freeze({
 });
 
 return L.Class.extend({
-	title: TXT.STATUS.title,
+	title: TXT.STATUS.openvpn,
 
 	// Shared data container for the OpenVPN view context
 	VIEW_DATA: {
@@ -60,11 +60,13 @@ return L.Class.extend({
 			L.require('view.vpn.openvpn-status'),
 			L.uci.load('openvpn').catch(function () { return null; })
 
-		// Make only the inner callback function async!
+			// Make only the inner callback function async!
 		]).then(async function (results) {
 
 			const openvpnStatus = results[0];
 			if (!openvpnStatus) return null;
+
+			await openvpnStatus.onLoad();
 
 			const sections = L.uci.sections('openvpn', 'openvpn') || [];
 
@@ -74,7 +76,7 @@ return L.Class.extend({
 				return null;
 			}
 
-			self.title = TXT.STATUS.title;
+			self.title = TXT.STATUS.openvpn;
 			self.statusTableContainer = E('div', { 'id': 'openvpn_overview_table_wrapper', 'style': 'display: block;' }, [E('div', {})]);
 			self.ifaceBoxContainer = E('div', { 'style': 'display:block; margin: 10px 0 15px 0; text-align: left;' }, []);
 

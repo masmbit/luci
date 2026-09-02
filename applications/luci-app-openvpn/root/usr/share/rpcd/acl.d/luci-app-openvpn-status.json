@@ -10,6 +10,7 @@
 			},
 			"file": {
 				"/etc/openvpn/": [ "read" ],
+				"/run/": [ "read" ],
 				"/var/run/": [ "read" ],
 				"/proc/uptime": [ "read" ],
 				"/proc/net/dev": [ "read" ],

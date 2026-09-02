@@ -11,6 +11,7 @@
 			},
 			"file": {
 				"/etc/openvpn/": [ "read" ],
+				"/run/": [ "read" ],				
 				"/var/run/": [ "read" ],
 				"/proc/uptime": [ "read" ],
 				"/proc/net/dev": [ "read" ],
@@ -34,7 +35,6 @@
 				"/etc/openvpn/luci/": [ "write" ],
 				"/etc/openvpn/keys/": [ "write" ],
 				"/etc/config/openvpn": [ "write" ],
-				"/var/run/": [ "write" ],
 				"/usr/libexec/": [ "exec" ],
 				"/usr/libexec/luci-app-openvpn": [ "exec" ]
 			}

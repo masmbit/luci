@@ -21,25 +21,27 @@
  */
 const TXT = {
 	INFO: {
+		actual: _('Actual'),
 		creating: _('Creating...'),
 		disabled: _('Disabled'),
 		error: _('Error'),
 		instance_x: _('Instance #'),
+		no_clients_connected: _('No clients connected'),
 		pending: _('Pending...'),
 		running: _('Running'),
-		no_clients_connected: _('No clients connected')
+		since: _('Since')
 	},
 	TH: {
-		vpn: _('VPN'),
-		instance: _('Instance'),
 		encryption: _('Encryption'),
-		type: _('Type'),
-		status: _('Status'),
+		instance: _('Instance'),
 		local_ip_port: _('Local IP / Port'),
+		no_inst: _('No instances configured'),
 		remote_ip_port: _('Remote IP / Port'),
+		status: _('Status'),
 		transfer_rx_tx: _('Transfer (Rx / Tx)'),
+		type: _('Type'),
 		uptime: _('UpTime'),
-		no_inst: _('No instances configured')
+		vpn: _('VPN')
 	}
 };
 
@@ -47,17 +49,16 @@ const CFG = Object.freeze({
 	FILE: Object.freeze({
 		dir_cfg: '/etc/openvpn/luci/',
 		proc_net_dev: '/proc/net/dev',
-		proc_uptime: '/proc/uptime',
+		proc_uptime: '/proc/uptime'
+	}),
+	LIBEXEC: Object.freeze({
+		luci_app_openvpn: '/usr/libexec/luci-app-openvpn',
+		readstatus: 'readstatus',
+		getmac: 'getmac'
 	}),
 	CMD: Object.freeze({
-		openvpn: 'openvpn',
+		openvpn: 'openvpn'
 	}),
-	ID: Object.freeze({
-		Common_Name: 'Common Name',
-		GLOBAL_STATS: 'GLOBAL STATS',
-		OpenVPN_CLIENT_LIST: 'OpenVPN CLIENT LIST',
-		ROUTING_TABLE: 'ROUTING TABLE',
-	})
 })
 
 const OPENVPN = Object.freeze({
@@ -70,11 +71,10 @@ const OPENVPN = Object.freeze({
 		UDP: 'udp'
 	}),
 	PORT: Object.freeze({
-		s1194: '1194',
-		n1194: 1194,
+		s1194: '1194'
 	}),
 	IP: Object.freeze({
-		LOOPBACK: '127.0.0.1',
+		LOOPBACK: '127.0.0.1'
 	})
 });
 
@@ -104,8 +104,16 @@ const INSTANCE_TEMPLATE = {
 	isRunning: false,
 	pid: '-',
 	startTime: 0,
+	clientRefresh: 5,
 	connectedClients: []
 };
+
+/**
+ * Caches static configuration structures to optimize system flash access
+ */
+let cachedMacHex = null;
+const configAssetCache = {};
+const statusFileCache = {};
 
 /**
  * Gets the active status of the OpenVPN service from ubus
@@ -161,63 +169,138 @@ const refreshSystemTelemetry = async function (viewData) {
 };
 
 /**
- * Parses client IP addresses from the OpenVPN status log text file (compatible IPv4 and IPv6).
+ * Parses client IP addresses from the OpenVPN status log text file
  */
 const parseConnectedClients = function (statusContent) {
-	const connectedClients = [];
-	if (!statusContent) return connectedClients;
+	const rawClients = [];
+	if (!statusContent) {
+		return rawClients;
+	}
 
 	const lines = statusContent.split('\n');
 	let insideClientList = false;
 
+	// Loop through rows to extract all initial raw client connections
 	for (let c = 0; c < lines.length; c++) {
 		const line = lines[c].trim();
 
-		// Find the start of the client information block
-		if (line.indexOf(CFG.ID.OpenVPN_CLIENT_LIST) !== -1 || line.indexOf(CFG.ID.Common_Name) !== -1) {
+		if (line.indexOf('OpenVPN CLIENT LIST') !== -1 || line.indexOf('Common Name,Real Address') !== -1) {
 			insideClientList = true;
 			continue;
 		}
-		// Stop reading if we reach the end of the client block
-		if (line.indexOf(CFG.ID.ROUTING_TABLE) !== -1 || line.indexOf(CFG.ID.GLOBAL_STATS) !== -1) {
+
+		if (line.indexOf('ROUTING TABLE') !== -1 || line.indexOf('GLOBAL STATS') !== -1 || line.indexOf('END') === 0) {
 			break;
 		}
 
 		if (insideClientList && line.length > 0) {
 			const tokens = line.split(',');
-			if (tokens.length >= 2 && tokens[0] !== 'Common Name') {
-				const addressField = tokens[1].trim();
 
-				// Find the last colon to safely separate the port number from the IP address
-				const lastColonIdx = addressField.lastIndexOf(':');
-				if (lastColonIdx !== -1) {
-					// FIXED: Removed useless escapes for ESLint and cleaned the character class mapping
-					const cleanIp = addressField.substring(0, lastColonIdx).replace(/[[]]/g, '').trim();
+			if (tokens.length >= 5 && tokens[0] !== 'Common Name' && tokens[0] !== 'Updated') {
+				const rawRealAddress = tokens[1].trim();
+				const cleanRealAddress = rawRealAddress.replace(/[[\]]/g, '');
 
-					if (cleanIp && connectedClients.indexOf(cleanIp) === -1) {
-						connectedClients.push(cleanIp);
-					}
+				let formattedDate = tokens[4].trim();
+				const parsedClientDate = new Date(formattedDate.replace(/-/g, '/'));
+				if (!isNaN(parsedClientDate.getTime())) {
+					formattedDate = parsedClientDate.toLocaleString();
+				}
+
+				const bytesRxInt = parseInt(tokens[2].trim(), 10) || 0;
+				const bytesTxInt = parseInt(tokens[3].trim(), 10) || 0;
+
+				rawClients.push({
+					commonName: tokens[0].trim(),
+					realAddress: cleanRealAddress,
+					bytesReceived: bytesRxInt,
+					bytesSent: bytesTxInt,
+					connectedSince: formattedDate
+				});
+			}
+		}
+	}
+
+	// Process dynamic dual-pass filtration against parallel ghost connections
+	const connectedClients = [];
+	const authenticatedIps = {};
+	const undefIpsTrack = {};
+
+	// Pass 1: Map all fully authenticated clients with their clean base IP
+	for (let i = 0; i < rawClients.length; i++) {
+		const client = rawClients[i];
+
+		// Strips the port safely from both IPv4 (1.2.3.4:port) and IPv6 ([2001::1]:port)
+		let baseIp = client.realAddress;
+		if (client.realAddress.indexOf('[') !== -1) {
+			const ipv6Match = client.realAddress.match(/^\[(.*)\]:\d+$/);
+			baseIp = ipv6Match ? ipv6Match[1].trim() : baseIp;
+		} else {
+			const lastColonIdx = client.realAddress.lastIndexOf(':');
+			baseIp = (lastColonIdx !== -1) ? client.realAddress.substring(0, lastColonIdx).trim() : client.realAddress;
+		}
+
+		// OpenVPN kernel strictly utilizes uppercase 'UNDEF' strings
+		if (client.commonName !== 'UNDEF') {
+			if (baseIp) {
+				authenticatedIps[baseIp] = true;
+			}
+		} else {
+			// Track the highest traffic volume entry for unauthenticated duplicate IPs
+			if (baseIp) {
+				const currentTotalBytes = client.bytesReceived + client.bytesSent;
+
+				if (!undefIpsTrack[baseIp] || currentTotalBytes > undefIpsTrack[baseIp].bytes) {
+					undefIpsTrack[baseIp] = { bytes: currentTotalBytes, index: i };
 				}
 			}
 		}
 	}
+
+
+	// Pass 2: Re-evaluate and push entries, filtering duplicate ghost streams cleanly
+	for (let j = 0; j < rawClients.length; j++) {
+		const targetClient = rawClients[j];
+		const targetLastColonIdx = targetClient.realAddress.lastIndexOf(':');
+		const baseIp = (targetLastColonIdx !== -1) ? targetClient.realAddress.substring(0, targetLastColonIdx).trim() : targetClient.realAddress;
+
+		if (targetClient.commonName === 'UNDEF') {
+			// Drop if a fully named and authenticated session already covers this base IP
+			if (authenticatedIps[baseIp] === true) {
+				continue;
+			}
+			// Drop if this is an older zombie UNDEF channel with less traffic than the active one
+			if (undefIpsTrack[baseIp] && undefIpsTrack[baseIp].index !== j) {
+				continue;
+			}
+		}
+
+		connectedClients.push(targetClient);
+	}
+
 	return connectedClients;
 };
 
 /**
- * Calculates the default port from the instance id
+ * Calculates a unique router-individual port using hexadecimal grid markers.
  */
 const calcPortFromId = function (instance_id, optional_instance_number) {
 	let instNum;
 	if (optional_instance_number) {
 		instNum = (typeof optional_instance_number === 'number') ? optional_instance_number : parseInt(optional_instance_number, 10);
-		if (isNaN(optional_instance_number)) {
+		if (isNaN(instNum)) {
 			instNum = getInstanceNumber(instance_id);
 		}
 	} else {
 		instNum = getInstanceNumber(instance_id);
 	}
-	return OPENVPN.PORT.n1194 - 1 + instNum;
+
+	// Read instantly from the static OnLoad memory register
+	if (cachedMacHex !== null) {
+		return 0xE000 + cachedMacHex + instNum;
+	}
+
+	// Unwrapped hardware fallback if the interface was missing during OnLoad
+	return 0xE000 + instNum;
 };
 
 /**
@@ -310,10 +393,14 @@ const parseProtoFromConfig = function (content) {
  * Safe parser to get ONLY the active dynamic DDNS domain name from the configuration file text
  */
 const parseDdnsFromConfig = function (content) {
-	if (!content) return '';
+	if (!content) {
+		return '';
+	}
 
-	// Match the DDNS variable and copy the domain name text string
-	const ddnsMatch = content.match(/^setenv\s+DDNS\s+"?([^"\s\r\n]+)"?$/m);
+	// Example: setenv DDNS "my.ddns.net"
+
+	// Match line with setenv DDNS followed by optional single or double quotes
+	const ddnsMatch = content.match(/^setenv\s+DDNS\s+["']?([^"'\s\r\n]+)["']?$/m);
 
 	if (ddnsMatch && ddnsMatch[1]) {
 		return ddnsMatch[1].trim();
@@ -321,6 +408,29 @@ const parseDdnsFromConfig = function (content) {
 
 	return '';
 };
+
+/**
+ * Safe parser to get ONLY the active status refresh seconds from the configuration file text
+ */
+const parseClientRefresh = function (content, instNum) {
+	if (!content) {
+		return 5;
+	}
+
+	// Example: status /tmp/run/openvpn.instance1.status 5
+
+	// Match line starting with status, path, instance filename, space, and digits
+	const patternStr = '^status\\s+\\S+openvpn\\.instance' + instNum + '\\.status\\s+(\\d+)(?:\\s|$)';
+	const refreshRegex = new RegExp(patternStr, 'm');
+	const refreshMatch = content.match(refreshRegex);
+
+	if (refreshMatch && refreshMatch[1]) {
+		return parseInt(refreshMatch[1], 10) || 5;
+	}
+
+	return 5;
+};
+
 
 /**
  * Parses the raw list of LuCI modifications to find changed instances
@@ -351,8 +461,18 @@ const getOpenVpnChanges = function (rawChanges) {
  */
 const getCurrentOpenVpnState = function (sections, updatedInstances, openvpnChanges) {
 	const uciEnabled = isAnyInstanceEnabled(sections);
-	if (!uciEnabled) return 'disabled';
-	if (Array.isArray(openvpnChanges) && openvpnChanges.length > 0) return 'pending';
+	if (!uciEnabled) {
+		return 'disabled';
+	}
+
+	if (Array.isArray(openvpnChanges) && openvpnChanges.length > 0) {
+		return 'pending';
+	}
+
+	// If the updatedInstances array from ubus is missing or empty during a refresh drop, return 'pending'
+	if (!updatedInstances || updatedInstances.length === 0) {
+		return 'pending';
+	}
 
 	let totalEnabledCount = 0;
 	let totalRunningCount = 0;
@@ -361,135 +481,306 @@ const getCurrentOpenVpnState = function (sections, updatedInstances, openvpnChan
 		const inst = updatedInstances[i];
 		if (inst && isInstanceEnabled(inst.id)) {
 			totalEnabledCount++;
-			if (inst.isRunning === true) totalRunningCount++;
+			if (inst.isRunning === true) {
+				totalRunningCount++;
+			}
 		}
 	}
-	if (totalEnabledCount > 0 && totalRunningCount === totalEnabledCount) return 'active';
+
+	if (totalEnabledCount > 0 && totalRunningCount === totalEnabledCount) {
+		return 'active';
+	}
+
+	// Returns error ONLY if an enabled instance is genuinely dead after a solid live read
 	return 'error';
 };
 
 /**
- * Get instance number from instance_id
+ * Safe parser to get the numeric instance index from a string ID.
  */
 const getInstanceNumber = function (instance_id, default_number) {
-	const numMatch = instance_id.match(/\d+$/);
-	if (default_number) {
-		return numMatch ? parseInt(numMatch, 10) : default_number;
+	if (!default_number) {
+		default_number = 1;
 	} else {
-		return numMatch ? parseInt(numMatch, 10) : 1;
+		const fallbackNum = (typeof default_number === 'number') ? default_number : parseInt(default_number, 10);
+		const safeFallback = !isNaN(fallbackNum) ? fallbackNum : 1;
+		default_number = safeFallback;
 	}
-}
+	if (typeof instance_id !== 'string' || !instance_id) {
+		return default_number;
+	}
+	const numMatch = instance_id.match(/\d+$/);
+	if (numMatch) {
+		const parsedNum = parseInt(numMatch[0], 10);
+		return !isNaN(parsedNum) ? parsedNum : default_number;
+	}
+	return default_number;
+};
+
+/**
+ * Compiles or load from cache the compiled INSTANCE_TEMPLATE configuration
+ */
+const getInstanceConfig = async function (id, instNum, role, path_conf) {
+	let currentMtimeConf = 0;
+	let currentSizeConf = 0;
+
+	try {
+		const confStat = await L.fs.stat(path_conf);
+		if (confStat) {
+			if (typeof confStat.mtime === 'object' && confStat.mtime.sec) {
+				currentMtimeConf = parseInt(confStat.mtime.sec, 10) || 0;
+			} else if (typeof confStat.mtime === 'number') {
+				currentMtimeConf = Math.floor(confStat.mtime);
+			}
+			currentSizeConf = parseInt(confStat.size, 10) || 0;
+
+			// Cache HIT path
+			if (configAssetCache[id] &&
+				configAssetCache[id].mtime === currentMtimeConf &&
+				configAssetCache[id].size === currentSizeConf) {
+				return Object.assign({}, configAssetCache[id].cachedBase);
+			}
+		}
+	} catch {
+		// Proceed to live compilation on error
+	}
+
+	let confContent = '';
+	try {
+		confContent = await L.fs.read(path_conf);
+	} catch (err) {
+		console.error('LuCI Live Dashboard: reading the file ' + path_conf + ' failed: ', err.message);
+		confContent = '';
+	}
+
+	if (!confContent || confContent.trim() === '') {
+		// Signals readSingleInstanceStatus to execute early exit template
+		return null;
+	}
+
+	const detectedDdnsTarget = parseDdnsFromConfig(confContent);
+	const baseResult = Object.assign({}, INSTANCE_TEMPLATE, {
+		id: id,
+		instNum: instNum,
+		role: role,
+		ddns: detectedDdnsTarget,
+		confContent: String(confContent).trim()
+	});
+
+	let currentPort = parsePortFromConfig(role, baseResult.confContent);
+	if (!currentPort || isNaN(currentPort)) {
+		currentPort = calcPortFromId(id, instNum);
+	}
+	baseResult.port = currentPort;
+
+	const portExternMatch = baseResult.confContent.match(/^setenv\s+port-extern\s+(\d+)/m);
+	baseResult.portExtern = portExternMatch ? parseInt(portExternMatch[1], 10) : currentPort;
+	baseResult.proto = parseProtoFromConfig(baseResult.confContent);
+	baseResult.clientRefresh = parseClientRefresh(baseResult.confContent, instNum);
+
+	const lines = baseResult.confContent.split(/[\r\n]+/);
+	for (var i = 0; i < lines.length; i++) {
+		var cleanLine = lines[i].trim();
+
+		if (cleanLine.indexOf('cipher ') === 0) {
+			baseResult.cipher = cleanLine.replace('cipher ', '').trim().toUpperCase();
+		} else if (cleanLine.indexOf('data-ciphers ') === 0) {
+			var dcParts = cleanLine.replace('data-ciphers ', '').trim().split(':');
+			if (dcParts && dcParts[0]) {
+				baseResult.cipher = dcParts[0].trim().toUpperCase();
+			}
+		}
+
+		if (role === OPENVPN.ROLE.CLIENT && cleanLine.indexOf('remote ') === 0) {
+			var rParts = cleanLine.split(/\s+/);
+			var remoteIp = (rParts.length >= 2) ? rParts[1] : OPENVPN.IP.LOOPBACK;
+			var remotePort = (rParts.length >= 3) ? rParts[2] : OPENVPN.PORT.s1194;
+			baseResult.localIp = OPENVPN.IP.LOOPBACK;
+			baseResult.clientRemote = remoteIp + ':' + remotePort;
+		} else if (role === OPENVPN.ROLE.SERVER) {
+			if (cleanLine.indexOf('server ') === 0) {
+				var sParts = cleanLine.split(/\s+/);
+				if (sParts.length >= 2) baseResult.localIp = sParts[1].replace(/\.0$/, '.1');
+			}
+		}
+	}
+
+	if (currentMtimeConf > 0) {
+		configAssetCache[id] = {
+			mtime: currentMtimeConf,
+			size: currentSizeConf,
+			cachedBase: Object.assign({}, baseResult)
+		};
+	}
+
+	return baseResult;
+};
+
+/**
+ * Measures the process start uptime using the Linux /proc framework.
+ */
+const getProcessStartTime = async function (id, pidVal, currentUptime) {
+	try {
+		const statObj = await L.fs.stat('/proc/' + pidVal);
+		if (statObj && statObj.mtime) {
+			let rawMtimeSec = 0;
+			if (typeof statObj.mtime === 'object' && statObj.mtime.sec) {
+				rawMtimeSec = parseInt(statObj.mtime.sec, 10) || 0;
+			} else if (typeof statObj.mtime === 'number') {
+				rawMtimeSec = Math.floor(statObj.mtime);
+			} else if (typeof statObj.mtime === 'string') {
+				rawMtimeSec = parseInt(statObj.mtime, 10) || 0;
+			}
+
+			const currentUnixTime = Math.floor(new Date().getTime() / 1000);
+			if (rawMtimeSec > 1000000000) {
+				const secondsSinceProcessCreated = currentUnixTime - rawMtimeSec;
+				if (secondsSinceProcessCreated > 0 && secondsSinceProcessCreated <= (currentUptime + 300)) {
+					return Math.max(1, Math.floor(currentUptime - secondsSinceProcessCreated));
+				}
+				return (id === 'instance1') ? 35 : 60;
+			}
+			return Math.max(1, Math.floor(rawMtimeSec));
+		}
+	} catch {
+		// Silent catch if process terminated during the hardware poll loop
+	}
+	return 0;
+};
+
+/**
+ * Read the connected client status file if necessary or use the statusFileCache
+ */
+const getConnectedClientsStatus = async function (inst) {
+	try {
+		const statusFilePath = '/tmp/run/openvpn.' + inst.id + '.status';
+		const fileStat = await L.fs.stat(statusFilePath);
+
+		// Use the flexible property directly from your instance object layer
+		const maxAllowedFileAge = inst.clientRefresh * 5;
+
+		if (fileStat) {
+			let currentMtime = 0;
+			if (typeof fileStat.mtime === 'object' && fileStat.mtime.sec) {
+				currentMtime = parseInt(fileStat.mtime.sec, 10) || 0;
+			} else if (typeof fileStat.mtime === 'number') {
+				currentMtime = Math.floor(fileStat.mtime);
+			}
+			const currentSize = parseInt(fileStat.size, 10) || 0;
+
+			if (!statusFileCache[inst.id]) {
+				statusFileCache[inst.id] = { mtime: 0, size: 0, parsedClients: [] };
+			}
+
+			const currentRouterUnixTime = Math.floor(new Date().getTime() / 1000);
+			const fileAgeSeconds = currentRouterUnixTime - currentMtime;
+
+			// Invalidate cache immediately if openvpn daemon froze in deadlock
+			if (fileAgeSeconds > maxAllowedFileAge) {
+				statusFileCache[inst.id].parsedClients = [];
+				return [];
+			}
+
+			// Cache HIT check execution lane
+			if (statusFileCache[inst.id].mtime === currentMtime &&
+				statusFileCache[inst.id].size === currentSize) {
+				return statusFileCache[inst.id].parsedClients;
+			}
+
+			// Cache MISS: Call privileged shell tool to fetch raw text
+			const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.readstatus, inst.id]);
+			const cleanStatusContent = String((res && res.code === 0) ? (res.stdout || '') : '').trim();
+
+			if (cleanStatusContent.length > 0) {
+				const freshClients = parseConnectedClients(cleanStatusContent);
+
+				statusFileCache[inst.id].mtime = currentMtime;
+				statusFileCache[inst.id].size = currentSize;
+				statusFileCache[inst.id].parsedClients = freshClients;
+
+				return freshClients;
+			}
+		}
+	} catch {
+		// Silent catch fallback execution
+	}
+
+	if (statusFileCache[inst.id]) {
+		statusFileCache[inst.id].parsedClients = [];
+	}
+	return [];
+};
+
+/**
+ * Reads the active runtime status and telemetry fields
+ */
+const readSingleInstanceStatus = async function (id, instancesObj, currentUptime, role) {
+	const instNum = getInstanceNumber(id);
+	const path_conf = CFG.FILE.dir_cfg + id + '.conf';
+
+	// Step 1: Get instance configuration profile from file or cache
+	let inst = await getInstanceConfig(id, instNum, role, path_conf);
+
+	// Early exit if no instance configuration found
+	if (inst === null) {
+		return Object.assign({}, INSTANCE_TEMPLATE, {
+			id: id,
+			instNum: instNum,
+			role: role,
+			isRunning: false,
+			pid: '-'
+		});
+	}
+
+	// Get process running state and pid from service list
+	const runtimeInstance = instancesObj[id] || {};
+	const isRunning = (runtimeInstance.running === true);
+	const pidVal = isRunning ? (runtimeInstance.pid || '-') : '-';
+
+	inst.isRunning = isRunning;
+	inst.pid = pidVal;
+
+	// Exit if the server daemon process is offline
+	if (isRunning === false || pidVal === '-') {
+		inst.startTime = 0;
+		inst.connectedClients = [];
+		return inst;
+	}
+
+	// Step 2: Measure dynamic runtime process uptime via proc stats
+	inst.startTime = await getProcessStartTime(id, pidVal, currentUptime);
+
+	// Client profiles do not create status logs
+	if (role !== OPENVPN.ROLE.SERVER) {
+		return inst;
+	}
+
+	// Step 3: Resolve connected users matrix buffer via cached shell routine
+	inst.connectedClients = await getConnectedClientsStatus(inst);
+
+	return inst;
+};
 
 /**
  * Reads the active runtime status and telemetry fields for all instances
  */
-const readInstanceStatus = function (sections, instancesObj, systemUptime) {
+const readInstanceStatus = async function (sections, instancesObj, systemUptime) {
 	const instPromises = [];
 	const currentUptime = parseFloat(systemUptime) || 0;
+	const cleanSections = Array.isArray(sections) ? sections : [];
 
-	sections.forEach(function (s) {
-		const id = s['.name'];
-		const instNum = getInstanceNumber(id);
+	// Modern, flat iterator to populate the background scanning registers
+	for (const section of cleanSections) {
+		if (!section) continue;
+		const id = section['.name'];
 		const role = L.uci.get(CFG.CMD.openvpn, id, 'role') || OPENVPN.ROLE.SERVER;
 
-		const readPromise = L.resolveDefault(L.fs.read(CFG.FILE.dir_cfg + id + '.conf'), '').then(function (confContent) {
-			const runtimeInstance = instancesObj[id] || {};
-			const isRunning = (runtimeInstance.running === true);
-			const pidVal = isRunning ? (runtimeInstance.pid || '-') : '-';
-			const detectedDdnsTarget = parseDdnsFromConfig(confContent);
+		// Push the independent worker promises into the central pipeline array container
+		instPromises.push(readSingleInstanceStatus(id, instancesObj, currentUptime, role));
+	}
 
-			// Clone the central INSTANCE_TEMPLATE safely into the live run result
-			const baseResult = Object.assign({}, INSTANCE_TEMPLATE, {
-				id: id,
-				instNum: instNum,
-				role: role,
-				ddns: detectedDdnsTarget,
-				confContent: String(confContent).trim(),
-				isRunning: isRunning,
-				pid: pidVal
-			});
-
-			// Apply port parsing logic for internal port
-			let currentPort = parsePortFromConfig(role, baseResult.confContent);
-			if (!currentPort || isNaN(currentPort)) {
-				currentPort = calcPortFromId(id, instNum);
-			}
-			baseResult.port = currentPort;
-
-			// Extract the custom external port-extern value from the environment variable
-			const portExternMatch = baseResult.confContent.match(/^setenv\s+port-extern\s+(\d+)/m);
-			baseResult.portExtern = portExternMatch ? parseInt(portExternMatch[1], 10) : currentPort;
-
-			// Apply the protocol parsing logic
-			baseResult.proto = parseProtoFromConfig(baseResult.confContent);
-
-			// FIXED ENGINE: Parse cipher, localIp, and clientRemote ONCE right here on file load
-			if (baseResult.confContent) {
-				const lines = baseResult.confContent.split(/[\r\n]+/);
-				for (let j = 0; j < lines.length; j++) {
-					const line = lines[j].trim();
-
-					if (line.indexOf('cipher ') === 0) {
-						baseResult.cipher = line.replace('cipher ', '').trim().toUpperCase();
-					}
-					else if (line.indexOf('data-ciphers ') === 0) {
-						const dcParts = line.replace('data-ciphers ', '').trim().split(':');
-						if (dcParts && dcParts[0]) {
-							baseResult.cipher = dcParts[0].trim().toUpperCase();
-						}
-					}
-
-					if (role === OPENVPN.ROLE.CLIENT && line.indexOf('remote ') === 0) {
-						const rParts = line.split(/\s+/);
-						const remoteIp = (rParts.length >= 2) ? rParts[1] : OPENVPN.IP.LOOPBACK;
-						const remotePort = (rParts.length >= 3) ? rParts[2] : OPENVPN.PORT.s1194;
-						baseResult.localIp = OPENVPN.IP.LOOPBACK;
-						baseResult.clientRemote = remoteIp + ':' + remotePort;
-					} else if (role === OPENVPN.ROLE.SERVER) {
-						if (line.indexOf('server ') === 0) {
-							const sParts = line.split(/\s+/);
-							if (sParts.length >= 2) baseResult.localIp = sParts[1].replace(/\.0$/, '.1');
-						}
-					}
-				}
-			}
-
-			if (!isRunning || pidVal === '-') return baseResult;
-
-			return L.resolveDefault(L.fs.stat('/proc/' + pidVal), null).then(function (statObj) {
-				if (statObj && statObj.mtime) {
-					let rawMtimeSec = 0;
-					if (typeof statObj.mtime === 'object' && statObj.mtime.sec) {
-						rawMtimeSec = parseInt(statObj.mtime.sec, 10) || 0;
-					} else if (typeof statObj.mtime === 'number') {
-						rawMtimeSec = Math.floor(statObj.mtime);
-					} else if (typeof statObj.mtime === 'string') {
-						rawMtimeSec = parseInt(statObj.mtime, 10) || 0;
-					}
-					const currentUnixTime = Math.floor(new Date().getTime() / 1000);
-					if (rawMtimeSec > 1000000000) {
-						const secondsSinceProcessCreated = currentUnixTime - rawMtimeSec;
-						if (secondsSinceProcessCreated > 0 && secondsSinceProcessCreated <= (currentUptime + 300)) {
-							baseResult.startTime = Math.max(1, Math.floor(currentUptime - secondsSinceProcessCreated));
-						} else {
-							baseResult.startTime = (id === 'instance1') ? 35 : 60;
-						}
-					} else {
-						baseResult.startTime = Math.max(1, Math.floor(rawMtimeSec));
-					}
-				}
-				if (role !== OPENVPN.ROLE.SERVER) return baseResult;
-
-				const statusFilePath = '/var/run/openvpn.' + id + '.status';
-				return L.resolveDefault(L.fs.read(statusFilePath), '').then(function (statusContent) {
-					baseResult.connectedClients = parseConnectedClients(statusContent);
-					return baseResult;
-				});
-			});
-		});
-		instPromises.push(readPromise);
-	});
-	return Promise.all(instPromises);
+	// Fire all configuration scans simultaneously in parallel for rapid modal loads
+	return await Promise.all(instPromises);
 };
 
 
@@ -504,20 +795,31 @@ const readInstanceStatus = function (sections, instancesObj, systemUptime) {
 const parseKernelInterfaceData = function (tunDevice, devDataRaw) {
 	const stats = { rxBytes: 0, rxPkts: 0, txBytes: 0, txPkts: 0, hasData: false };
 
-	if (!devDataRaw || devDataRaw.length === 0) return stats;
+	if (!devDataRaw || devDataRaw.length === 0) {
+		return stats;
+	}
 
 	const devLines = devDataRaw.split('\n');
+
+	// Strict boundary anchor to match exactly "tun0:" and not "tun00:" or "vtun0:"
+	const targetAnchor = tunDevice + ':';
+
 	for (let d = 0; d < devLines.length; d++) {
-		if (devLines[d].indexOf(tunDevice + ':') !== -1) {
-			const parts = devLines[d].replace(/.*:/, '').trim().split(/\s+/);
-			if (parts.length >= 16) {
+		const currentLine = devLines[d].trim();
+
+		if (currentLine.indexOf(targetAnchor) === 0) {
+			const rawMetrics = currentLine.substring(targetAnchor.length).trim();
+			const parts = rawMetrics.split(/\s+/);
+
+			// A standard POSIX /proc/net/dev row contains exactly 16 telemetry columns
+			if (parts && parts.length >= 16) {
 				stats.rxBytes = parseInt(parts[0], 10) || 0;
 				stats.rxPkts = parseInt(parts[1], 10) || 0;
 				stats.txBytes = parseInt(parts[8], 10) || 0;
 				stats.txPkts = parseInt(parts[9], 10) || 0;
 				stats.hasData = true;
 			}
-			break;
+			break; // Found the targeted device row, stop processing the remaining lines
 		}
 	}
 	return stats;
@@ -541,9 +843,18 @@ const renderRemoteNode = function (role, isRunning, clientRemote, connectedClien
 	const clientRows = [];
 	connectedClients.forEach(function (client) {
 		clientRows.push(E('div', {
-			'style': 'font-family: var(--font-monospace, monospace); margin: 0; padding: 0; border: none !important; line-height: 1.2; color: var(--text-color, #334155);'
+			'style': 'font-family: var(--font-monospace, monospace); margin: 0; padding: 0; border: none !important; line-height: 1.3; color: var(--text-color, #334155);'
 		}, [
-			E('strong', {}, client)
+			E('strong', {}, [
+				E('span', { 'style': 'color: var(--action-bg, #00a8ff);' }, client.realAddress),
+				E('span', { 'style': 'color: var(--text-color-light, #64748b); font-weight: normal' }, protoStr)
+			]),
+			E('small', {
+				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); font-style: italic; margin-top: 2px;'
+			}, TXT.INFO.since + ': ' + client.connectedSince),
+			E('small', {
+				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); font-style: italic; margin-top: 1px;'
+			}, TXT.INFO.actual + ': ' + formatStatusBytes(client.bytesReceived) + ' / ' + formatStatusBytes(client.bytesSent))
 		]));
 	});
 
@@ -554,9 +865,9 @@ const renderRemoteNode = function (role, isRunning, clientRemote, connectedClien
  * Formats a raw byte count into a human-readable data size string (B, KB, or MB)
  */
 const formatStatusBytes = function (b) {
-	if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
-	if (b >= 1024) return (b / 1024).toFixed(1) + ' KB';
-	return b + ' B';
+	if (b >= 1048576) return (b / 1048576).toFixed(1) + 'MB';
+	if (b >= 1024) return (b / 1024).toFixed(1) + 'KB';
+	return b + 'B';
 };
 
 /**
@@ -595,7 +906,7 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 
 		const kernelStats = parseKernelInterfaceData('tun' + (inst.instNum - 1), devDataRaw);
 
-		const protoStr = (inst.isRunning && inst.proto) ? '-' + inst.proto.toUpperCase() : '';
+		const protoStr = (inst.isRunning && inst.proto) ? '/' + inst.proto : '';
 		const remoteIpNode = renderRemoteNode(role, inst.isRunning, inst.clientRemote, inst.connectedClients, protoStr);
 
 		const customUciName = L.uci.get(CFG.CMD.openvpn, inst.id, 'displayname') || '';
@@ -619,18 +930,18 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 		} else if (hasPendingApply) {
 			statusBadge = E('span', {
 				'class': 'ifacebadge',
-				'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color:#e67e22 !important; border:1px solid #d35400; text-shadow:none !important; box-shadow:none !important;'
+				'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color: var(--warning-text, #e67e22) !important; border:1px solid #d35400; text-shadow:none !important; box-shadow:none !important;'
 			}, TXT.INFO.pending);
 		} else if (L.uci.get(CFG.CMD.openvpn, inst.id, 'enabled') === '1') {
 			if (!isLiveRefresh) {
 				statusBadge = E('span', {
 					'class': 'ifacebadge',
-					'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color:#e67e22 !important; border:1px solid #d35400; text-shadow:none !important; box-shadow:none !important;'
+					'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color: var(--warning-text, #e67e22) !important; border:1px solid #d35400; text-shadow:none !important; box-shadow:none !important;'
 				}, TXT.INFO.creating);
 			} else {
 				statusBadge = E('span', {
 					'class': 'ifacebadge',
-					'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color:#e74c3c !important; border:1px solid #c0392b; text-shadow:none !important; box-shadow:none !important;'
+					'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--background-color, transparent) !important; color: var(--danger-text, #e74c3c) !important; border:1px solid #c0392b; text-shadow:none !important; box-shadow:none !important;'
 				}, TXT.INFO.error);
 			}
 		} else {
@@ -639,19 +950,41 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 				'style': 'font-weight:normal !important; padding:2px 8px; border-radius:3px; background:var(--neutral-bg, #f1f2f6) !important; color:var(--text-color-light, #64748b) !important; border:1px solid var(--border-color, #cbd5e1); text-shadow:none !important; box-shadow:none !important;'
 			}, TXT.INFO.disabled);
 		}
-		let localConnectionAddress = '-';
-		let port;
-		if (role === OPENVPN.ROLE.SERVER) {
-			port = inst.port || '?';
-			localConnectionAddress = inst.localIp + ':' + port + protoStr;
-		} else {
-			port = inst.isRunning ? 'dynamic' : '-';
-			localConnectionAddress = inst.localIp + ':' + port + protoStr;
+
+		let localConnectionNode = '-';
+		if (inst.isRunning) {
+			const activePort = inst.port || '?';
+			const activeProto = inst.proto ? '/' + inst.proto.toLowerCase() : '';
+
+			localConnectionNode = E('span', {
+				'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);'
+			}, [
+				inst.localIp + ':' + activePort,
+				E('span', { 'style': 'color:var(--text-color-light, #64748b)' }, activeProto)
+			]);
 		}
 
-		const transferDisplay = kernelStats.hasData
-			? formatStatusBytes(kernelStats.rxBytes) + ' / ' + formatStatusBytes(kernelStats.txBytes) + ' (' + kernelStats.rxPkts + ' / ' + kernelStats.txPkts + ')'
-			: '0 B / 0 B (0 / 0)';
+		// Clean separation between primary Data Bytes and volatile Packet Counters
+		let transferNode = '-';
+		if (inst.isRunning && kernelStats.hasData) {
+			transferNode = E('div', {
+				'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155); white-space:nowrap; padding:0; margin:0;'
+			}, [
+				E('span', { 'style': 'white-space:nowrap;' }, formatStatusBytes(kernelStats.rxBytes) + ' / ' + formatStatusBytes(kernelStats.txBytes)),
+				E('small', {
+					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); font-style:italic; margin-top:0px; white-space:nowrap;'
+				}, kernelStats.rxPkts + ' / ' + kernelStats.txPkts)
+			]);
+		} else if (inst.isRunning) {
+			transferNode = E('div', {
+				'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);'
+			}, [
+				E('span', {}, '0 B / 0 B'),
+				E('small', {
+					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); font-style:italic; margin-top:0px;'
+				}, '0 / 0')
+			]);
+		}
 
 		const uptimeDisplay = calculateInstanceUptime(inst.startTime, systemUptime);
 		const cipherLabel = String(inst.cipher || 'AES-256-GCM');
@@ -665,10 +998,10 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 			E('td', { 'class': 'td', 'style': 'font-weight:bold; color:var(--text-color, #334155);' }, displayId),
 			E('td', { 'class': 'td' }, typeBadge),
 			E('td', { 'class': 'td' }, statusBadge),
-			E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, localConnectionAddress),
+			E('td', { 'class': 'td' }, localConnectionNode),
 			E('td', { 'class': 'td' }, remoteIpNode),
-			E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); font-weight:bold; color:#10b981;' }, inst.isRunning ? cipherLabel : '-'),
-			E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155); white-space:nowrap;' }, inst.isRunning ? transferDisplay : '-'),
+			E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); font-weight:bold; color: var(--success-text, #10b981);' }, inst.isRunning ? cipherLabel : '-'),
+			E('td', { 'class': 'td' }, transferNode),
 			E('td', { 'class': 'td', 'style': 'font-family:var(--font-monospace, monospace); color:var(--text-color, #334155);' }, inst.isRunning ? uptimeDisplay : '-')
 		]));
 	}
@@ -694,39 +1027,55 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 };
 
 /**
- * Refreshes the status table and updates the main dashboard view continuously
+ * Refreshes the status table and updates the main dashboard view continuously.
+ * Fully synchronized with async/await and secured against idle session drops.
+ * 
+ * Comments in simple school English.
  */
 const refreshLiveDashboard = async function (viewData, tableContainerElement, refreshMainCallback) {
 	try {
-		// Wait for the system telemetry to refresh first
+		// 1. Wait for the system telemetry to refresh first
 		await refreshSystemTelemetry(viewData);
 
-		// Get service data and uci changes at the same time to save time
+		// 2. Fetch service data and uci changes simultaneously
 		const results = await Promise.all([
-			L.resolveDefault(callServiceList(CFG.CMD.openvpn), {}),
-			L.resolveDefault(L.uci.changes(), {})
+			L.resolveDefault(callServiceList(CFG.CMD.openvpn), null),
+			L.resolveDefault(L.uci.changes(), null)
 		]);
 
-		const [serviceData, uciChanges] = results;
+		const serviceData = results[0];
+		const uciChanges = results[1];
+
+		// Check A: If ubus blocked the query (Session Timeout / Tab Sleep), abort instantly! Do NOT overwrite viewData with corrupt empty elements.
+		if (!serviceData || typeof serviceData !== 'object') {
+			return;
+		}
+
 		const instancesObj = serviceData.instances || {};
 		const rawChanges = (uciChanges && uciChanges[CFG.CMD.openvpn]) ? uciChanges[CFG.CMD.openvpn] : null;
 		const openvpnChanges = getOpenVpnChanges(rawChanges);
+
 		const systemUptime = parseFloat(viewData.uptime) || 0;
 		const devDataRaw = String(viewData.devData || '').trim();
 
-		// Wait for the instance status data without nested callback functions
+		// 3. Wait for the instance status data safely
 		const updatedInstances = await readInstanceStatus(viewData.sections, instancesObj, systemUptime);
 
-		// Save the fresh data into the global cache object
+		// Check B: Structural integrity check. If the array dropped to zero but UCI has profiles, a background processing block occurred -> Abort!
+		if ((!updatedInstances || updatedInstances.length === 0) && viewData.sections && viewData.sections.length > 0) {
+			return;
+		}
+
+		// Save the fresh verified data into the global cache object safely
 		viewData.instances = updatedInstances;
 
-		// Update the live status table layout on the screen
+		// 4. Update the live status table layout on the screen
 		if (tableContainerElement && tableContainerElement.firstChild) {
 			const freshTableNode = refreshStatusTable(viewData.instances, devDataRaw, systemUptime, true, openvpnChanges);
 			tableContainerElement.replaceChild(freshTableNode, tableContainerElement.firstChild);
 		}
 
-		// Fire the callback method to update the main view badges
+		// 5. Fire the callback method to update the main view badges
 		if (typeof refreshMainCallback === 'function') {
 			const calculatedState = getCurrentOpenVpnState(viewData.sections, viewData.instances, openvpnChanges);
 			refreshMainCallback(calculatedState, devDataRaw, viewData);
@@ -738,10 +1087,39 @@ const refreshLiveDashboard = async function (viewData, tableContainerElement, re
 };
 
 /**
+ * Hardware initializer executed on system class load
+ */
+const onLoad = async function () {
+	try {
+		// get mac address
+		const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.getmac]);
+		const rawMac = String((res && res.code === 0) ? (res.stdout || '') : '').trim();
+
+		if (rawMac && rawMac !== '00:00:00:00:00:00') {
+			const cleanMac = rawMac.replace(/[^a-fA-F0-9]/g, '');
+
+			// Isolate the last 3 hex characters (12-bit entropy seed)
+			if (cleanMac.length >= 3) {
+				const lastThreeHex = cleanMac.substring(cleanMac.length - 3);
+
+				// Save into the static memory register for all future allocations
+				const parsedSeed = parseInt(lastThreeHex, 16);
+				cachedMacHex = !isNaN(parsedSeed) ? parsedSeed : 0x000;
+			}
+		}
+	} catch {
+		// Silent safety fallback execution lane
+	}
+};
+
+/**
  * Export the status functions to the main LuCI view layer
  */
 return L.Class.extend({
 	INSTANCE_TEMPLATE: INSTANCE_TEMPLATE,
+	onLoad: onLoad,
+	getInstanceNumber: getInstanceNumber,
+	calcPortFromId: calcPortFromId,
 	parsePortFromConfig: parsePortFromConfig,
 	parseProtoFromConfig: parseProtoFromConfig,
 	parseDdnsFromConfig: parseDdnsFromConfig,
@@ -749,3 +1127,4 @@ return L.Class.extend({
 	refreshStatusTable: refreshStatusTable,
 	refreshLiveDashboard: refreshLiveDashboard
 });
+

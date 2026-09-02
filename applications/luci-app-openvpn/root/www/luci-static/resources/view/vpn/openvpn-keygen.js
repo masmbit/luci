@@ -29,6 +29,7 @@ const TXT = {
         validated: _('Validated'),
         valid_until: _('Valid Until'),
         years: _('Years'),
+        wizard: _('Wizard')
     },
     BTN: {
         close: _('Close'),
@@ -79,6 +80,7 @@ const TXT = {
         tls_description: _('Symmetric static encryption key for encryption protection layer.'),
         tls_key_saved: _('TLS-Crypt key saved successfully.'),
         title_main: _('OpenVPN Instance Key Generator'),
+        key_allocation: ('Key Allocation'),
         unknown_asset: _('Unknown Asset'),
         use_unique_name_for_each_office: _('Important: Use a unique name for each office to configure the network routing correctly.'),
         validity_days: _('Validity (Days)'),
@@ -87,6 +89,8 @@ const TXT = {
     WARNING: {
         clicking_save_will_break_vpn: _('WARNING: Clicking save will instantly break all active VPN tunnels. You must generate and share new client profiles (.ovpn) to restore the connections.'),
         key_not_saved: _('Generated keys are not saved! Close window and discard keys?'),
+        use_wizard_hint_title: _('Deployment Recommendation:'),
+        use_wizard_hint_desc: _('It is highly recommended to use the automated Setup Wizard to deploy a Mobile Server (OpenVPN Connect) or a Headquarters LAN-to-LAN Server. In just a few clicks, the wizard fully configures easy DDNS provider setup, multi-client remote networks, optimal firewall zones, and scan-ready QR codes.')
     },
     ERROR: {
         format_corruption: _('The saved key data contains structural format corruption!'),
@@ -121,6 +125,7 @@ const ICON = Object.freeze({
     ARROW: '➔ ',
     ERROR: '❌ ',
     LAPTOP: '💻 ',
+    ROCKET: '🚀 ',
     SAVE: '💾 ',
     SUCCESS: '✅ ',
     WARNING: '⚠️ ',
@@ -606,7 +611,10 @@ const saveKeysToDisk = function (instance_id, active_mode, pkiPayload, singlePay
 /**
  * Opens a window to ask the user if they want to create new unique keys
  */
-const openAutomatedPostKeyGenModal = function (instance_id, viewData, cnName, showSaveApplyOpenVPNCallback, L_fs_callback) {
+const openAutomatedPostKeyGenModal = async function (newInstanceItem, viewData, wizardParams, callbacks, optionalShowBtnCancel) {
+    const instance_id = newInstanceItem.id;
+    const cnName = wizardParams ? viewData.wizardClass.getValidCommonName(wizardParams.displayName) : '';
+
     const progressTextArea = E('textarea', {
         'class': 'cbi-input-textarea',
         'style': 'width:100%; max-width:100%; resize:none; font-family:var(--font-monospace, monospace); font-size:12px; background:var(--background-color-dark, #222); color:var(--text-color-success, #0f0) !important; padding:15px; border-radius:4px; border:1px solid var(--border-color, #cbd5e1); text-shadow:none !important; display:none;',
@@ -618,68 +626,115 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, cnName, sh
         TXT.KEY.generate_unique_keys_new_instance
     );
 
+    let styleHide = '';
+    if (optionalShowBtnCancel !== true) {
+        styleHide = ' display:none !important;';
+    }
+
     const yesBtn = E('button', { 'class': 'btn cbi-button cbi-button-action important', 'style': 'margin-right:10px;' }, TXT.KEY.generate_unique_keys);
     const noBtn = E('button', { 'class': 'btn cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' }, TXT.KEY.clone_default_keys);
-    const cancelBtn = E('button', { 'class': 'btn cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' }, TXT.BTN.cancel);
+    const cancelBtn = E('button', { 'class': 'btn cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' + styleHide }, TXT.BTN.cancel);
     const closeBtn = E('button', { 'class': 'cbi-button cbi-button-action important', 'style': 'display:none;' }, TXT.BTN.close);
 
     const buttonContainer = E('div', { 'style': 'text-align:right; margin-top:15px;' }, [yesBtn, noBtn, cancelBtn, closeBtn]);
 
-    // Skip creating new keys and use cloned default files instead
-    noBtn.addEventListener('click', function () {
-        L.ui.hideModal();
-        showSaveApplyOpenVPNCallback(instance_id);
+    const dashedDivider = E('hr', {
+        'style': 'margin:20px 0; border:0; border-top:1px dashed var(--border-color, #cbd5e1);' + styleHide
     });
 
-    cancelBtn.addEventListener('click', function () {
+    const wizardAdvertNoticeBox = E('div', {
+        'class': 'alert-message',
+        'style': 'margin-bottom:15px; padding:0px; font-size:12px; line-height:1.5; text-align:left; background:none !important; box-shadow:none !important; border:none !important;' + styleHide
+    }, [
+        E('strong', { 'style': 'display:block; margin-bottom:4px; font-size:13px; color:var(--sysstat-text-blue, #3b82f6)' }, [ICON.ARROW, TXT.WARNING.use_wizard_hint_title]),
+        E('div', { 'style': 'color:var(--text-color, #334155); margin-top:10px; padding:8px 12px; background:color-mix(in srgb, var(--action-bg, #00a8ff) 10%, transparent); border-left:4px solid var(--action-bg, #00a8ff); border-radius:4px;' }, [TXT.WARNING.use_wizard_hint_desc])
+    ]);
+
+    const openWizardBtn = E('button', {
+        'class': 'cbi-button cbi-button-apply important',
+        'style': 'text-shadow: none !important; ' +
+            'box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--action-bg, #00a8ff) 20%, transparent) !important; ' +
+            'white-space: nowrap; ' +
+            'padding: 6px 16px; ' +
+            'font-weight: bold; ' +
+            'display: inline-flex; ' +
+            'align-items: center; ' +
+            'justify-content: center; ' +
+            'gap: 8px;' +
+            styleHide
+    }, [
+        E('span', { 'style': 'font-size: 16px; line-height: 1;' }, ICON.ROCKET),
+        E('span', {}, TXT.INFO.wizard + ' ...')
+    ]);
+
+    const wizardButtonWrapperRow = E('div', {
+        'style': 'display:flex; justify-content:flex-end; width:100%; margin-top:5px;' + styleHide
+    }, [openWizardBtn]);
+
+    const wizardHelperLayoutBlock = E('div', { 'style': 'display:block;' }, [
+        dashedDivider,
+        wizardAdvertNoticeBox,
+        wizardButtonWrapperRow
+    ]);
+
+    openWizardBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        L.ui.hideModal();
+        callbacks.openWizardBtnClick(viewData, null, true);
+    });
+
+    // Declared anonymous handler as ASYNC to authorize internal await callbacks.createInstance
+    noBtn.addEventListener('click', async function (ev) {
+        ev.preventDefault();
+        L.ui.hideModal();
+        await callbacks.createInstance(newInstanceItem, viewData, wizardParams);
+        callbacks.showSaveApplyOpenVPN(instance_id);
+    });
+
+    cancelBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
         L.ui.hideModal();
     });
 
-    // Start creating new unique keys when clicking the yes button
-    yesBtn.addEventListener('click', function () {
+    // Declared anonymous handler as ASYNC to authorize internal await callbacks.createInstance
+    yesBtn.addEventListener('click', async function (ev) {
+        ev.preventDefault();
         yesBtn.style.display = 'none';
         noBtn.style.display = 'none';
-        cancelBtn.style.display = 'none'; // Hide cancel button when generation starts
+        cancelBtn.style.display = 'none';
         promptMessageNode.style.display = 'none';
-
+        wizardHelperLayoutBlock.style.display = 'none';
         progressTextArea.style.display = 'block';
         closeBtn.style.display = 'inline-block';
         closeBtn.disabled = true;
-        closeBtn.className = 'cbi-button cbi-button-neutral'; // Reset to neutral color while working
+        closeBtn.className = 'cbi-button cbi-button-neutral';
 
-        // Stage 1: Generate the full PKI certificate files first
-        executeAsynchronousKeyGen(instance_id, 'pki', 'rsa2048_ec', '100', cnName, '', progressTextArea, L_fs_callback, function (pkiSuccess, pkiData, nullData) {
+        await callbacks.createInstance(newInstanceItem, viewData, wizardParams);
+
+        executeAsynchronousKeyGen(instance_id, 'pki', 'rsa2048_ec', '100', cnName, '', progressTextArea, callbacks.L_fs_Callbacks, function (pkiSuccess, pkiData, nullData) {
             if (!pkiSuccess || !pkiData) {
                 progressTextArea.value += '\n' + ICON.ERROR + ' PKI generation failed.';
                 closeBtn.disabled = false;
                 closeBtn.className = 'cbi-button cbi-button-action important';
                 return;
             }
-
             const log_separator_line = '\n\n--------------------------------------------------\n\n';
-
-            // Add a log divider line and show message for the next step
             progressTextArea.value += log_separator_line + ICON.ARROW + TXT.KEY.generate_tls_key + '\n';
             progressTextArea.scrollTop = progressTextArea.scrollHeight;
 
-            // Stage 2: Generate the unique TLS-Crypt key file next
-            executeAsynchronousKeyGen(instance_id, 'tls', '2048', '100', cnName, '', progressTextArea, L_fs_callback, function (tlsSuccess, nullData, tlsData) {
+            executeAsynchronousKeyGen(instance_id, 'tls', '2048', '100', cnName, '', progressTextArea, callbacks.L_fs_Callbacks, function (tlsSuccess, nullData, tlsData) {
                 if (!tlsSuccess || !tlsData) {
                     progressTextArea.value += '\n' + ICON.ERROR + ' TLS-Crypt secret generation failed.';
                     closeBtn.disabled = false;
                     closeBtn.className = 'cbi-button cbi-button-action important';
                     return;
                 }
-
-                // Stage 3: Save both new key files to the disk memory safely
                 Promise.all([
-                    saveKeysToDisk(instance_id, 'pki', pkiData, null, L_fs_callback),
-                    saveKeysToDisk(instance_id, 'tls', null, tlsData, L_fs_callback)
+                    saveKeysToDisk(instance_id, 'pki', pkiData, null, callbacks.L_fs_Callbacks),
+                    saveKeysToDisk(instance_id, 'tls', null, tlsData, callbacks.L_fs_Callbacks)
                 ]).then(function () {
                     progressTextArea.value += '\n' + ICON.SUCCESS + ' ' + TXT.KEY.pki_saved + '\n' + ICON.SAVE + ' ' + TXT.KEY.tls_key_saved;
                     progressTextArea.scrollTop = progressTextArea.scrollHeight;
-
-                    // Enable the close button to finish the setup
                     closeBtn.disabled = false;
                     closeBtn.className = 'cbi-button cbi-button-action important';
                 }).catch(function (err) {
@@ -691,18 +746,19 @@ const openAutomatedPostKeyGenModal = function (instance_id, viewData, cnName, sh
         }, 'fresh');
     });
 
-    closeBtn.addEventListener('click', function () {
+    closeBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
         L.ui.hideModal();
-        showSaveApplyOpenVPNCallback(instance_id);
+        callbacks.showSaveApplyOpenVPN(instance_id);
     });
 
-    // Render the complete key allocation window layout
-    L.ui.showModal(TXT.KEY.title_main + ' - Key Allocation (' + instance_id + ')', [
+    L.ui.showModal(TXT.KEY.title_main + ' - ' + TXT.KEY.key_allocation + ' (' + instance_id + ')', [
         E('div', { 'class': 'cbi-map' }, [
             E('div', { 'class': 'cbi-section' }, [
                 promptMessageNode,
                 progressTextArea,
-                buttonContainer
+                buttonContainer,
+                wizardHelperLayoutBlock
             ])
         ])
     ]);
