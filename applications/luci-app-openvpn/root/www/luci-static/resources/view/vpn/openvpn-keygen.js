@@ -772,7 +772,7 @@ const createKeyGenUiElements = function (role, defaultName, viewData) {
     const dhOptionHtml = (role === OPENVPN.ROLE.SERVER) ? '<option value="dh">' + TXT.KEY.opt_dh + '</option>' : '';
     const clientPkiOptionHtml = (role === OPENVPN.ROLE.SERVER) ? '<option value="client_pki">' + TXT.KEY.client_ca_private_key_issued_by_ca + '</option>' : '';
 
-    const fallbackCn = viewData.wizardClass.getValidCommonName(defaultName, false);
+    const fallbackCn = viewData.wizardClass.getValidCommonName(defaultName);
 
     // Build the settings selectors using simple HTML string layers
     const optionsHtml = '<div class="cbi-value">' +
@@ -979,7 +979,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
             const cnInput = document.getElementById(CFG.ID.keygen_cn);
 
             // Actively validate the input text box using the loose common name parser ruleset
-            finalCn = cnInput ? viewData.wizardClass.getValidCommonName(cnInput.value, false) : '';
+            finalCn = cnInput ? viewData.wizardClass.getValidCommonName(cnInput.value) : '';
         }
 
         let rawBitsSelection = '2048';
@@ -1090,7 +1090,7 @@ const setupKeyGenEvents = function (ui, instance_id, state, viewData, showSaveAp
         const cnInput = document.getElementById(CFG.ID.keygen_cn);
         const userEnteredName = cnInput ? cnInput.value : '';
 
-        let cleanFilename = viewData.wizardClass.getValidCommonName(userEnteredName, true);
+        let cleanFilename = viewData.wizardClass.getValidCommonName(userEnteredName);
         if (!cleanFilename) {
             cleanFilename = 'client_' + instance_id;
         }

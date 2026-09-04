@@ -10,9 +10,9 @@
 				"network": [ "status" ]
 			},
 			"file": {
-				"/etc/openvpn/": [ "read" ],
-				"/run/": [ "read" ],				
-				"/var/run/": [ "read" ],
+				"/etc/openvpn/luci/*": [ "read" ],
+				"/etc/openvpn/keys/*": [ "read" ],
+				"/var/run/openvpn.keygen.lock": [ "read" ],
 				"/proc/uptime": [ "read" ],
 				"/proc/net/dev": [ "read" ],
 				"/tmp/openvpn.keygen.log": [ "read" ],
@@ -27,15 +27,10 @@
 		},
 		"write": {
 			"uci": [ "openvpn" ],
-			"ubus": {
-				"luci.service": [ "action" ]
-			},
 			"file": {
-				"/etc/openvpn/": [ "write" ],
-				"/etc/openvpn/luci/": [ "write" ],
-				"/etc/openvpn/keys/": [ "write" ],
+				"/etc/openvpn/luci/*": [ "write" ],
+				"/etc/openvpn/keys/*": [ "write" ],
 				"/etc/config/openvpn": [ "write" ],
-				"/usr/libexec/": [ "exec" ],
 				"/usr/libexec/luci-app-openvpn": [ "exec" ]
 			}
 		}

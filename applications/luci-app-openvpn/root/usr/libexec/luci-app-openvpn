@@ -11,7 +11,7 @@
 
 # Check if the user gave an argument
 if [ -z "$1" ]; then
-    echo "Usage: $0 {getmac|ovpnservice|symlink|readstatus|iroute|cleanipdns|checkip|checkport|checkddns|publicip|wgetddns|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
+    echo "Usage: $0 {getmac|bestcrypto|ovpnservice|symlink|readstatus|iroute|cleanipdns|checkip|checkport|checkddns|publicip|wgetddns|ddns|cleanup|keymeta|initkeys|keygen} [parameters]"
     exit 1
 fi
 
@@ -23,7 +23,17 @@ getmac() {
     fi
     return 0
 }
-	
+
+# Evaluates system hardware to determine the highest-performing cipher suite anchor
+bestcrypto() {
+	if grep -E -q 'aes|pmull' /proc/cpuinfo; then
+		echo "AES"
+	else
+		echo "CHACHA"
+	fi
+	return 0
+}
+
 # openvpn service stop/start
 ovpnservice() {
 	shift # Remove "ovpnservice" from the arguments list
@@ -105,7 +115,7 @@ symlink() {
 readstatus() {
 	shift # Remove the "readstatus" command word from the arguments list
 	local instance_id="$1"
-	
+
 	if [ -z "$instance_id" ]; then
 		echo "ERROR: Missing instance ID parameter."
 		return 1
@@ -123,7 +133,7 @@ readstatus() {
 		return 0
 	fi
 }
-	
+
 # Validates connecting clients and applies dynamic routing topologies for TCP and UDP protocols.
 iroute() {
     shift # Remove "iroute" from the arguments list
@@ -251,67 +261,13 @@ checkip() {
 	return 1
 }
 
-# Python script: Advanced Asymmetric Port Scanner for TCP and UDP.
-#   Sends TCP/UDP from random local port to fixed public port.
-#   We use the firewall (nftables) to count the return packet.
-PY_UNIFIED_SCAN=$(cat << 'EOF'
-import socket, subprocess, time, re, sys
-
-host = sys.argv[1]
-ext_port = int(sys.argv[2]) # External WAN port on the main modem
-int_port = int(sys.argv[3]) # Expected internal landing port on OpenWrt
-proto = sys.argv[4].lower() # Protocol choice: "tcp" or "udp"
-
-# 1. Open the firewall counter rules matching the INTERNAL landing port
-subprocess.run(f"nft add chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True)
-subprocess.run(f"nft add rule inet fw4 openvpn_wiz_check {proto} dport {int_port} counter accept 2>/dev/null", shell=True)
-subprocess.run(f"nft insert rule inet fw4 input jump openvpn_wiz_check 2>/dev/null", shell=True)
-
-# 2. Transmit the probe packet based on the selected protocol
-if proto == "tcp":
-    # TCP Mode: Try to connect to the external public port mapping
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1.0)
-    try: s.connect((host, ext_port))
-    except: pass
-    finally: s.close()
-else:
-    # UDP Mode: Fire a test token from a safe random local source port
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try: s.sendto(b"LUCI_APP_OPENVPN_PORT_CHECK_UDP", (host, ext_port))
-    finally: s.close()
-
-# 3. Wait for the hardware packet loopback reflection to hit the kernel
-time.sleep(1.0)
-
-# 4. Read the nftables chain and verify the packet hit the internal port
-res = subprocess.run("nft list chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True, capture_output=True, text=True)
-packets = [int(p) for p in re.findall(r"counter packets (\d+)", res.stdout)]
-
-if packets and packets[0] > 0:
-    print("PORT_OPEN")
-else:
-    print("PORT_CLOSED")
-
-# 5. Clean up ALL old ghost firewall rules to keep the router fast and safe
-jump_res = subprocess.run("nft -a list chain inet fw4 input", shell=True, capture_output=True, text=True)
-for line in jump_res.stdout.splitlines():
-    if "jump openvpn_wiz_check" in line:
-        match = re.search(r"handle (\d+)", line)
-        if match:
-            subprocess.run(f"nft delete rule inet fw4 input handle {match.group(1)} 2>/dev/null", shell=True)
-
-subprocess.run("nft delete chain inet fw4 openvpn_wiz_check 2>/dev/null", shell=True)
-EOF
-)
-
 # Check if TCP or UDP port is accessible from outside on Double NAT
 checkport() {
 	shift # Remove the word "checkport" from the arguments list
 
 	local public_host="$1"   # Public WAN IP or DDNS domain name
-	local ext_port="$2"      # External Port on WAN main modem (e.g. 443)
-	local int_port="$3"      # Internal Port on LAN OpenVPN router (e.g. 444)
+	local ext_port="$2"      # External Port on WAN main modem (e.g. 58493)
+	local int_port="$3"      # Internal Port on LAN OpenVPN router (e.g. 58493)
 	local proto="$4"         # Protocol "udp" or "tcp"
 
 	# Stop if vital parameters are empty
@@ -328,14 +284,47 @@ checkport() {
 		proto="udp"
 	fi
 
-	# Scan Port with phyton socket and firewall
-	local scan_res=$(python3 -c "$PY_UNIFIED_SCAN" "$public_host" "$ext_port" "$int_port" "$proto" 2>/dev/null)
+	# 1. Open the firewall tracking chain matching the target protocol exactly
+	nft add chain inet fw4 luci_app_openvpn_port_check 2>/dev/null
+	if [ "$proto" = "tcp" ]; then
+		nft add rule inet fw4 luci_app_openvpn_port_check tcp dport "$int_port" counter accept 2>/dev/null
+	else
+		nft add rule inet fw4 luci_app_openvpn_port_check udp dport "$int_port" counter accept 2>/dev/null
+	fi
+	nft insert rule inet fw4 input jump luci_app_openvpn_port_check 2>/dev/null
 
-	# Fallback safety if python breaks down unexpectedly
-	[ -z "$scan_res" ] && scan_res="PORT_CLOSED"
+	# 2. Transmit the probe packet synchronously utilizing native timeout behaviors
+	if [ "$proto" = "tcp" ]; then
+		# TCP Mode: Probe using uclient-fetch with a strict 1-second connection timeout
+		uclient-fetch -T 1 --spider "http://${public_host}:${ext_port}/" >/dev/null 2>&1
+	else
+		# UDP Mode: Freeze the port using native busybox nslookup to prevent increments
+		nslookup -port="$ext_port" portcheck.local "$public_host" >/dev/null 2>&1 
+	fi
+
+	# 3. Read the nftables chain and verify if packets hit the internal counters
+	local packet_count=$(nft list chain inet fw4 luci_app_openvpn_port_check 2>/dev/null | grep -oE "counter packets [0-9]+" | awk '{print $3}' | awk '{s+=$1} END {print s}')
+	local scan_res="PORT_CLOSED"
+
+	if [ -n "$packet_count" ] && [ "$packet_count" -gt 0 ]; then
+		scan_res="PORT_OPEN"
+	fi
+
 	echo "$scan_res"
 
-	if [ "$scan_res" = "PORT_OPEN" ]; then return 0; else return 1; fi
+	# 4. Clean up ALL old ghost firewall rules to keep the router fast and safe
+	local handle_ids=$(nft -a list chain inet fw4 input | grep "jump luci_app_openvpn_port_check" | grep -oE "handle [0-9]+" | awk '{print $2}')
+	for handle in $handle_ids; do
+		nft delete rule inet fw4 input handle "$handle" 2>/dev/null
+	done
+
+	nft delete chain inet fw4 luci_app_openvpn_port_check 2>/dev/null
+
+	if [ "$scan_res" = "PORT_OPEN" ]; then 
+		return 0; 
+	else 
+		return 1;
+	fi
 }
 
 # Check a DDNS domain name or validate a raw public WAN IP address, and verify if it is online
@@ -1061,6 +1050,7 @@ keygen_worker() {
 # Main entry point
 case "$1" in
 	getmac)			getmac ;;
+	bestcrypto)		bestcrypto ;;
 	ovpnservice)	ovpnservice "$@" ;;
     symlink)        symlink "$@" ;;
 	readstatus)		readstatus "$@" ;;
@@ -1109,7 +1099,7 @@ case "$1" in
 
     *)
         echo "Error: Unknown command '$1'"
-        echo "Valid commands: ovpnservice, symlink, iroute, cleanipdns, checkip, checkport, checkddns, publicip, wgetddns, ddns, cleanup, keymeta, initkeys, keygen"
+        echo "Valid commands: getmac bestcrypto ovpnservice symlink readstatus iroute cleanipdns checkip checkport checkddns publicip wgetddns ddns cleanup keymeta initkeys keygen"
         exit 1
         ;;
 esac

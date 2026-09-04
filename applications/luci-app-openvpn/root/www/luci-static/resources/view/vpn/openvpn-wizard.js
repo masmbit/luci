@@ -48,7 +48,7 @@ const TXT = {
 		outside_port: _('Outside Port:'),
 		port_forwarding: _('Port Forwarding:'),
 		protocol: _('Protocol'),
-		placeholder_1194: _('e.g. 1194'),
+		placeholder_eg: _('e.g.'),
 		public_ip_or_domain: _('Public IP Address or Domain'),
 		public_static_ip: _('Public Static IP'),
 		remote_office_name: _('Remote Office Name'),
@@ -77,7 +77,7 @@ const TXT = {
 	},
 	MSG: {
 		add_your_other_office: _('Add your other offices below. The server will connect all networks automatically.'),
-		another_router_detected: _('Another Router detected!!'),
+		another_router_detected: _('Another Router detected!'),
 		another_internet_router_detected: _('Another Main Internet Router Detected'),
 		choose_how_send_through_vpn: _('Choose how your internet traffic is sent through the VPN. You can use any free OpenVPN app on your phone or laptop to import this profile.'),
 		client_for_branch_office: _('Client for Branch Office (Branch)'),
@@ -114,7 +114,7 @@ const TXT = {
 		the_port_forward: _('The port forward'),
 		the_external_port: _('The external port'),
 		tcp_for_traveling: _('TCP (Good for traveling - works behind firewalls)'),
-		udp_recommended: _('UDP (Recommended - Fast)'),
+		udp_performance: _('UDP (High Performance - maximum throughput)'),
 		use_ddns_service: _('Use Dynamic DNS (DDNS) Service'),
 		use_public_ip: _('Use Public IP Address / Domain')
 	},
@@ -157,9 +157,9 @@ const TXT = {
 	},
 	WARNING: {
 		ip_cannot_be_resolved: _('Warning: The IP address cannot be resolved. Your router might be offline.'),
-		no_static_ip_selected: _('Warning: You did not select "Public Static IP". If your public IP address changes, your VPN tunnel will crash.'),
+		no_static_ip_selected: _('Warning: You did not select «Public Static IP». If your public IP address changes, your VPN tunnel will crash.'),
 		openvpn_key_detected: _('OpenVPN Keys Detected:'),
-		unsaved_text_input: _('Warning: You have un-saved text in the input fields. Please click the blue "Add Office" button to save it, or clear the fields to continue.'),
+		unsaved_text_input: _('Warning: You have un-saved text in the input fields. Please click the blue «Add Office» button to save it, or clear the fields to continue.'),
 		upload_wrong_keys: _('Warning: If you upload wrong keys, your connection will stop!')
 	},
 	ERROR: {
@@ -335,29 +335,31 @@ const sanitizeInputText = function (value) {
 /**
  * Cleans a name string to remove bad characters and make it safe for files or text.
  */
-const getValidCommonName = function (name, isFilename) {
+const getValidCommonName = function (name) {
 	if (!name) {
-		return '';
+		return null;
 	}
+
+	// Define X.509 RFC length bounds
+	const MIN_LENGTH = 2;
+	const MAX_LENGTH = 64;
 	const trimmedName = sanitizeInputLine(name);
 
-	if (isFilename === true) {
-		// Restrictive rule: "Instance #1" -> "Instance__1" -> "Instance_1"
-		return trimmedName
-			.replace(/[^a-zA-Z0-9_-]/g, '_') // Turn dots, spaces, special chars into _
-			.replace(/_+/g, '_')             // Collapse multiple underscores
-			.replace(/-+/g, '-')             // Collapse multiple dashes
-			.trim()                          // Clean spaces if any left
-			.replace(/^[_-]+|[_-]+$/g, '');  // Fix: Remove leading/trailing dashes and underscores
+	// Enforce a unified safe string rule by converting all spaces and symbols to underscores
+	const cleanName = trimmedName
+		.replace(/[^a-zA-Z0-9_-]/g, '_')
+		.replace(/_+/g, '_')
+		.replace(/-+/g, '-')
+		.trim()
+		.replace(/^[_-]+|[_-]+$/g, '');
+
+	// Return null if the sanitized string violates X.509 length constraints
+	if (cleanName.length < MIN_LENGTH || cleanName.length > MAX_LENGTH) {
+		return null;
 	}
 
-	// Loose rule: "Instance #1" -> "Instance  1" -> "Instance 1"
-	return trimmedName
-		.replace(/[^a-zA-Z0-9_. -]/g, ' ')
-		.replace(/ +/g, ' ')
-		.replace(/_+/g, '_')
-		.trim();
-}
+	return cleanName;
+};
 
 /**
  * Generates an isolated, self-validating Site-to-Site network inputs row layout block
@@ -403,7 +405,7 @@ const renderSubnetInputs = function () {
 			let cleanMask = '';
 
 			// 1. Check if the Office Name is valid
-			cleanCn = getValidCommonName(rawCn, false);
+			cleanCn = getValidCommonName(rawCn);
 			if (!rawCn || !cleanCn) {
 				cnInput.classList.add('cbi-input-invalid'); // Mark field red
 				hasValidationError = true;
@@ -761,7 +763,7 @@ const createServerInstance = async function (scenarioSelect, elements, protoSele
 	}
 
 	const internalPortVal = parseInt(sanitizeInputLine(elements.inputs.port.value), 10) || (wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber));
-	const externalPortVal = elements.inputs.clientPort ? (parseInt(sanitizeInputLine(elements.inputs.clientPort.value), 10) || internalPortVal) : internalPortVal;
+	const externalPortVal = elements.inputs.externPort ? (parseInt(sanitizeInputLine(elements.inputs.externPort.value), 10) || internalPortVal) : internalPortVal;
 	const connType = elements.inputs.connectionType.value;
 
 	let provider = '';
@@ -1453,7 +1455,7 @@ const buildWizardStep3Row = function (elements_inputs, radioUdp, radioTcp, butto
 		E('div', { 'class': 'cbi-value', 'id': 'row_client_port_container', 'style': 'display: none !important;' }, [
 			E('label', { 'class': 'cbi-value-title' }, TXT.INFO.external_port),
 			E('div', { 'class': 'cbi-value-field' }, [
-				elements_inputs.clientPort,
+				elements_inputs.externPort,
 				E('div', { 'class': 'cbi-value-description', 'style': 'margin-top:4px;' }, TXT.MSG.port_used_main_router)
 			])
 		]),
@@ -1462,7 +1464,7 @@ const buildWizardStep3Row = function (elements_inputs, radioUdp, radioTcp, butto
 			E('label', { 'class': 'cbi-value-title' }, TXT.INFO.protocol),
 			E('div', { 'class': 'cbi-value-field', 'style': 'display:inline-flex; flex-direction:column; gap:10px; padding-top:4px;' }, [
 				E('label', { 'style': 'display:inline-flex; align-items:center; cursor:pointer; font-weight:bold;' }, [
-					radioUdp, E('span', { 'style': 'margin-left:6px;' }, TXT.MSG.udp_recommended)
+					radioUdp, E('span', { 'style': 'margin-left:6px;' }, TXT.MSG.udp_performance)
 				]),
 				E('label', { 'style': 'display:inline-flex; align-items:center; cursor:pointer; font-weight:bold;' }, [
 					radioTcp, E('span', { 'style': 'margin-left:6px; color:var(--text-color-success, #10b981);' }, TXT.MSG.tcp_for_traveling)
@@ -1487,6 +1489,8 @@ const createWizardInputElements = function (buttons, wizardData, selectedScenari
 	const radioSiteClient = E('input', { 'type': 'radio', 'name': 'wizard_scenario_group', 'value': OPENVPN.SCENARIO.SITE_TO_SITE_CLIENT, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' + styleHide });
 
 	const forcedScenario = wizardData.forcedScenario;
+
+
 	if (selectedScenario === OPENVPN.SCENARIO.CONNECT_SERVER) {
 		radioConnect.checked = true;
 	}
@@ -1502,12 +1506,12 @@ const createWizardInputElements = function (buttons, wizardData, selectedScenari
 		radioSiteClient.disabled = true;
 	}
 
-	const radioUdp = E('input', { 'type': 'radio', 'name': 'wizard_proto_group', 'value': OPENVPN.PROTO.UDP, 'checked': 'checked', 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
+	const radioUdp = E('input', { 'type': 'radio', 'name': 'wizard_proto_group', 'value': OPENVPN.PROTO.UDP, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
 	const radioTcp = E('input', { 'type': 'radio', 'name': 'wizard_proto_group', 'value': OPENVPN.PROTO.TCP, 'style': 'width:18px; height:18px; margin:0; cursor:pointer;' });
 	const displayNameInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.MSG.placeholder_myhomevpn, 'style': 'width:100%;' });
 	const ddnsInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.MSG.placeholder_mydomain_publicip, 'style': 'width:100%; font-weight:bold; color:var(--action-bg, #00a8ff);' });
-	const portInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'value': String(wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber)), 'placeholder': TXT.INFO.placeholder_1194, 'style': 'font-family:var(--font-monospace, monospace)' });
-	const clientPortInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'placeholder': TXT.INFO.placeholder_1194, 'style': 'font-family:var(--font-monospace, monospace)' });
+	const portInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'style': 'font-family:var(--font-monospace, monospace)' });
+	const externPortInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'style': 'font-family:var(--font-monospace, monospace)' });
 
 	const messageBoxInfo = E('div', { 'id': 'dns_check_result_container', 'style': 'margin: 15px 0; display: none;' });
 
@@ -1563,7 +1567,7 @@ const createWizardInputElements = function (buttons, wizardData, selectedScenari
 			ddnsCustomUrl: ddnsCustomUrlInput,
 			isStatic: staticIpCheckbox,
 			port: portInput,
-			clientPort: clientPortInput
+			externPort: externPortInput
 		},
 		subNodes: { connectServer: optConnectServer, siteServer: optSiteServer, siteClient: optSiteClient },
 		info: { messageBox: messageBoxInfo }
@@ -1586,12 +1590,17 @@ const createWizardNavigationButtons = function () {
 /**
  * Changes the default ports automatically based on protocol and network type
  */
-const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert, portInput, clientPortInput, scenario, wizardData) {
+const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert, portInput, externPortInput, scenario, wizardData) {	
+	let defaultPort;
+	let defaultPortExtern;
 	const isTcp = (protoValue === OPENVPN.PROTO.TCP);
-	let defaultPort = OPENVPN.PORT.s443;
-
-	if (!isTcp) {
+	if (isTcp) {
+		const ports = getPortsTcp(wizardData);
+		defaultPort = ports.port
+		defaultPortExtern = ports.portExtern;
+	} else {
 		defaultPort = String(wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber));
+		defaultPortExtern = defaultPort;
 	}
 
 	const role = getRoleFromScenarioValue(scenario);
@@ -1626,19 +1635,19 @@ const updateDefaultWizardPorts = async function (protoValue, portForwardingAlert
 		// HELP-RULE: If TCP is selected behind Double-NAT, auto-fill External=443 and Internal=444!
 		if (isAp === true) {
 			// Internal target port (444)
-			portInput.value = OPENVPN.PORT.s444;
-			if (clientPortInput) {
+			portInput.value = defaultPort;
+			if (externPortInput) {
 				// External WAN port (443)
-				clientPortInput.value = OPENVPN.PORT.s443;
+				externPortInput.value = defaultPortExtern;
 			}
 		} else {
-			portInput.value = OPENVPN.PORT.s443;
-			if (clientPortInput) clientPortInput.value = OPENVPN.PORT.s443;
+			portInput.value = defaultPort;
+			if (externPortInput) externPortInput.value = defaultPort;
 		}
 	} else {
 		// Default standard UDP port calculation
 		portInput.value = defaultPort;
-		if (clientPortInput) clientPortInput.value = defaultPort;
+		if (externPortInput) externPortInput.value = defaultPortExtern;
 	}
 };
 
@@ -1754,7 +1763,7 @@ const triggerWizardNetworkCheck = function (elements, portForwardingAlert, force
 	const scenarioStr = getSelectedScenarioValue(elements);
 	const roleStr = getRoleFromScenarioValue(scenarioStr);
 	const internalPort = sanitizeInputLine(elements.inputs.port.value);
-	const externalPort = sanitizeInputLine(elements.inputs.clientPort.value);
+	const externalPort = sanitizeInputLine(elements.inputs.externPort.value);
 
 	// Promises inside .check() handle the background thread automatically.
 	return portForwardingAlert.check(protoStr, roleStr, internalPort, externalPort, force);
@@ -1807,6 +1816,46 @@ const renderIpValidationWarning = function (elements, scenario, wizardData, butt
 };
 
 /**
+ * Evaluates existing profiles and get collision-free TCP ports
+ */
+const getPortsTcp = function (wizardData) {
+	const instances = wizardData.viewData.instances || [];
+	
+	// Default configuration for the very first travel-optimized TCP profile (Master Instance)
+	let newPort = OPENVPN.PORT.s444;
+	let newExterPort = OPENVPN.PORT.s443;
+	
+	if (instances && instances.length > 0) {
+		let tcpInstanceCount = 0;
+		
+		// 1. Just count how many TCP instances are currently registered in total
+		for (let i = 0; i < instances.length; i++) {
+			if (instances[i] && instances[i].proto === OPENVPN.PROTO.TCP) {
+				tcpInstanceCount++;
+			}
+		}
+		
+		// 2. Structural cascade based strictly on the index count
+		if (tcpInstanceCount > 0) {
+			// Fast mathematical block calculation starting at base 444
+			const nextCalculatedPort = 444 + tcpInstanceCount;
+			
+			// Safety boundary matching your consensus to keep it safe from registered system services
+			if (nextCalculatedPort >= 450) {
+				newPort = wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber);
+				newExterPort = newPort;
+			} else {
+				// Cascade based strictly on instance order: Inst 1 -> 444 / 443, Inst 2 -> 445 / 445, Inst 3 -> 446 / 446...
+				newPort = String(nextCalculatedPort);
+				newExterPort = newPort;
+			}
+		}
+	}
+	
+	return { port: newPort, portExtern: newExterPort };
+};
+
+/**
  * Handles the step-by-step navigation logic when clicking the Next button.
  */
 const handleButtonNextClick = function (state, elements, buttons, portForwardingAlert, wizardData) {
@@ -1843,10 +1892,26 @@ const handleButtonNextClick = function (state, elements, buttons, portForwarding
 				importClientInstance(elements, wizardData, buttons.next, buttons.prev);
 				return;
 			}
+			// set default tcp on mobile connect and udp on site to site
+			if (scenario === OPENVPN.SCENARIO.CONNECT_SERVER) {
+				
+				elements.radios.tcp.checked = true;
+				elements.radios.udp.checked = false;
+				const ports = getPortsTcp(wizardData);
+				elements.inputs.port.value = ports.port
+				elements.inputs.externPort.value = ports.portExtern;
+			} else {
+				elements.radios.tcp.checked = false;
+				elements.radios.udp.checked = true;
+				elements.inputs.port.value = String(wizardData.viewData.statusClass.calcPortFromId(null, wizardData.instanceNumber));
+				elements.inputs.externPort.value = elements.inputs.port.value;
+			}
+			elements.inputs.port.placeholder = TXT.INFO.placeholder_eg + ' ' + elements.inputs.port.value;
+			elements.inputs.externPort.placeholder = TXT.INFO.placeholder_eg + ' ' + elements.inputs.externPort.value;
 
 			state.currentStep = 3;
 			updateStepVisibility(elements, state, buttons, wizardData);
-			updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, scenario, wizardData).then(function () {
+			updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.externPort, scenario, wizardData).then(function () {
 				triggerWizardNetworkCheck(elements, portForwardingAlert, false);
 			});
 		}
@@ -2006,8 +2071,10 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 
 	// Update ports and warnings when the protocol changes
 	const handleProtoContextChange = function () {
-		updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.clientPort, getSelectedScenarioValue(elements), wizardData).then(function () {
+		updateDefaultWizardPorts(getActiveProtoValue(elements), portForwardingAlert, elements.inputs.port, elements.inputs.externPort, getSelectedScenarioValue(elements), wizardData).then(function () {
 			triggerWizardNetworkCheck(elements, portForwardingAlert, true);
+			elements.inputs.port.placeholder = TXT.INFO.placeholder_eg + ' ' + elements.inputs.port.value;
+			elements.inputs.externPort.placeholder = TXT.INFO.placeholder_eg + ' ' + elements.inputs.externPort.value;
 		});
 	}
 
@@ -2052,7 +2119,7 @@ const setupWizardEventListeners = function (elements, buttons, portForwardingAle
 	});
 
 	// Listen to manual external client port modifications to update the alert live
-	elements.inputs.clientPort.addEventListener('input', function () {
+	elements.inputs.externPort.addEventListener('input', function () {
 		lockCreateButton(buttons);
 	});
 

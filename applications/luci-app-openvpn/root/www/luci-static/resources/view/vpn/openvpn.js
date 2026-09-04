@@ -13,12 +13,10 @@
  * 3. --- SAVE AND RESTART --- ..... UCI saving and instance restart logic
  * 4. --- OVPN PROFILES --- ........ Import and export .ovpn profiles
  * 5. --- MAIN VIEW --- ............ Main OpenVPN dashboard
- * 6. --- KEY EDITOR --- ........... Text area editor for key files
- * 7. --- KEY GENERATOR --- ........ Background key generation wizard
- * 8. --- OPENVPN INSTANCES --- .... Instance settings and creation buttons
- * 9. --- FIREWALL & LOG VIEW --- .. Active ports info and system log box
- * 10. --- LOCK SCREEN --- ......... Startup loading overlay and pollers
- * 11. --- VIEW ENTRYPOINT --- ..... Main entry where the page is generated
+ * 6. --- OPENVPN INSTANCES --- .... Instance settings and creation buttons
+ * 7. --- FIREWALL & LOG VIEW --- .. Active ports info and system log box
+ * 8. --- LOCK SCREEN --- .......... Startup loading overlay and pollers
+ * 9. --- VIEW ENTRYPOINT --- ...... Main entry where the page is generated
  */
 
 /* global E, URL, FileReader, Blob, sessionStorage, uqr, network */
@@ -68,7 +66,7 @@ const TXT = {
         add_server: _('Add Server Instance'),
         cancel: _('Cancel'),
         change: _('Change'),
-        click_save_apply: _('Please click "Save & Apply".'),
+        click_save_apply: _('Please click «Save & Apply».'),
         close: _('Close'),
         del_instance: _('Delete Instance'),
         del_ready: _('Deleted - Save & Apply'),
@@ -94,6 +92,7 @@ const TXT = {
         edit_config: _('Edit Config file'),
         export_connection_address_qr_code: _('This is the address your VPN clients will use to connect from the internet. Scan the QR code with your phone camera or use the link below to download your connection profile.'),
         export_ovpn: _('Export (.ovpn)'),
+        export_openvpn_connect_client_profile: _('Export OpenVPN Connect Client Profile'),
         import_ovpn: _('Import (.ovpn)'),
         import_openvpn_connect_client_profile: _('Import OpenVPN Connect Client Profile'),
         import_profile: _('Import Profile'),
@@ -106,6 +105,8 @@ const TXT = {
         no_vpn_configured: _('No OpenVPN instances configured yet. Use the buttons below to create an instance.'),
         no_vpn_log: _('No active OpenVPN log entries found.'),
         office_profile: _('Office Profile:'),
+        placeholder_cn_mobile: _('e.g. my-smartphone'),
+        please_assign_cn_name: _('Please assign a unique device name (Common Name) for this mobile profile:'),
         process_take_few_minutes: _('This automated initialization process can take a few minutes on your device...'),
         scan_qr_code_with_camera: _('Scan QR Code with Mobile Phone Camera:'),
         secure_temporary_profile_url: _('Secure Temporary Profile URL Field:'),
@@ -169,8 +170,6 @@ const TXT = {
     }
 }
 
-
-
 const CFG = Object.freeze({
     FILE: Object.freeze({
         dir_cfg: '/etc/openvpn/luci/',
@@ -180,6 +179,8 @@ const CFG = Object.freeze({
         dh_def_pem: 'dh_default.pem',
         server_def_crt: 'server_default.crt',
         server_def_key: 'server_default.key',
+        client_def_crt: 'client_default.crt',
+        client_def_key: 'client_default.key',
         tls_def_key: 'tls-crypt_default.key',
         loading_img: '/luci-static/resources/icons/loading.svg',
         openvpn_keygen_lock: '/var/run/openvpn.keygen.lock',
@@ -192,6 +193,7 @@ const CFG = Object.freeze({
     LIBEXEC: Object.freeze({
         luci_app_openvpn: '/usr/libexec/luci-app-openvpn',
         ovpnservice: 'ovpnservice',
+        bestcrypto: 'bestcrypto',
         keymeta: 'keymeta',
         symlink: 'symlink',
         iroute: 'iroute',
@@ -213,10 +215,20 @@ const CFG = Object.freeze({
         main_control_box: 'main_control_box_luci_app_openvp',
         openvpn_pending_reactivation: 'openvpn_pending_reactivation',
         openvpn_keygen_overlay: 'openvpn_keygen_overlay',
-        openvpn_log_stamp: 'openvpn_log_stamp',
+        openvpn_log_stamp: 'openvpn_log_stamp'
+    }),
+    CONF: Object.freeze({
         modern_vpn_client: '# Modern OpenVPN Client Configuration Instance',
         modern_vpn_server: '# Modern OpenVPN Server Configuration Instance',
-        openvpn_instance1_status: 'openvpn.instance1.status'
+        remote_cert_tls_server: 'remote-cert-tls server',
+        remote_cert_tls_server_comment: '#remote-cert-tls server',
+        openvpn_instance1_status: 'openvpn.instance1.status',
+        certificate_and_keys_comment: '# --- Certificates & Keys ---',
+        data_ciphers_aes: 'data-ciphers AES-256-GCM:AES-128-GCM:CHACHA20-POLY1305',
+        data_ciphers_chacha: 'data-ciphers CHACHA20-POLY1305:AES-256-GCM:AES-128-GCM',
+        data_ciphers_comment: '# Prioritize CHACHA20 on devices without hardware AES acceleration',
+        tcp_nodelay: 'tcp-nodelay',
+        mssfix_1360: 'mssfix 1360'
     })
 })
 
@@ -663,7 +675,7 @@ const networkCallbacks = ({
     checkDdns: checkDdns,
     checkPort: checkPort,
     updateDdnsProvider: updateDdnsProvider,
-    checkNetworkStructure: checkNetworkStructure    
+    checkNetworkStructure: checkNetworkStructure
 });
 
 /**
@@ -752,7 +764,6 @@ const getServerSubnetFromInstNum = function (instNum) {
     return OPENVPN.IP.SUBNET_SERVER;
 };
 
-
 /**
  * Calculates a unique IPv6 server subnet prefix offset from the instance placement number
  */
@@ -762,14 +773,43 @@ const getServerIpv6SubnetFromInstNum = function (instNum) {
     return 'fd00:db8:0:' + subnetOffset + '::/64';
 };
 
-const clientConnectConfigInfo = '# 4. luci-app-openvpn iroute checks client name and sends the correct route';
+/**
+ * Executes a hardware cpu check to determine and return if the optimal cipher is AES
+ */
+const checkOptimalDataCipherAES = async function () {
+    try {
+        // Invoke the specialized hardware capability test from your shell backend utility
+        const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.bestcrypto]);
+
+        if (res && res.code === 0 && res.stdout) {
+            if (res.stdout.trim() === 'AES') {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
+
+    } catch {
+        return true;
+    }
+};
+
+/**
+ * Escapes dot characters to safely rewrite default crypto filenames into unique instance paths
+ */
+const escapeRegExp = function (str) {
+    return str.replace(/\./g, '\\.');
+};
+
 // write in the server instance.conf: client-connect /usr/libexec/luci-app-openvpn iroute"
 const clientConnectConfigCommand = 'client-connect "' + CFG.LIBEXEC.luci_app_openvpn + ' ' + CFG.LIBEXEC.iroute + '"';
+const clientConnectConfigInfo = '# 4. luci-app-openvpn iroute checks client name and sends the correct route';
 
 /**
  * Generate configuration file text for an OpenVPN server profile instance
  */
-const generateConfigContentServer = function (viewData, newInstanceItem, wizardParams) {
+const generateConfigContentServer = async function (viewData, newInstanceItem, wizardParams) {
     if (!viewData.serverTemplate) {
         return '';
     }
@@ -787,16 +827,13 @@ const generateConfigContentServer = function (viewData, newInstanceItem, wizardP
         externPortValue = wizardParams.portExtern;
     }
 
-    const escapeRegExp = function (str) {
-        return str.replace(/\./g, '\\.');
-    };
-
     // Save the correct port back into the shared object property
     newInstanceItem.port = chosenPort;
 
     // Calculate unique server subnets using helper functions
     const targetIpv4Subnet = getServerSubnetFromInstNum(instNum);
     const targetIpv6Subnet = getServerIpv6SubnetFromInstNum(instNum);
+    const optimalDataCipherAES = await checkOptimalDataCipherAES();
 
     let config = viewData.serverTemplate
         .replace(new RegExp(escapeRegExp(CFG.FILE.ca_def_crt), 'g'), 'ca_' + id + '.crt')
@@ -805,16 +842,28 @@ const generateConfigContentServer = function (viewData, newInstanceItem, wizardP
         .replace(new RegExp(escapeRegExp(CFG.FILE.dh_def_pem), 'g'), 'dh_' + id + '.pem')
         .replace(new RegExp(escapeRegExp(CFG.FILE.tls_def_key), 'g'), 'tls-crypt_' + id + '.key')
         .replace(/^port\s+\d+/m, 'port ' + chosenPort)
-        .replace(/^setenv\s+port-extern\s+\d+/m, 'setenv portextern ' + externPortValue)
+        .replace(/^setenv\s+portextern\s+\d+/m, 'setenv portextern ' + externPortValue)
         .replace(/^proto\s+\S+/m, 'proto ' + chosenProto)
         .replace(/^server\s+10\.8\.0\.0/m, 'server ' + targetIpv4Subnet)
         .replace(/^server-ipv6\s+fd00:db8:0:1::\/64/m, 'server-ipv6 ' + targetIpv6Subnet)
-        .replace(CFG.ID.openvpn_instance1_status, 'openvpn.instance' + instNum + '.status');
+        .replace(CFG.CONF.openvpn_instance1_status, 'openvpn.instance' + instNum + '.status');
 
     if (displayName) {
-        config = config.replace(CFG.ID.modern_vpn_server, CFG.ID.modern_vpn_server + ' #' + instNum + ' (' + displayName + ')');
+        config = config.replace(CFG.CONF.modern_vpn_server, CFG.CONF.modern_vpn_server + ' #' + instNum + ' (' + displayName + ')');
     } else {
-        config = config.replace(CFG.ID.modern_vpn_server, CFG.ID.modern_vpn_server + ' #' + instNum);
+        config = config.replace(CFG.CONF.modern_vpn_server, CFG.CONF.modern_vpn_server + ' #' + instNum);
+    }
+
+    if (!optimalDataCipherAES) {
+        config = config.replace(CFG.CONF.data_ciphers_aes, CFG.CONF.data_ciphers_comment + "\n" + CFG.CONF.data_ciphers_chacha);
+    }
+
+    if (chosenProto === OPENVPN.PROTO.TCP) {
+        // remove mssfix 1360 if running on TCP
+        config = config.replace(CFG.CONF.mssfix_1360, '');
+    } else {
+        // remove ntcp-nodelay if running on UDP
+        config = config.replace(CFG.CONF.tcp_nodelay, '');
     }
 
     // Option A: Mobile clients profile settings (Route all traffic over VPN)
@@ -979,7 +1028,7 @@ const getClientIpFromInstNum = function (instNum) {
 /**
  * Generate configuration file text for an OpenVPN client profile instance
  */
-const generateConfigContentClient = function (viewData, newInstanceItem, wizardParams) {
+const generateConfigContentClient = async function (viewData, newInstanceItem, wizardParams) {
     if (!viewData.clientTemplate) {
         return '';
     }
@@ -991,23 +1040,31 @@ const generateConfigContentClient = function (viewData, newInstanceItem, wizardP
     const chosenProto = (wizardParams && wizardParams.proto) ? wizardParams.proto : newInstanceItem.proto;
     const remoteServer = (wizardParams && wizardParams.remoteServer) ? wizardParams.remoteServer.trim() : getClientIpFromInstNum(instNum);
     const displayName = (wizardParams && wizardParams.displayName) ? wizardParams.displayName.trim() : '';
-
-    const escapeRegExp = function (str) {
-        return str.replace(/\./g, '\\.');
-    };
+    const optimalDataCipherAES = await checkOptimalDataCipherAES();
 
     // 1. Prepare base replacement variables for crypto paths
     let config = viewData.clientTemplate
         .replace(new RegExp(escapeRegExp(CFG.FILE.ca_def_crt), 'g'), 'ca_' + id + '.crt')
-        .replace(new RegExp(escapeRegExp(CFG.FILE.server_def_crt), 'g'), 'client_' + id + '.crt')
-        .replace(new RegExp(escapeRegExp(CFG.FILE.server_def_key), 'g'), 'client_' + id + '.key')
-        .replace(new RegExp(escapeRegExp(CFG.FILE.dh_def_pem), 'g'), 'dh_' + id + '.pem')
+        .replace(new RegExp(escapeRegExp(CFG.FILE.client_def_crt), 'g'), 'client_' + id + '.crt')
+        .replace(new RegExp(escapeRegExp(CFG.FILE.client_def_key), 'g'), 'client_' + id + '.key')
         .replace(new RegExp(escapeRegExp(CFG.FILE.tls_def_key), 'g'), 'tls-crypt_' + id + '.key');
 
     if (displayName) {
-        config = config.replace(CFG.ID.modern_vpn_client, CFG.ID.modern_vpn_client + ' #' + instNum + ' (' + displayName + ')');
+        config = config.replace(CFG.CONF.modern_vpn_client, CFG.CONF.modern_vpn_client + ' #' + instNum + ' (' + displayName + ')');
     } else {
-        config = config.replace(CFG.ID.modern_vpn_client, CFG.ID.modern_vpn_client + ' #' + instNum);
+        config = config.replace(CFG.CONF.modern_vpn_client, CFG.CONF.modern_vpn_client + ' #' + instNum);
+    }
+
+    if (!optimalDataCipherAES) {
+        config = config.replace(CFG.CONF.data_ciphers_aes, CFG.CONF.data_ciphers_comment + "\n" + CFG.CONF.data_ciphers_chacha);
+    }
+
+    if (chosenProto === OPENVPN.PROTO.TCP) {
+        // remove mssfix 1360 if running on TCP
+        config = config.replace(CFG.CONF.mssfix_1360, '');
+    } else {
+        // remove ntcp-nodelay if running on UDP
+        config = config.replace(CFG.CONF.tcp_nodelay, '');
     }
 
     // 2. Inject remote server connection paths and transport protocols
@@ -1016,11 +1073,66 @@ const generateConfigContentClient = function (viewData, newInstanceItem, wizardP
         .replace(/^proto\s+\S+/m, 'proto ' + chosenProto);
 
     if (wizardParams) {
-        config = config.replace('#remote-cert-tls server', 'remote-cert-tls server');
+        config = config.replace(CFG.CONF.remote_cert_tls_server_comment, CFG.CONF.remote_cert_tls_server);
     }
 
     return config.trim() + '\n';
 };
+
+/**
+ * Compiles the final standalone .ovpn profile text with embedded keys
+ */
+const compileOvpnProfileText = async function (cname, targetHost, targetPort, proto, cryptoAssets, viewData, instNum) {
+
+    const optimalDataCipherAES = await checkOptimalDataCipherAES();
+
+    // remove crypto keys - ovpn profile comes with embedded keys
+    let ovpn = viewData.clientTemplate
+        .replace(CFG.CONF.modern_vpn_client, CFG.CONF.modern_vpn_client + ' #' + instNum + ' (' + cname + ')')
+        .replace(CFG.CONF.certificate_and_keys_comment, '')
+        .replace(/^ca\s+\S+\r?\n/m, '')
+        .replace(/^cert\s+\S+\r?\n/m, '')
+        .replace(/^key\s+\S+\r?\n/m, '')
+        .replace(/^tls-crypt\s+\S+\r?\n/m, '')
+        .replace(/^remote\s+\S+\s+\d+/m, 'remote ' + targetHost + ' ' + targetPort)
+        .replace(/^proto\s+\S+/m, 'proto ' + proto)
+        .replace(CFG.CONF.remote_cert_tls_server_comment, CFG.CONF.remote_cert_tls_server);
+
+    if (!optimalDataCipherAES) {
+        ovpn = ovpn.replace(CFG.CONF.data_ciphers_aes, CFG.CONF.data_ciphers_comment + "\n" + CFG.CONF.data_ciphers_chacha);
+    }
+
+    if (proto === OPENVPN.PROTO.TCP) {
+        // remove mssfix 1360 if running on TCP
+        ovpn = ovpn.replace(CFG.CONF.mssfix_1360, '');
+    } else {
+        // remove ntcp-nodelay if running on UDP
+        ovpn = ovpn.replace(CFG.CONF.tcp_nodelay, '');
+    }
+
+    // Collapse three or more consecutive newlines down to exactly one empty line
+    ovpn = ovpn.replace(/\n{3,}/g, '\n\n');
+    ovpn += 'setenv client-cname ' + cname + '\n\n';
+
+    if (cryptoAssets.ca && typeof cryptoAssets.ca.trim === 'function') {
+        // SECURITY FILTER: Strip out the secret CA Private Key block from the ca asset string
+        const rawCa = cryptoAssets.ca.trim();
+        const cleanCa = rawCa.replace(/-----BEGIN[^\n]*PRIVATE KEY-----[\s\S]*?-----END[^\n]*PRIVATE KEY-----\n*/g, '');
+        ovpn += '<ca>\n' + cleanCa.trim() + '\n</ca>\n\n';
+    }
+    if (cryptoAssets.cert && typeof cryptoAssets.cert.trim === 'function') {
+        ovpn += '<cert>\n' + cryptoAssets.cert.trim() + '\n</cert>\n\n';
+    }
+    if (cryptoAssets.key && typeof cryptoAssets.key.trim === 'function') {
+        ovpn += '<key>\n' + cryptoAssets.key.trim() + '\n</key>\n\n';
+    }
+    if (cryptoAssets.tlsCrypt && typeof cryptoAssets.tlsCrypt.trim === 'function' && cryptoAssets.tlsCrypt.trim()) {
+        ovpn += '<tls-crypt>\n' + cryptoAssets.tlsCrypt.trim() + '\n</tls-crypt>\n';
+    }
+
+    return ovpn;
+};
+
 
 /**
  * Checks and creates all configuration and key files for an instance
@@ -1081,9 +1193,9 @@ const initFile = async function (customPath, defaultPath, newInstanceItem, viewD
             let configContent = '';
 
             if (newInstanceItem.role === OPENVPN.ROLE.CLIENT) {
-                configContent = generateConfigContentClient(viewData, newInstanceItem, wizardParams);
+                configContent = await generateConfigContentClient(viewData, newInstanceItem, wizardParams);
             } else {
-                configContent = generateConfigContentServer(viewData, newInstanceItem, wizardParams);
+                configContent = await generateConfigContentServer(viewData, newInstanceItem, wizardParams);
             }
 
             // Write the new config file and return its content inline
@@ -1431,38 +1543,6 @@ const importOvpnClientProfile = async function (ovpnContent, instanceId) {
     };
 };
 
-
-/**
- * Compiles the final standalone .ovpn profile text with embedded keys
- */
-const compileOvpnProfileText = function (cname, targetHost, targetPort, proto, cryptoAssets) {
-    let ovpn = '# OpenVPN Connect Client Profile for ' + cname + '\n';
-    ovpn += 'client\ndev tun\nproto ' + proto + '\n';
-    ovpn += 'remote ' + targetHost + ' ' + targetPort + '\n';
-    ovpn += 'resolv-retry infinite\nnobind\npersist-key\npersist-tun\n';
-    ovpn += 'remote-cert-tls server\ncipher AES-256-GCM\ndata-ciphers AES-256-GCM:AES-128-GCM\n';
-    ovpn += 'setenv client-cname ' + cname + '\n\n';
-
-    if (cryptoAssets.ca && typeof cryptoAssets.ca.trim === 'function') {
-        // SECURITY FILTER: Strip out the secret CA Private Key block from the ca asset string
-        const rawCa = cryptoAssets.ca.trim();
-        const cleanCa = rawCa.replace(/-----BEGIN[^\n]*PRIVATE KEY-----[\s\S]*?-----END[^\n]*PRIVATE KEY-----\n*/g, '');
-        ovpn += '<ca>\n' + cleanCa.trim() + '\n</ca>\n\n';
-    }
-    if (cryptoAssets.cert && typeof cryptoAssets.cert.trim === 'function') {
-        ovpn += '<cert>\n' + cryptoAssets.cert.trim() + '\n</cert>\n\n';
-    }
-    if (cryptoAssets.key && typeof cryptoAssets.key.trim === 'function') {
-        ovpn += '<key>\n' + cryptoAssets.key.trim() + '\n</key>\n\n';
-    }
-    if (cryptoAssets.tlsCrypt && typeof cryptoAssets.tlsCrypt.trim === 'function' && cryptoAssets.tlsCrypt.trim()) {
-        ovpn += '<tls-crypt>\n' + cryptoAssets.tlsCrypt.trim() + '\n</tls-crypt>\n';
-    }
-
-    return ovpn;
-};
-
-
 /**
  * Displays the mobile QR code vector for OpenVPN profiles
  */
@@ -1568,27 +1648,34 @@ const createQrBoxElements = function (initialHost) {
 /**
  * Setup all click actions and update the view when things change
  */
-const setupQrBoxEvents = function (elements, ovpnParams, files, viewData) {
-    // Update data, links and the QR code when the host changes
-    const refreshModalState = function () {
-        const activeHost = elements.nodes.input.value ? sanitizeInputLine(elements.nodes.input.value) : window.location.hostname;
-        const fullProfileText = compileOvpnProfileText(ovpnParams.displayId, activeHost, ovpnParams.port, ovpnParams.proto, files);
-        const instNumber = viewData.statusClass.getInstanceNumber(ovpnParams.nextId);
+const setupQrBoxEvents = function (elements, ovpnParams, cryptoAssets, viewData) {
 
-        const sanitizedFileName = ovpnParams.displayId.replace(/\s+/g, '_');
-        const downloadUrl = window.location.protocol + '//' + window.location.host + '/' + sanitizedFileName + '_client.ovpn';
+    // Update data, links and the QR code asynchronously when the host changes
+    const refreshModalState = async function () {
+        try {
+            const activeHost = elements.nodes.input.value ? sanitizeInputLine(elements.nodes.input.value) : window.location.hostname;
+            const instNumber = viewData.statusClass.getInstanceNumber(ovpnParams.nextId);
 
-        elements.nodes.url.href = downloadUrl;
-        elements.nodes.url.textContent = downloadUrl;
+            // 1. Await the dynamic profile compilation text block
+            const fullProfileText = await compileOvpnProfileText(ovpnParams.displayId, activeHost, ovpnParams.port, ovpnParams.proto, cryptoAssets, viewData, instNumber);
+            const sanitizedFileName = ovpnParams.displayId.replace(/\s+/g, '_');
+            const downloadUrl = window.location.protocol + '//' + window.location.host + '/' + sanitizedFileName + '_client.ovpn';
 
-        // Save the profile file and tell the router script to make the web link
-        L.fs.write(ovpnParams.exportPath, fullProfileText).then(function () {
-            return L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.symlink, instNumber.toString(), 'create', ovpnParams.displayId]);
-        }).then(function () {
+            elements.nodes.url.href = downloadUrl;
+            elements.nodes.url.textContent = downloadUrl;
+
+            // 2. Write the compiled text payload directly into the RAM configuration folder
+            await L.fs.write(ovpnParams.exportPath, fullProfileText);
+
+            // 3. Trigger the backend symlink engine execution pipeline
+            await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.symlink, instNumber.toString(), 'create', ovpnParams.displayId]);
+
+            // 4. Render the vector graphic directly into the visible workspace panel
             renderClientOvpnProfileQr(elements.nodes.qr, downloadUrl);
-        }).catch(function (e) {
-            console.error('Failed to create file link:', e);
-        });
+
+        } catch (e) {
+            console.error('Failed to process and link profile export assets:', e);
+        }
     };
 
     elements.nodes.input.addEventListener('input', refreshModalState);
@@ -1619,13 +1706,16 @@ const setupQrBoxEvents = function (elements, ovpnParams, files, viewData) {
     // Download the profile file directly to a computer
     elements.buttons.download.addEventListener('click', function () {
         const activeHost = elements.nodes.input.value ? sanitizeInputLine(elements.nodes.input.value) : window.location.hostname;
-        const blob = new Blob([compileOvpnProfileText(ovpnParams.displayId, activeHost, ovpnParams.port, ovpnParams.proto, files)], { type: 'application/x-openvpn-profile' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = ovpnParams.displayId.replace(/\s+/g, '_') + '_client.ovpn';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const instNumber = viewData.statusClass.getInstanceNumber(ovpnParams.nextId);
+        compileOvpnProfileText(ovpnParams.displayId, activeHost, ovpnParams.port, ovpnParams.proto, cryptoAssets, viewData, instNumber).then(function (fullProfileText) {
+            const blob = new Blob([fullProfileText], { type: 'application/x-openvpn-profile' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = ovpnParams.displayId.replace(/\s+/g, '_') + '_client.ovpn';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     });
 
     // Delete temporary files and close the window when clicking the close button
@@ -1648,12 +1738,124 @@ const setupQrBoxEvents = function (elements, ovpnParams, files, viewData) {
     refreshModalState();
 };
 
+/**
+ * Universal data structure template for packing generated OpenVPN profile assets
+ */
 const SERVER_FILES_TEMPLATE = {
     conf: '',
     ca: '',
     cert: '',
     key: '',
     tlsCrypt: ''
+};
+
+/**
+ * Opens a simplified modal for mobile apps clients with a dynamic targetCnName input field and triggers asynchronous client_pki cryptographic generation.
+ */
+const openMobileExportModal = function (instance_id, nextId, files, finalHost, triggerStandardExportFlow, viewData) {
+    // 1. Create UI Input elements
+    const cnInput = E('input', {
+        'type': 'text',
+        'class': 'cbi-input-text',
+        'style': 'width:100%; font-weight:bold;',
+        'placeholder': TXT.MSG.placeholder_cn_mobile
+    });
+
+    // Remove the invalid styling marker automatically as soon as the user starts typing
+    cnInput.addEventListener('input', function () {
+        cnInput.classList.remove('cbi-input-invalid');
+    });
+
+    const modalConfirmBtn = E('button', { 'class': 'cbi-button cbi-button-action important' }, [TXT.BTN.next + ' ' + ICON.FORWARD]);
+    const modalCancelBtn = E('button', { 'class': 'cbi-button cbi-button-neutral', 'style': 'margin-right:10px;' }, [TXT.BTN.cancel]);
+
+    const statusFeedbackNode = E('textarea', {
+        'class': 'cbi-input-textarea',
+        'style': 'width:100%; max-width:100%; resize:none; font-family:monospace; font-size:11px; display:none; background:#111; color: var(--success-text, #00ff00); padding:10px; margin-top:12px;',
+        'rows': '8', 'readonly': 'readonly'
+    });
+
+    let forgedAssetsBundle = null;
+    let finalizedCnName = '';
+    let saveApplyOpenVPN = false;
+
+    // 2. Render Modal Frame Layout
+    L.ui.showModal(ICON.MOBILE + ' ' + TXT.MSG.export_openvpn_connect_client_profile, [
+        E('div', { 'class': 'cbi-map' }, [
+            E('div', { 'class': 'cbi-section' }, [
+                E('div', { 'id': 'mobile-description-node', 'class': 'cbi-section-descr', 'style': 'margin-bottom:12px; font-size:12px; color:var(--text-color-light, #64748b);' }, [
+                    TXT.MSG.please_assign_cn_name
+                ]),
+                E('div', { 'class': 'cbi-value', 'style': 'border:none; padding:0;' }, [
+                    E('div', { 'class': 'cbi-value-field', 'style': 'width:100%; margin:0; padding:0;' }, [
+                        cnInput,
+                        statusFeedbackNode
+                    ])
+                ]),
+                E('div', { 'style': 'text-align:right; margin-top:15px; border-top:1px solid var(--border-color, #cbd5e1); padding-top:12px;' }, [
+                    modalCancelBtn, modalConfirmBtn
+                ])
+            ])
+        ])
+    ]);
+
+    modalCancelBtn.addEventListener('click', L.ui.hideModal);
+
+    // 3. Form submission and core validation loop
+    modalConfirmBtn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+
+        // Next Step Action Layer: If keys are already generated, dispatch directly to download frame
+        if (forgedAssetsBundle && finalizedCnName) {
+            L.ui.hideModal();
+            triggerStandardExportFlow(forgedAssetsBundle, finalizedCnName, saveApplyOpenVPN);
+            return;
+        }
+
+        // Reset previous validation state red lines
+        cnInput.classList.remove('cbi-input-invalid');
+
+        // Form Validation Check Routine
+        const rawCn = sanitizeInputLine(cnInput.value);
+        const cleanCn = viewData.wizardClass.getValidCommonName(rawCn);
+        if (!rawCn || !cleanCn) {
+            cnInput.classList.add('cbi-input-invalid'); // Mark field red
+            return;
+        }
+
+        finalizedCnName = cleanCn;
+
+        const descNode = document.getElementById('mobile-description-node');
+        if (descNode) { descNode.style.display = 'none'; }
+        cnInput.style.display = 'none';
+        modalConfirmBtn.disabled = true;
+        modalConfirmBtn.textContent = ICON.LOADING + ' ' + TXT.BTN.processing;
+        modalCancelBtn.style.display = 'none';
+        statusFeedbackNode.style.display = 'block';
+
+        // 4. client_pki asynchronous keygen
+        viewData.keygenClass.executeAsynchronousKeyGen(nextId, 'client_pki', 'rsa2048_ec', '100', finalizedCnName, '', statusFeedbackNode, L_fs_Callbacks, async function (keygenSuccess, pkiPayload) {
+            if (!keygenSuccess || !pkiPayload) {
+                modalCancelBtn.style.display = 'inline-block';
+                modalConfirmBtn.disabled = false;
+                modalConfirmBtn.textContent = TXT.BTN.next + ' ' + ICON.FORWARD;
+                statusFeedbackNode.value += '\n' + ICON.ERROR + ' ' + TXT.ERROR.keygen_failed;
+                return;
+            }
+            forgedAssetsBundle = Object.assign({}, SERVER_FILES_TEMPLATE, {
+                conf: files.conf,
+                ca: pkiPayload.ca,
+                cert: pkiPayload.cert,
+                key: pkiPayload.key,
+                tlsCrypt: files.tlsCrypt
+            });
+
+            // Unlock UI
+            modalConfirmBtn.disabled = false;
+            modalConfirmBtn.className = 'cbi-button cbi-button-save important';
+            modalConfirmBtn.textContent = TXT.INFO.download_profile + ' ' + ICON.EXPORT;
+        }, 'fresh');
+    });
 };
 
 /**
@@ -1948,9 +2150,9 @@ const downloadClientOvpnProfile = async function (instance_id, instObj, customUc
             ]);
         };
 
-        // If it is a standard mobile server, jump directly to the QR center view layer
+        // If it is a standard mobile server, open the Mobile Export modal to generate unique client_pki keys first
         if (!isSiteToSite) {
-            triggerStandardExportFlow(serverAssets);
+            openMobileExportModal(instance_id, nextId, serverAssets, finalHost, triggerStandardExportFlow, viewData);
             return;
         }
 
@@ -3086,7 +3288,7 @@ const addNewInstance = async function (roleType, viewData, wizardParams, optiona
     });
 
     // Trigger the automated key allocation modal for ALL server installations
-    if ((newInstanceItem.role === OPENVPN.ROLE.SERVER) || ((wizardParams) && (wizardParams.role === OPENVPN.ROLE.SERVER))) {        
+    if ((newInstanceItem.role === OPENVPN.ROLE.SERVER) || ((wizardParams) && (wizardParams.role === OPENVPN.ROLE.SERVER))) {
 
         const callbacks = ({
             openWizardBtnClick: openWizardBtnClick,

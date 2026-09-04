@@ -1,0 +1,1323 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:136
+msgid "A client connection needs the server keys and config. Select an .ovpn profile to import them automatically, or click Cancel to use the default settings."
+msgstr "客户端连接需要服务器密钥和配置。选择一个 .ovpn 配置文件来自动导入，或点击取消以使用默认设置。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:129
+msgid "A secure firewall zone for all"
+msgstr "适用于所有组件的安全防火墙区域"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:130
+msgid "API Token"
+msgstr "API 令牌"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:151
+msgid "Account Update Key"
+msgstr "账户更新密钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:25
+msgid "Action"
+msgstr "操作"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:18
+#: root/www/luci-static/resources/view/vpn/openvpn.js:34
+msgid "Active"
+msgstr "活动"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:35
+msgid "Active PIDs:"
+msgstr "活动的 PID:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:24
+msgid "Actual"
+msgstr "实际"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:65
+msgid "Add Client Instance"
+msgstr "添加客户端实例"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:69
+msgid "Add Office"
+msgstr "添加办公室"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:66
+msgid "Add Server Instance"
+msgstr "添加服务器实例"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:79
+msgid "Add your other offices below. The server will connect all networks automatically."
+msgstr "在下方添加您的其他办公室。服务器将自动连接所有网络。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:36
+msgid "Aggregated RX:"
+msgstr "总计接收 (RX):"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:37
+msgid "Aggregated TX:"
+msgstr "总计发送 (TX):"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:81
+msgid "Another Main Internet Router Detected"
+msgstr "检测到另一个主互联网路由器"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:80
+msgid "Another Router detected!"
+msgstr "检测到另一个路由器！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:90
+msgid "Are you sure you want to delete"
+msgstr "您确定要删除吗"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:121
+msgid "Automated Zone Setup:"
+msgstr "自动区域设置:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:70
+msgid "Back"
+msgstr "返回"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:27
+msgid "CLOSED"
+msgstr "已关闭"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:36
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:71
+#: root/www/luci-static/resources/view/vpn/openvpn.js:67
+msgid "Cancel"
+msgstr "取消"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:46
+msgid "Certificate"
+msgstr "证书"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:134
+msgid "Certification Authority"
+msgstr "证书颁发机构 (CA)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:68
+msgid "Change"
+msgstr "修改"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:72
+msgid "Check Address Status"
+msgstr "检查地址状态"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:122
+msgid "Check Traffic Rules:"
+msgstr "检查流量规则:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:74
+msgid "Choose File..."
+msgstr "选择文件..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:82
+msgid "Choose how your internet traffic is sent through the VPN. You can use any free OpenVPN app on your phone or laptop to import this profile."
+msgstr "选择您的互联网流量如何通过 VPN 发送。您可以在手机或笔记本电脑上使用任何免费的 OpenVPN 应用程序来导入此配置文件。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:136
+msgid "Classic free provider with exceptional IPv6 and dual-stack support."
+msgstr "经典的免费服务商，支持极佳的 IPv6 和双栈。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:49
+msgid "Clear Log"
+msgstr "清除日志"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:38
+msgid "Clearing..."
+msgstr "正在清除..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:26
+msgid "Client"
+msgstr "客户端"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:135
+msgid "Client Certificate"
+msgstr "客户端证书"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:47
+msgid "Client Certificate & Private Key (issued by CA)"
+msgstr "客户端证书和私钥（由 CA 颁发）"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:83
+msgid "Client for Branch Office (Branch)"
+msgstr "分支机构客户端 (Branch)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:49
+msgid "Client keys exported successfully."
+msgstr "客户端密钥成功导出。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:48
+msgid "Client keys generated successfully!"
+msgstr "客户端密钥成功生成！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:35
+#: root/www/luci-static/resources/view/vpn/openvpn.js:70
+msgid "Close"
+msgstr "关闭"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:51
+msgid "Common Name (CN)"
+msgstr "通用名称 (CN)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:89
+msgid "Configuration changed! Applying will temporarily restart the OpenVPN instance. Once the page has reloaded, click Apply a second time to complete the reactivation."
+msgstr "配置已更改！应用设置将暂时重启 OpenVPN 实例。页面重新加载后，请再次点击应用以完成重启激活。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:39
+msgid "Connected:"
+msgstr "已连接:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:26
+msgid "Connection Type"
+msgstr "连接类型"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:73
+msgid "Create VPN"
+msgstr "创建 VPN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:84
+msgid "Create a secure VPN connection in just a few clicks."
+msgstr "只需点击几次即可创建安全的 VPN 连接。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:137
+msgid "Create keys for a new office..."
+msgstr "为新办公室创建密钥..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:28
+msgid "Creating VPN..."
+msgstr "正在创建 VPN..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:25
+#: root/www/luci-static/resources/view/vpn/openvpn.js:40
+msgid "Creating..."
+msgstr "正在创建..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:77
+msgid "Crypto operation running. Please wait..."
+msgstr "加密操作正在运行。请稍候..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:156
+msgid "Cryptographic Key Warning"
+msgstr "加密密钥警告"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:124
+msgid "Custom / Manual Update URL"
+msgstr "自定义 / 手动更新 URL"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:52
+msgid "Custom CLI Options"
+msgstr "自定义 CLI 选项"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:29
+msgid "Custom Update URL"
+msgstr "自定义更新 URL"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:155
+msgid "DDNS Key / Password"
+msgstr "DDNS 密钥 / 密码"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:30
+msgid "DDNS Provider"
+msgstr "DDNS 服务商"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:26
+msgid "Default"
+msgstr "默认"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:75
+msgid "Delete"
+msgstr "删除"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:71
+msgid "Delete Instance"
+msgstr "删除实例"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:85
+msgid "Delete this office"
+msgstr "删除此办公室"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:72
+msgid "Deleted - Save & Apply"
+msgstr "已删除 - 保存并应用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:92
+msgid "Deployment Recommendation:"
+msgstr "部署推荐:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:138
+msgid "Diffie - Hellman Parameters"
+msgstr "Diffie-Hellman 参数"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:62
+msgid "Diffie-Hellman Parameters (Perfect Forward Secrecy)"
+msgstr "Diffie-Hellman 参数 (完全 forward 保密/PFS)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:53
+msgid "Diffie-Hellman parameters enforce numeric prime bit boundaries exclusively."
+msgstr "Diffie-Hellman 参数仅强制执行数字质数位边界。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:143
+msgid "Direct Update Token"
+msgstr "直接更新令牌"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:41
+msgid "Disable"
+msgstr "禁用"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:19
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:27
+#: root/www/luci-static/resources/view/vpn/openvpn.js:42
+msgid "Disabled"
+msgstr "已禁用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:155
+msgid "Do you want to proceed and save this file anyway?"
+msgstr "您确定要继续并保存此文件吗？"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:31
+msgid "Domain Name"
+msgstr "域名"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:37
+#: root/www/luci-static/resources/view/vpn/openvpn.js:73
+msgid "Download"
+msgstr "下载"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:74
+msgid "Download (.ovpn)"
+msgstr "下载 (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:43
+msgid "Download Profile"
+msgstr "下载配置文件"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:91
+msgid "Download and QR code link are only available while this window is open."
+msgstr "下载和二维码链接仅在此窗口打开时可用。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:129
+msgid "DuckDNS (duckdns.org)"
+msgstr "DuckDNS (duckdns.org)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:133
+msgid "Dynu Systems (dynu.com)"
+msgstr "Dynu Systems (dynu.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:97
+msgid "ERROR: Safety polling threshold exceeded boundaries. Process deadlocked."
+msgstr "错误: 安全轮询阈值超过边界。进程死锁。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:92
+msgid "Edit Config file"
+msgstr "编辑配置文件"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:44
+msgid "Enable"
+msgstr "启用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:38
+msgid "Enable Save"
+msgstr "启用保存"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:75
+msgid "Enabled"
+msgstr "已启用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:45
+msgid "Enabled:"
+msgstr "已启用:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:36
+msgid "Encryption"
+msgstr "加密"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:122
+msgid "Enter your own manual HTTP update URL structure."
+msgstr "输入您自己的手动 HTTP 更新 URL 结构。"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:21
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:28
+#: root/www/luci-static/resources/view/vpn/openvpn.js:46
+msgid "Error"
+msgstr "错误"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:171
+msgid "Error: An office with this name is already in the list."
+msgstr "错误: 列表中已存在此名称的办公室。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:163
+msgid "Error: Configuration or cryptographic keys are missing on disk."
+msgstr "错误: 磁盘上缺少配置或加密密钥。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:174
+msgid "Error: File is corrupted or missing vital fields."
+msgstr "错误: 文件损坏或缺少重要字段。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:170
+msgid "Error: Network status check failed. Please try again."
+msgstr "错误: 网络状态检查失败。请重试。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:166
+msgid "Error: Please add at least one office to the list before you continue."
+msgstr "错误: 请在继续之前向列表中至少添加一个办公室。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:169
+msgid "Error: This IP address is already used by another office. Every office needs a different IP address!"
+msgstr "错误: 此 IP 地址已被另一个办公室使用。每个办公室都需要不同的 IP 地址！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:172
+msgid "Error: You cannot use this IP network! It is the local network of this router and will block all traffic."
+msgstr "错误: 您不能使用此 IP 网络！它是此路由器的本地网络，将阻塞所有流量。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:131
+msgid "Excellent free option. No monthly email confirmation needed."
+msgstr "极好的免费选项。不需要每月的邮件确认。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:94
+msgid "Export (.ovpn)"
+msgstr "导出 (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:54
+msgid "Export Keys"
+msgstr "导出密钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:95
+msgid "Export OpenVPN Connect Client Profile"
+msgstr ""
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:32
+msgid "External Port"
+msgstr "外部端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:162
+msgid "Failed to build profile:"
+msgstr "构建配置文件失败:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:167
+msgid "Failed to create new OpenVPN server:"
+msgstr "创建新 OpenVPN 服务器失败:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:27
+msgid "File Location:"
+msgstr "文件位置:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:86
+msgid "Finding your public IP address..."
+msgstr "正在寻找您的公网 IP 地址..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:124
+msgid "Firewall"
+msgstr "防火墙"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:125
+msgid "Firewall & Routing Information"
+msgstr "防火墙和路由信息"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:87
+msgid "For Phones & Laptops (OpenVPN Connect App)"
+msgstr "适用于手机和笔记本电脑 (OpenVPN Connect 应用)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:142
+msgid "FreeDNS (afraid.org)"
+msgstr "FreeDNS (afraid.org)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:146
+msgid "FreeMYIP (freemyip.com)"
+msgstr "FreeMYIP (freemyip.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:63
+msgid "Full PKI Suite (CA + Server Certificate + Private Server Key)"
+msgstr "完整 PKI 套件 (CA + 服务器证书 + 服务器私钥)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:39
+msgid "Generate"
+msgstr "生成"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:91
+msgid "Generated keys are not saved! Close window and discard keys?"
+msgstr "生成的密钥未保存！是否关闭窗口并放弃密钥？"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:55
+msgid "Generating TLS-Crypt key..."
+msgstr "正在生成 TLS-Crypt 密钥..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:58
+msgid "Generating private client key..."
+msgstr "正在生成客户端私钥..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:76
+msgid "Generating..."
+msgstr "正在生成..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:139
+msgid "HTTP Token String"
+msgstr "HTTP 令牌字符串"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:33
+msgid "Help"
+msgstr "帮助"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:102
+msgid "Here you can manage multiple OpenVPN Server and Client instances dynamically."
+msgstr "您可以在这里动态管理多个 OpenVPN 服务器和客户端实例。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:41
+msgid "IP Address"
+msgstr "IP 地址"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:150
+msgid "IPv64 (ipv64.net)"
+msgstr "IPv64 (ipv64.net)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:88
+msgid "If your internet provides a static IP address."
+msgstr "如果您的互联网提供静态 IP 地址。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:96
+msgid "Import (.ovpn)"
+msgstr "导入 (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:37
+msgid "Import Failed:"
+msgstr "导入失败:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:97
+msgid "Import OpenVPN Connect Client Profile"
+msgstr "导入 OpenVPN Connect 客户端配置文件"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:152
+msgid "Import Parser Failed:"
+msgstr "导入解析器失败:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:34
+#: root/www/luci-static/resources/view/vpn/openvpn.js:98
+msgid "Import Profile"
+msgstr "导入配置文件"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:85
+msgid "Important: Use a unique name for each office to configure the network routing correctly."
+msgstr "重要: 为每个办公室使用唯一的名称，以便正确配置网络路由。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:36
+#: root/www/luci-static/resources/view/vpn/openvpn.js:99
+msgid "Imported Client"
+msgstr "已导入的客户端"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:35
+#: root/www/luci-static/resources/view/vpn/openvpn.js:100
+msgid "Importing profile..."
+msgstr "正在导入配置文件..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:126
+msgid "Inbound Access:"
+msgstr "入站访问:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:38
+msgid "Inside Port:"
+msgstr "内部端口:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:37
+msgid "Instance"
+msgstr "实例"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:29
+#: root/www/luci-static/resources/view/vpn/openvpn.js:47
+msgid "Instance #"
+msgstr "实例 #"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:57
+msgid "Instance Management"
+msgstr "实例管理"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:48
+msgid "Instances:"
+msgstr "实例:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:39
+msgid "Internal Port"
+msgstr "内部端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:40
+msgid "Internet Traffic"
+msgstr "互联网流量"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:164
+msgid "Invalid file. Important parts are missing (CA, Cert, or Private Key)."
+msgstr "无效文件。缺少重要部分 (CA、证书或私钥)。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:93
+msgid "It is highly recommended to use the automated Setup Wizard to deploy a Mobile Server (OpenVPN Connect) or a Headquarters LAN-to-LAN Server. In just a few clicks, the wizard fully configures easy DDNS provider setup, multi-client remote networks, optimal firewall zones, and scan-ready QR codes."
+msgstr "强烈建议使用自动设置向导来部署移动服务器 (OpenVPN Connect) 或总部 LAN-to-LAN 服务器。只需点击几下，向导即可完全配置简易的 DDNS 服务商设置、多客户端远程网络、优化的防火墙区域以及支持扫描的二维码。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:96
+msgid "Keep IP Setup anyway"
+msgstr "仍然保留 IP 设置"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:59
+msgid "Key Strength"
+msgstr "密钥强度"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:42
+msgid "Key Update Active"
+msgstr "密钥更新激活"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:165
+msgid "Key check failed. One security key is broken or invalid."
+msgstr "密钥检查失败。一个安全密钥损坏或无效。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:143
+msgid "Key file is empty or does not exist on disk yet."
+msgstr "密钥文件为空或在磁盘上尚不存在。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:166
+msgid "Key generation failed."
+msgstr "密钥生成失败。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:141
+msgid "Key generation in progress..."
+msgstr "正在生成密钥..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:167
+msgid "Key type mismatch"
+msgstr "密钥类型不匹配"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:139
+msgid "Key verification failed"
+msgstr "密钥验证失败"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:140
+msgid "KeyGen"
+msgstr "密钥生成"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:97
+msgid "Keys updated successfully!"
+msgstr "密钥更新成功！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:101
+msgid "LAN-to-LAN Router Profile Selection"
+msgstr "LAN-to-LAN 路由器配置文件选择"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:58
+msgid "LOG"
+msgstr "日志"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:60
+msgid "Loading key contents..."
+msgstr "正在加载密钥内容..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:38
+msgid "Local IP / Port"
+msgstr "本地 IP / 端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:50
+msgid "Log Cleared"
+msgstr "日志已清除"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:140
+msgid "Long-running community network with many free subdomains."
+msgstr "长期运行的社区网络，拥有许多免费子域名。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:134
+msgid "MD5 Password / Key"
+msgstr "MD5 密码 / 密钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:148
+msgid "Modern free provider with perfect IPv6 and Dual-Stack support."
+msgstr "现代免费服务商，支持完善的 IPv6 和双栈（Dual-Stack）。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:67
+msgid "N/A - openvpn --genkey accepts no extra flags"
+msgstr "不适用 - openvpn --genkey 不接受额外的标记"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:43
+msgid "Netmask"
+msgstr "子网掩码"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:127
+msgid "Network"
+msgstr "网络"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:168
+msgid "Network Error: DNS/IP query failed."
+msgstr "网络错误: DNS/IP 查询失败。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:76
+#: root/www/luci-static/resources/view/vpn/openvpn.js:77
+msgid "Next"
+msgstr "下一步"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:51
+msgid "No"
+msgstr "否"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:50
+msgid "No (Clone Default Keys)"
+msgstr "否 (克隆默认密钥)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:105
+msgid "No OpenVPN instances configured yet. Use the buttons below to create an instance."
+msgstr "尚未配置 OpenVPN 实例。使用下方的按钮创建实例。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:104
+#: root/www/luci-static/resources/view/vpn/openvpn.js:106
+msgid "No active OpenVPN log entries found."
+msgstr "未找到活动的 OpenVPN 日志条目。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:52
+msgid "No changes detected"
+msgstr "未检测到更改"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:30
+msgid "No clients connected"
+msgstr "无客户端连接"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:99
+msgid "No file chosen"
+msgstr "未选择文件"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:39
+msgid "No instances configured"
+msgstr "未配置实例"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:98
+msgid "No offices added yet. Use the fields below to add the first office."
+msgstr "尚未添加办公室。使用下方的字段添加第一个办公室。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:154
+msgid "No-IP (noip.com)"
+msgstr "No-IP (noip.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:61
+msgid "Not applicable"
+msgstr "不适用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:127
+msgid "Number 1 for Open-Source and Home-Assistant setups."
+msgstr "开源和 Home-Assistant 设置的首选。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:78
+msgid "OK"
+msgstr "确定"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:46
+msgid "OPEN"
+msgstr "打开"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:44
+msgid "Office IP Address"
+msgstr "办公室 IP 地址"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:45
+msgid "Office Name"
+msgstr "办公室名称"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:107
+msgid "Office Profile:"
+msgstr "办公室配置文件:"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:17
+#: root/www/luci-static/resources/view/vpn/openvpn.js:53
+msgid "OpenVPN"
+msgstr "OpenVPN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:88
+msgid "OpenVPN Client Export"
+msgstr "OpenVPN 客户端导出"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:103
+msgid "OpenVPN Connect Mobile Export"
+msgstr "OpenVPN Connect 移动端导出"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:82
+msgid "OpenVPN Instance Key Generator"
+msgstr "OpenVPN 实例密钥生成器"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:144
+msgid "OpenVPN Keys"
+msgstr "OpenVPN 密钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:161
+msgid "OpenVPN Keys Detected:"
+msgstr "检测到 OpenVPN 密钥:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:47
+msgid "OpenVPN Profile Valid:"
+msgstr "OpenVPN 配置文件有效:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:59
+msgid "OpenVPN Server/Client"
+msgstr "OpenVPN 服务器/客户端"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:59
+msgid "OpenVPN Setup Wizard"
+msgstr "OpenVPN 设置向导"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:128
+msgid "OpenVPN tunnel interfaces (tun0, tun1, tun3, etc.)"
+msgstr "OpenVPN 隧道接口 (tun0, tun1, tun3 等)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:48
+msgid "Outside Port:"
+msgstr "外部端口:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:68
+msgid "PKI Suite components successfully saved to disk!"
+msgstr "PKI 套件组件成功保存到磁盘！"
+
+#: root/www/luci-static/resources/view/status/include/35_openvpn.js:20
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:31
+#: root/www/luci-static/resources/view/vpn/openvpn.js:54
+msgid "Pending..."
+msgstr "等待中..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:109
+msgid "Please assign a unique device name (Common Name) for this mobile profile:"
+msgstr "请为此移动端配置文件分配一个唯一的设备名称（通用名称/CN）："
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:104
+msgid "Please check your profile file. A valid configuration file needs a remote target endpoint and key blocks."
+msgstr "请检查您的配置文件。有效的配置文件需要一个远程目标端点和密钥块。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:69
+msgid "Please click «Save & Apply»."
+msgstr "请点击 «保存并应用»。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:107
+msgid "Please create a port forwarding rule inside your main internet router."
+msgstr "请在您的主互联网路由器内创建一个端口转发规则。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:145
+msgid "Please select a valid .ovpn file first or click cancel to utilize fallback keys."
+msgstr "请先选择一个有效的 .ovpn 文件，或点击取消以使用备用密钥。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:142
+msgid "Please wait while secure cryptographic, router-unique default assets are being generated."
+msgstr "请稍候，正在生成安全的、路由器唯一的默认加密资产。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:49
+msgid "Port Forwarding:"
+msgstr "端口转发:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:101
+msgid "Port Open Success!"
+msgstr "端口打开成功！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:146
+msgid "Private Client Key"
+msgstr "客户端私钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:72
+msgid "Private Key"
+msgstr "私钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:148
+msgid "Private Server Key"
+msgstr "服务器私钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:154
+msgid "Proceeding with invalid cryptographic keys will cause total connection failure and may lead to service instability or infinite daemon crash loops."
+msgstr "使用无效的加密密钥继续操作将导致彻底的连接失败，并可能导致服务不稳定或守护进程的无限崩溃循环。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:79
+msgid "Processing..."
+msgstr "正在处理..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:157
+msgid "Profile link active (Native uqr framework (QR-Code) not loaded)."
+msgstr "配置文件链接已激活 (未加载本地 uqr 框架/二维码)。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:73
+msgid "Progress & Output"
+msgstr "进度与输出"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:50
+msgid "Protocol"
+msgstr "协议"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:52
+msgid "Public IP Address or Domain"
+msgstr "公网 IP 地址或域名"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:53
+msgid "Public Static IP"
+msgstr "公网静态 IP"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:74
+msgid "Pure ECC"
+msgstr "纯 ECC"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:75
+msgid "Pure RSA"
+msgstr "纯 RSA"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:76
+msgid "Ready for key generation."
+msgstr "准备生成密钥。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:109
+msgid "Ready for openvpn connections."
+msgstr "已准备好进行 OpenVPN 连接。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:79
+msgid "Recommended: RSA-2048 + ECC-Prime256v1. RSA ensures CA compatibility, while ECC accelerates the data tunnel."
+msgstr "推荐: RSA-2048 + ECC-Prime256v1。RSA 确保 CA 兼容性，而 ECC 加速数据隧道。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:40
+msgid "Remote IP / Port"
+msgstr "远程 IP / 端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:54
+msgid "Remote Office Name"
+msgstr "远程办公室名称"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:55
+msgid "Resolving Target..."
+msgstr "正在解析目标..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:56
+msgid "Reveal/hide password"
+msgstr "显示/隐藏密码"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:158
+msgid "Reverting to fallback configuration."
+msgstr "正在恢复到备用配置。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:32
+msgid "Running"
+msgstr "正在运行"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:40
+msgid "Save & Apply"
+msgstr "保存并应用"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:41
+#: root/www/luci-static/resources/view/vpn/openvpn.js:80
+msgid "Save Config"
+msgstr "保存配置"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:43
+#: root/www/luci-static/resources/view/vpn/openvpn.js:82
+msgid "Saved"
+msgstr "已保存"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:42
+#: root/www/luci-static/resources/view/vpn/openvpn.js:81
+msgid "Saving..."
+msgstr "正在保存..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:111
+msgid "Scan QR Code with Mobile Phone Camera:"
+msgstr "使用手机摄像头扫描二维码:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:147
+msgid "Secret Key Token"
+msgstr "密钥令牌 (Token)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:60
+msgid "Secure Full Tunnel (Route all traffic over VPN)"
+msgstr "安全全局隧道 (通过 VPN 路由所有流量)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:112
+msgid "Secure Temporary Profile URL Field:"
+msgstr "安全临时配置文件 URL 字段:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:159
+msgid "Security Notice:"
+msgstr "安全通知:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:113
+msgid "Select Profile (.ovpn)"
+msgstr "选择配置文件 (.ovpn)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:57
+msgid "Select VPN Type"
+msgstr "选择 VPN 类型"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:110
+msgid "Select the (.ovpn) profile or (.crt) multi-key bundle. Settings will be configured or updated automatically."
+msgstr "选择 (.ovpn) 配置文件或 (.crt) 多密钥捆绑包。设置将自动配置或更新。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:61
+msgid "Server Address:"
+msgstr "服务器地址:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:147
+msgid "Server Certificate"
+msgstr "服务器证书"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:111
+msgid "Server for Main Office (Headquarters)"
+msgstr "主办公室服务器 (总部)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:58
+msgid "Setup"
+msgstr "设置"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:83
+msgid "Show"
+msgstr "显示"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:78
+msgid "Signing client certificate using server CA..."
+msgstr "正在使用服务器 CA 签名客户端证书..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:144
+msgid "Simple free service using text-based HTTPS tokens."
+msgstr "基于文本 HTTPS 令牌的简易免费服务。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:33
+msgid "Since"
+msgstr "自"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:112
+msgid "Skip Check & Unlock Create Button"
+msgstr "跳过检查并解锁创建按钮"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:62
+msgid "Split Tunnel (Access home LAN only, faster web browsing)"
+msgstr "分流隧道 (仅访问家庭局域网，网页浏览更快)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:55
+msgid "Starting..."
+msgstr "正在启动..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:89
+msgid "Static IP check bypassed by administrator."
+msgstr "管理员已绕过静态 IP 检查。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:90
+msgid "Static IP now checked by administrator."
+msgstr "管理员现已检查静态 IP。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:41
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:63
+#: root/www/luci-static/resources/view/vpn/openvpn.js:56
+msgid "Status"
+msgstr "状态"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:69
+msgid "Step 1/3: Generating Certificate Authority (CA)..."
+msgstr "步骤 1/3: 正在生成证书颁发机构 (CA)..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:70
+msgid "Step 2/3: Generating Private Server Key..."
+msgstr "步骤 2/3: 正在生成服务器私钥..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:71
+msgid "Step 3/3: Generating & Signing Server Certificate..."
+msgstr "步骤 3/3: 正在生成并签名服务器证书..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:93
+msgid "Success: The IP address is valid and fully resolvable!"
+msgstr "成功: IP 地址有效且可完全解析！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:113
+msgid "Switch to Dynamic DNS (DDNS)"
+msgstr "切换到动态 DNS (DDNS)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:80
+msgid "Symmetric static encryption key for encryption protection layer."
+msgstr "用于加密保护层的对称静态加密密钥。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:115
+msgid "System logs ..."
+msgstr "系统日志..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:116
+msgid "TCP (Good for traveling - works behind firewalls)"
+msgstr "TCP (适合旅行 - 可在防火墙后工作)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:149
+msgid "TLS Crypt Secret"
+msgstr "TLS Crypt 密钥"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:64
+msgid "TLS Crypt Secret (Anti-DoS / Port-Scan Protection)"
+msgstr "TLS Crypt 密钥 (防御 DoS / 端口扫描保护)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:81
+msgid "TLS-Crypt key saved successfully."
+msgstr "TLS-Crypt 密钥保存成功。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:115
+msgid "The external port"
+msgstr "外部端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:114
+msgid "The port forward"
+msgstr "端口转发"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:106
+msgid "The port used on this OpenWrt router."
+msgstr "此 OpenWrt 路由器上使用的端口。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:105
+msgid "The port used on your main internet router."
+msgstr "您的主 internet 路由器上使用的端口。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:108
+msgid "The public IP address or your own external domain name."
+msgstr "公网 IP 地址或您自己的外部域名。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:96
+msgid "The saved key data contains structural format corruption!"
+msgstr "保存的密钥数据包含结构格式损坏！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:168
+msgid "The uploaded file is empty."
+msgstr "上传的文件为空。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:110
+msgid "This automated initialization process can take a few minutes on your device..."
+msgstr "此自动初始化过程可能需要几分钟时间..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:100
+msgid "This file contains only VPN client keys."
+msgstr "此文件仅包含 VPN 客户端密钥。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:93
+msgid "This is the address your VPN clients will use to connect from the internet. Scan the QR code with your phone camera or use the link below to download your connection profile."
+msgstr "这是您的 VPN 客户端从互联网连接时使用的地址。使用手机摄像头扫描二维码或点击下方链接下载您的连接配置文件。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:114
+msgid "This server handles network rules for multiple remote offices. Please choose an existing office name or write a name to make a new connection profile."
+msgstr "此服务器处理多个远程办公室的网络规则。请选择现有的办公室名称或写入一个新名称以建立新的连接配置文件。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:57
+msgid "To be secure, a new instance needs its own key files. Do you want to create them now? (Recommended - usually takes just a few moments)"
+msgstr "为了安全起见，新实例需要自己的密钥文件。是否现在创建？(推荐 - 通常只需几分钟)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:64
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:125
+msgid "Token / Password"
+msgstr "令牌 / 密码"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:130
+msgid "Traffic Rules"
+msgstr "流量规则"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:42
+msgid "Transfer (Rx / Tx)"
+msgstr "传输 (Rx / Tx)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:28
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:43
+#: root/www/luci-static/resources/view/vpn/openvpn.js:60
+msgid "Type"
+msgstr "类型"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:117
+msgid "UDP (High Performance - maximum throughput)"
+msgstr "UDP（高性能 - 最大吞吐量）"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:84
+msgid "Unknown Asset"
+msgstr "未知资产"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:44
+msgid "UpTime"
+msgstr "运行时间"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:84
+msgid "Upload"
+msgstr "上传"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:116
+msgid "Uploaded file is invalid or corrupt!"
+msgstr "上传的文件无效或已损坏！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:118
+msgid "Use Dynamic DNS (DDNS) Service"
+msgstr "使用动态 DNS (DDNS) 服务"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:85
+msgid "Use Fallback"
+msgstr "使用备用 (Fallback)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:119
+msgid "Use Public IP Address / Domain"
+msgstr "使用公网 IP 地址 / 域名"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:65
+msgid "Username"
+msgstr "用户名"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:135
+msgid "Username (Optional)"
+msgstr "用户名 (可选)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:156
+msgid "Username / E-Mail"
+msgstr "用户名 / 电子邮箱"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-status.js:45
+msgid "VPN"
+msgstr "VPN"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:117
+msgid "VPN Client Connection Domain or Address:"
+msgstr "VPN 客户端连接域名或地址:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:87
+msgid "VPN Key Type:"
+msgstr "VPN 密钥类型:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:66
+msgid "VPN Name"
+msgstr "VPN 名称"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:30
+msgid "Valid Until"
+msgstr "有效期至"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:29
+msgid "Validated"
+msgstr "已验证"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:173
+msgid "Validation Error: The VPN Name must contain only letters, numbers, hyphens or underscores."
+msgstr "验证错误: VPN 名称只能包含字母、数字、连字符或下划线。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:91
+msgid "Validation bypassed after network failure."
+msgstr "网络故障后已绕过验证。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:92
+msgid "Validation bypassed by administrator."
+msgstr "管理员已绕过验证。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:86
+msgid "Validity (Days)"
+msgstr "有效期 (天)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:152
+msgid "Very popular provider. Requires manual activation every 30 days in free account."
+msgstr "非常受欢迎的服务商。免费账户需要每 30 天手动激活一次。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:131
+msgid "WAN ports"
+msgstr "WAN 端口"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:90
+msgid "WARNING: Clicking save will instantly break all active VPN tunnels. You must generate and share new client profiles (.ovpn) to restore the connections."
+msgstr "警告: 点击保存将立即中断所有活动的 VPN 隧道。您必须生成并共享新的客户端配置文件 (.ovpn) 才能恢复连接。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:163
+msgid "Warning: If you upload wrong keys, your connection will stop!"
+msgstr "警告: 如果您上传了错误的密钥，您的连接将会停止！"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:159
+msgid "Warning: The IP address cannot be resolved. Your router might be offline."
+msgstr "警告: 无法解析该 IP 地址。您的路由器可能处于离线状态。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:153
+msgid "Warning: The uploaded file structure does not match the expected key type."
+msgstr "警告: 上传的文件结构与预期的密钥类型不匹配。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:160
+msgid "Warning: You did not select «Public Static IP». If your public IP address changes, your VPN tunnel will crash."
+msgstr "警告: 您未选择 «公网静态 IP»。如果您的公网 IP 地址发生更改，您的 VPN 隧道将会崩溃。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:162
+msgid "Warning: You have un-saved text in the input fields. Please click the blue «Add Office» button to save it, or clear the fields to continue."
+msgstr "警告: 输入框中有未保存的文本。请点击蓝色的 «添加办公室» 按钮进行保存，或清空字段以继续。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:32
+#: root/www/luci-static/resources/view/vpn/openvpn.js:61
+msgid "Wizard"
+msgstr "向导"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:169
+msgid "Wrong key type! Please upload the correct cryptographic file."
+msgstr "错误的密钥类型！请上传正确的加密文件。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:31
+msgid "Years"
+msgstr "年"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:62
+msgid "Yes"
+msgstr "是"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:56
+msgid "Yes (Generate Unique Keys)"
+msgstr "是 (生成唯一密钥)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:120
+msgid "are opened automatically for secure OpenVPN connections."
+msgstr "会自动开启以用于安全的 OpenVPN 连接。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:123
+msgid "devices is created automatically."
+msgstr "设备将自动创建。"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:138
+msgid "dynv6 (dynv6.com)"
+msgstr "dynv6 (dynv6.com)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:51
+msgid "e.g."
+msgstr "例如:"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:65
+#: root/www/luci-static/resources/view/vpn/openvpn-keygen.js:66
+msgid "e.g. -text (shows hex output)"
+msgstr "例如: -text (显示十六进制输出)"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:103
+msgid "e.g. Mobile-Server, Main-Office"
+msgstr "例如: Mobile-Server, Main-Office"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:126
+msgid "e.g. https://custom-provider.com?domain=...&key=..."
+msgstr "例如: https://custom-provider.com?domain=...&key=..."
+
+#: root/www/luci-static/resources/view/vpn/openvpn.js:108
+msgid "e.g. my-smartphone"
+msgstr "例如: my-smartphone"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:102
+msgid "e.g. mydomain.com or your public IP"
+msgstr "例如: mydomain.com 或您的公网 IP"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:123
+msgid "e.g. myname-custom-provider.com"
+msgstr "例如: myname-custom-provider.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:153
+msgid "e.g. myname.ddns.net"
+msgstr "例如: myname.ddns.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:128
+msgid "e.g. myname.duckdns.org"
+msgstr "例如: myname.duckdns.org"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:132
+msgid "e.g. myname.dynu.net"
+msgstr "例如: myname.dynu.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:137
+msgid "e.g. myname.dynv6.net"
+msgstr "例如: myname.dynv6.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:145
+msgid "e.g. myname.freemyip.com"
+msgstr "例如: myname.freemyip.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:149
+msgid "e.g. myname.ipv64.net"
+msgstr "例如: myname.ipv64.net"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:141
+msgid "e.g. myname.mooo.com"
+msgstr "例如: myname.mooo.com"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:94
+msgid "is already"
+msgstr "已经"
+
+#: root/www/luci-static/resources/view/vpn/openvpn-wizard.js:95
+msgid "is currently"
+msgstr "当前正在"

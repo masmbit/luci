@@ -23,6 +23,7 @@ const TXT = {
 	INFO: {
 		actual: _('Actual'),
 		creating: _('Creating...'),
+		client: _('Client'),
 		disabled: _('Disabled'),
 		error: _('Error'),
 		instance_x: _('Instance #'),
@@ -573,7 +574,7 @@ const getInstanceConfig = async function (id, instNum, role, path_conf) {
 	}
 	baseResult.port = currentPort;
 
-	const portExternMatch = baseResult.confContent.match(/^setenv\s+port-extern\s+(\d+)/m);
+	const portExternMatch = baseResult.confContent.match(/^setenv\s+portextern\s+(\d+)/m);
 	baseResult.portExtern = portExternMatch ? parseInt(portExternMatch[1], 10) : currentPort;
 	baseResult.proto = parseProtoFromConfig(baseResult.confContent);
 	baseResult.clientRefresh = parseClientRefresh(baseResult.confContent, instNum);
@@ -656,7 +657,6 @@ const getConnectedClientsStatus = async function (inst) {
 		const statusFilePath = '/tmp/run/openvpn.' + inst.id + '.status';
 		const fileStat = await L.fs.stat(statusFilePath);
 
-		// Use the flexible property directly from your instance object layer
 		const maxAllowedFileAge = inst.clientRefresh * 5;
 
 		if (fileStat) {
@@ -681,13 +681,13 @@ const getConnectedClientsStatus = async function (inst) {
 				return [];
 			}
 
-			// Cache HIT check execution lane
+			// use cache if no change
 			if (statusFileCache[inst.id].mtime === currentMtime &&
 				statusFileCache[inst.id].size === currentSize) {
 				return statusFileCache[inst.id].parsedClients;
 			}
 
-			// Cache MISS: Call privileged shell tool to fetch raw text
+			// change detected - parse status file
 			const res = await L.fs.exec(CFG.LIBEXEC.luci_app_openvpn, [CFG.LIBEXEC.readstatus, inst.id]);
 			const cleanStatusContent = String((res && res.code === 0) ? (res.stdout || '') : '').trim();
 
@@ -850,13 +850,20 @@ const renderRemoteNode = function (role, isRunning, clientRemote, connectedClien
 				E('span', { 'style': 'color: var(--text-color-light, #64748b); font-weight: normal' }, protoStr)
 			]),
 			E('small', {
-				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); font-style: italic; margin-top: 2px;'
+				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); margin-top: 0px;'
+			}, [
+				TXT.INFO.client + ': ',
+				E('strong', { 'style': 'color: var(--success-text, #10b981); font-weight: bold;' }, client.commonName)
+			]),
+			E('small', {
+				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); margin-top: 0px;'
 			}, TXT.INFO.since + ': ' + client.connectedSince),
 			E('small', {
-				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); font-style: italic; margin-top: 1px;'
+				'style': 'display: block; font-size: 11px; color: var(--text-color-light, #64748b); margin-top: 0px;'
 			}, TXT.INFO.actual + ': ' + formatStatusBytes(client.bytesReceived) + ' / ' + formatStatusBytes(client.bytesSent))
 		]));
 	});
+
 
 	return E('div', { 'style': 'display: block; margin: 0; padding: 0; border: none !important;' }, clientRows);
 };
@@ -972,7 +979,7 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 			}, [
 				E('span', { 'style': 'white-space:nowrap;' }, formatStatusBytes(kernelStats.rxBytes) + ' / ' + formatStatusBytes(kernelStats.txBytes)),
 				E('small', {
-					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); font-style:italic; margin-top:0px; white-space:nowrap;'
+					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); margin-top:0px; white-space:nowrap;'
 				}, kernelStats.rxPkts + ' / ' + kernelStats.txPkts)
 			]);
 		} else if (inst.isRunning) {
@@ -981,7 +988,7 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 			}, [
 				E('span', {}, '0 B / 0 B'),
 				E('small', {
-					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); font-style:italic; margin-top:0px;'
+					'style': 'display:block; font-size:11px; color:var(--text-color-light, #64748b); margin-top:0px;'
 				}, '0 / 0')
 			]);
 		}
@@ -1028,9 +1035,6 @@ const refreshStatusTable = function (instances, devDataRaw, systemUptime, isLive
 
 /**
  * Refreshes the status table and updates the main dashboard view continuously.
- * Fully synchronized with async/await and secured against idle session drops.
- * 
- * Comments in simple school English.
  */
 const refreshLiveDashboard = async function (viewData, tableContainerElement, refreshMainCallback) {
 	try {
